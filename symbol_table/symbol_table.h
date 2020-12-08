@@ -5,7 +5,7 @@
 #include "../vector/vector.h"
 
 typedef struct {
-
+    // TODO: implement basic structure of symbol
 } symbol;
 
 typedef struct {
