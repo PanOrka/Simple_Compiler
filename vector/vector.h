@@ -22,6 +22,17 @@
 #define VECTOR_ADD(vec, new_element) vector_add(&vec, &new_element)
 #endif
 
+/**
+ * 
+ * MACRO for vector_find: void
+ * 
+ * ARGUMENTS: vector, element_to_find (instance of element with specified member values to find), comparator_eq (function identifier)
+ * 
+*/
+#ifndef VECTOR_FIND
+#define VECTOR_FIND(vec, element_to_find, comparator_eq) vector_find(&vec, &element_to_find, &comparator_eq)
+#endif
+
 #include <stdlib.h>
 #include <stdalign.h>
 
@@ -32,6 +43,13 @@ typedef struct {
     size_t used_size;
     size_t max_size;
 } vector;
+
+typedef struct {
+    void *element_ptr;
+    size_t idx;
+} vector_element;
+
+typedef int (*comp_eq)(void *, void *);
 
 /**
  * 
@@ -58,5 +76,14 @@ void vector_add(vector *vec, void *new_element);
  * RETURN: address of last element in vector 
 */
 void * vector_pop(vector *vec);
+
+/**
+ * 
+ * Find element with comparator_eq function of type comp_eq
+ * comparator_eq should return 1 when element in vector == element_to_find by definition
+ * 
+ * RETURN: vector_element: address of found element and it's index in vector. ON failed search address is NULL
+*/
+vector_element vector_find(vector *vec, void *element_to_find, comp_eq comparator_eq);
 
 #endif

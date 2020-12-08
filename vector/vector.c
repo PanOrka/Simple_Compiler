@@ -53,3 +53,13 @@ void * vector_pop(vector *vec) {
     fprintf(stderr, "[vector]: POP of empty vector!"); // It can work this way :)
     return vec->_mem_ptr;
 }
+
+vector_element vector_find(vector *vec, void *element_to_find, comp_eq comparator_eq) {
+    for (int32_t i=0; i<vec->used_size; ++i) {
+        if (comparator_eq(element_to_find, vec->_mem_ptr + i * vec->_element_size)) {
+            return (vector_element){vec->_mem_ptr + i * vec->_element_size, i};
+        }
+    }
+
+    return (vector_element){NULL, 0};
+}
