@@ -29,14 +29,13 @@ void vector_add(vector *vec, void *new_element) {
         memcpy(vec->_mem_ptr + vec->used_size * vec->_element_size, new_element, vec->_element_size);
         ++(vec->used_size);
     } else {
-        vec->max_size = 2 * vec->max_size;
-
         void *new_mem;
-        if (!(new_mem = aligned_alloc(vec->_alignment, vec->max_size * vec->_element_size))) {
+        if (!(new_mem = aligned_alloc(vec->_alignment, 2 * vec->max_size * vec->_element_size))) {
             fprintf(stderr, "[vector]: Memory reallocation error!\n");
             exit(EXIT_FAILURE);
         }
         memcpy(new_mem, vec->_mem_ptr, vec->max_size * vec->_element_size);
+        vec->max_size = 2 * vec->max_size;
 
         free(vec->_mem_ptr);
         vec->_mem_ptr = new_mem;
