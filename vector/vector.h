@@ -3,11 +3,23 @@
 
 /**
  * 
- * MACRO for vector_pop: address -> element
+ * MACRO for vector_pop: address
  * 
+ * ARGUMENTS: vector, macro takes address iself
 */
 #ifndef VECTOR_POP
-#define VECTOR_POP(vec) *(vector_pop(vec))
+#define VECTOR_POP(vec) vector_pop(&vec)
+#endif
+
+/**
+ * 
+ * MACRO for vector_add: void
+ * 
+ * ARGUMENTS: vector, element
+ * 
+*/
+#ifndef VECTOR_ADD
+#define VECTOR_ADD(vec, new_element) vector_add(&vec, &new_element)
 #endif
 
 #include <stdlib.h>

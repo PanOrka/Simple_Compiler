@@ -44,19 +44,12 @@ void vector_add(vector *vec, void *new_element) {
     }
 }
 
-typedef struct {
-    int a;
-    short b;
-} test;
-
-int main() {
-    vector v = vector_create(sizeof(test), alignof(test), 0);
-    test a = {1, 1};
-    vector_add(&v, &a);
-    a.a = 2, a.b = 2;
-    vector_add(&v, &a);
-
-    for (int i=0; i<2; ++i) {
-        printf("%d, %d\n", ((test *)v._mem_ptr)[i].a, ((test *)v._mem_ptr)[i].b);
+void * vector_pop(vector *vec) {
+    if (vec->used_size) {
+        --(vec->used_size);
+        return vec->_mem_ptr + vec->used_size * vec->_element_size;
     }
+
+    fprintf(stderr, "[vector]: POP of empty vector!"); // It can work this way :)
+    return vec->_mem_ptr;
 }
