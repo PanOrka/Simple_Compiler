@@ -23,8 +23,9 @@ typedef struct {
 } reg_set;
 
 typedef struct {
-    char id;
-    bool is_allocated;
+    reg *r;
+    uint32_t idx;
+    bool was_allocated;
 } reg_allocator;
 
 /**
@@ -38,20 +39,24 @@ reg_set reg_m_create();
 
 /**
  * 
- * Put addr on register machine
- * If exists then gives existing otherwise chooses Least Used Register
+ * Get register
+ * If addr exists in reg_set then gives existing otherwise chooses Least Used Register
+ * Returned register becomes 1st
  * 
- * RETURN: reg_allocator: id of register && is_allocated flag
+ * RETURN: reg_allocator: ptr to register, old idx of register and was_allocated flag
  * 
 */
-reg_allocator reg_m_put_addr(uint64_t addr);
+reg_allocator reg_m_get(uint64_t addr, reg_set *r_set);
 
 /**
  * 
- * Change stored addr to r.addr of register specified by r.id
+ * Returns Least Recently Used Register
+ * Use it wisely for temporary objects that aren't addressed
+ * Returned register becomes 1st
  * 
- * WARNING: Used ONLY in instructions of type OPER reg_x reg_y = reg_x <- reg_x OPER reg_y, when destination is change ex: c := a + b
+ * RETURN: reg_allocator: ptr to register, old idx of register and was_allocated flag
+ * 
 */
-void reg_m_change_addr(reg r);
+reg_allocator reg_m_LRU(reg_set *r_set);
 
 #endif
