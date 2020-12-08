@@ -6,15 +6,12 @@
 #define REG_ID_SET {'a', 'b', 'c', 'd', 'e', 'f'}
 #endif
 
-#ifndef ADDR_UNDEF
-#define ADDR_UNDEF 0xFFFFFFFFFFFFFFFF
-#endif
-
-#include <stdint.h>
 #include <stdbool.h>
 
+#include "../definitions.h"
+
 typedef struct {
-    uint64_t addr;
+    addr_t addr;
     char id;
 } reg;
 
@@ -46,12 +43,12 @@ reg_set reg_m_create();
  * RETURN: reg_allocator: ptr to register, old idx of register and was_allocated flag
  * 
 */
-reg_allocator reg_m_get(uint64_t addr, reg_set *r_set);
+reg_allocator reg_m_get(addr_t addr, reg_set *r_set);
 
 /**
  * 
  * Returns Least Recently Used Register
- * Use it wisely for temporary objects that aren't addressed
+ * Use it wisely for temporary objects that aren't addressed, best to use for single fast operations
  * Returned register becomes 1st
  * 
  * RETURN: reg_allocator: ptr to register, old idx of register and was_allocated flag
