@@ -8,7 +8,15 @@
  * ARGUMENTS: vector, macro takes address iself
 */
 #ifndef VECTOR_POP
-#define VECTOR_POP(vec) vector_pop(&vec)
+#define VECTOR_POP(vec, do_pop) vector_pop(&(vec), do_pop)
+#endif
+
+#ifndef POP
+#define POP 1
+#endif
+
+#ifndef NO_POP
+#define NO_POP 0
 #endif
 
 /**
@@ -19,18 +27,18 @@
  * 
 */
 #ifndef VECTOR_ADD
-#define VECTOR_ADD(vec, new_element) vector_add(&vec, &new_element)
+#define VECTOR_ADD(vec, new_element) vector_add(&(vec), &(new_element))
 #endif
 
 /**
  * 
- * MACRO for vector_find: void
+ * MACRO for vector_find: vector_element
  * 
  * ARGUMENTS: vector, element_to_find (instance of element with specified member values to find), comparator_eq (function identifier)
  * 
 */
 #ifndef VECTOR_FIND
-#define VECTOR_FIND(vec, element_to_find, comparator_eq) vector_find(&vec, &element_to_find, &comparator_eq)
+#define VECTOR_FIND(vec, element_to_find, comparator_eq) vector_find(&(vec), &(element_to_find), &(comparator_eq))
 #endif
 
 #include <stdlib.h>

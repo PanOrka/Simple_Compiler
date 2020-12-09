@@ -53,7 +53,7 @@ void * vector_pop(vector *vec, bool do_pop) {
         return vec->_mem_ptr + vec->used_size * vec->_element_size;
     }
 
-    fprintf(stderr, "[vector]: POP of empty vector!"); // It can work this way :)
+    fprintf(stderr, "[vector]: POP of empty vector!\n"); // It can work this way :)
     return vec->_mem_ptr;
 }
 
