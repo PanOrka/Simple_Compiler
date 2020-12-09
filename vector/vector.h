@@ -39,8 +39,8 @@
 
 typedef struct {
     void *_mem_ptr;
-    size_t _element_size;
-    size_t _alignment;
+    const size_t _element_size;
+    const size_t _alignment;
     size_t used_size;
     size_t max_size;
 } vector;
