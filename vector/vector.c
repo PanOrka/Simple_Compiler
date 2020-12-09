@@ -9,11 +9,11 @@ vector vector_create(size_t element_size, size_t alignment, size_t size) {
     }
 
     vector vec = {
-        NULL,
-        element_size,
-        alignment,
-        0,
-        size
+        ._mem_ptr = NULL,
+        ._element_size = element_size,
+        ._alignment = alignment,
+        .used_size = 0,
+        .max_size = size
     };
 
     if (!(vec._mem_ptr = aligned_alloc(alignment, size*element_size))) {
