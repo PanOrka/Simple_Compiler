@@ -13,11 +13,7 @@ int symbol_comparator_eq(void *a, void *b) {
     symbol *_a = (symbol *)a;
     symbol *_b = (symbol *)b;
 
-    if (strcmp(_a->identifier, _b->identifier) == 0) {
-        return 1;
-    }
-
-    return 0;
+    return (strcmp(_a->identifier, _b->identifier) == 0) ? 1 : 0;
 }
 
 symbol * symbol_table_find(symbol_table *s_table, char *identifier) {
@@ -34,12 +30,7 @@ void symbol_table_add(symbol_table *s_table, const char *identifier, size_t star
         exit(EXIT_FAILURE);
     }
 
-    addr_t start_addr;
-    if (s_table->v.used_size > 0) {
-        start_addr = ((symbol *)VECTOR_POP(s_table->v, NO_POP))->addr[1];
-    } else {
-        start_addr = 0;
-    }
+    addr_t start_addr = (s_table->v.used_size > 0) ? ((symbol *)VECTOR_POP(s_table->v, NO_POP))->addr[1] : 0;
 
     symbol new_symbol = {
         .identifier = identifier,
