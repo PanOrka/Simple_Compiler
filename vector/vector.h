@@ -35,6 +35,7 @@
 
 #include <stdlib.h>
 #include <stdalign.h>
+#include <stdbool.h>
 
 typedef struct {
     void *_mem_ptr;
@@ -73,9 +74,10 @@ void vector_add(vector *vec, void *new_element);
  * 
  * Pops element from vector
  * 
+ * ARGUMENTS: vector *, bool do_pop - if true then element is popped from vector
  * RETURN: address of last element in vector 
 */
-void * vector_pop(vector *vec);
+void * vector_pop(vector *vec, bool do_pop);
 
 /**
  * 

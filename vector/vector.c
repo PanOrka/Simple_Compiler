@@ -44,9 +44,12 @@ void vector_add(vector *vec, void *new_element) {
     }
 }
 
-void * vector_pop(vector *vec) {
+void * vector_pop(vector *vec, bool do_pop) {
     if (vec->used_size) {
-        --(vec->used_size);
+        if (do_pop) {
+            --(vec->used_size);
+        }
+
         return vec->_mem_ptr + vec->used_size * vec->_element_size;
     }
 
