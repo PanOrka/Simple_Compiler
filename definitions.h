@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 typedef uint64_t addr_t;
-typedef uint32_t instr_lvl_t;
 
 /**
  * 

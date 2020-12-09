@@ -5,7 +5,10 @@
 #include "../vector/vector.h"
 
 typedef struct {
-    // TODO: implement basic structure of symbol
+    char *identifier;
+    addr_t addr[2];
+    size_t start_idx;
+    
 } symbol;
 
 typedef struct {
