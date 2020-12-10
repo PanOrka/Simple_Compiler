@@ -12,10 +12,19 @@
 #define NO_FLAGS 0b00000000
 #endif
 
+#ifndef ITERATOR_FLAG
+#define ITERATOR_FLAG 0b00000001
+#endif
+
+typedef union {
+    uint64_t start_idx;
+    symbol *hide;
+} add_info;
+
 typedef struct {
     const char *identifier;
     const addr_t addr[2]; // address is [FROM, TO), cuz TO - FROM = size
-    const size_t start_idx;
+    const add_info _add_info; // TODO: union with address of PRZYKRYTA zmienna if it's iterator, to change it on POP() start_idx is uint64_t so w/e about memory
     uint8_t flags;
 } symbol;
 
@@ -45,13 +54,14 @@ symbol * symbol_table_find(symbol_table *s_table, char *identifier);
  * Add new symbol to symbol_table
  * 
 */
-void symbol_table_add(symbol_table *s_table, const char *identifier, size_t start_idx, size_t size, uint8_t flags);
+void symbol_table_add(symbol_table *s_table, const char *identifier, uint64_t start_idx, size_t size, uint8_t flags);
 
 /**
  * 
  * Pop symbol from symbol_table
  * 
+ * RETURN: COPY of popped symbol
 */
-void symbol_table_pop(symbol_table *s_table);
+symbol symbol_table_pop(symbol_table *s_table);
 
 #endif
