@@ -59,7 +59,7 @@ void * vector_pop(vector *vec, bool do_pop) {
 
 vector_element vector_find(vector *vec, void *element_to_find, comp_eq comparator_eq) {
     for (int32_t i=0; i<vec->used_size; ++i) {
-        if (comparator_eq(element_to_find, vec->_mem_ptr + i * vec->_element_size)) {
+        if (comparator_eq(vec->_mem_ptr + i * vec->_element_size, element_to_find)) {
             return (vector_element){vec->_mem_ptr + i * vec->_element_size, i};
         }
     }
