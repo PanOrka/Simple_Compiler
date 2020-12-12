@@ -27,10 +27,11 @@ int main(int argc, char *argv[]) {
 
         prelex(in, prelex_out);
         fclose(in);
+        rewind(prelex_out);
 
         parse(prelex_out, compiler_out);
         fclose(prelex_out);
-        remove(temp_out);
+        //remove(temp_out); // commented for debug
         fclose(compiler_out);
     } else {
         fprintf(stderr, "WRONG AMOUNT OF INPUT ARGUMENTS!\n");

@@ -6,7 +6,7 @@ int yylex();
 extern FILE *yyin;
 int yyerror(char*);
 
-FILE *compiler_out;
+static FILE *compiler_out;
 %}
 
 %union {
@@ -28,7 +28,7 @@ FILE *compiler_out;
 /*
 // BODY
 */
-%token BEGIN
+%token _BEGIN
 %token END
 
 /*

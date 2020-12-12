@@ -5,7 +5,7 @@
 
 int zzlex();
 
-FILE *prelexer_out;
+static FILE *prelexer_out;
 %}
 
 %s DECLARE

@@ -11,27 +11,21 @@ int yylex();
 %}
 
 %%
-/*
-// DECLARE
-*/
+
 "DECLARE" {
     return DECLARE;
 }
 
-/*
-// BODY
-*/
+
 "BEGIN" {
-    return BEGIN;
+    return _BEGIN;
 }
 
 "END" {
     return END;
 }
 
-/*
-// IF
-*/
+
 "IF" {
     return IF;
 }
@@ -48,9 +42,7 @@ int yylex();
     return ENDIF;
 }
 
-/*
-// WHILE
-*/
+
 "WHILE" {
     return WHILE;
 }
@@ -59,9 +51,7 @@ int yylex();
     return ENDWHILE;
 }
 
-/*
-// REPEAT
-*/
+
 "REPEAT" {
     return REPEAT;
 }
@@ -70,9 +60,7 @@ int yylex();
     return UNTIL;
 }
 
-/*
-// FOR
-*/
+
 "FOR" {
     return FOR;
 }
@@ -93,16 +81,11 @@ int yylex();
     return ENDFOR;
 }
 
-/*
-// UNIVERSAL
-*/
+
 "DO" {
     return DO;
 }
 
-/*
-// SYMBOL & CONST VALUE
-*/
 [_a-z]+ {
     size_t len = strlen(yytext) + 1;
     char *id = malloc(len);
