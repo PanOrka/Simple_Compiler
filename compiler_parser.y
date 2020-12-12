@@ -7,6 +7,8 @@ extern FILE *yyin;
 int yyerror(char*);
 
 static FILE *compiler_out;
+
+#include "parser_func/getters.h"
 %}
 
 %union {
@@ -138,7 +140,9 @@ any: DECLARE declarations
 
 declarations: declarations COMA pidentifier
             | declarations COMA pidentifier L_BRACE num ARRAY_IND num R_BRACE
-            | pidentifier
+            | pidentifier {
+                declare($1.id);
+            }
             | pidentifier L_BRACE num ARRAY_IND num R_BRACE
 
 expression: value
