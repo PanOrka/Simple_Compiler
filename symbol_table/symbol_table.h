@@ -20,17 +20,19 @@
 #define SYMBOL_INITIALIZED 0b00000010
 #endif
 
+typedef struct symbol symbol;
+
 typedef union {
     uint64_t start_idx;
     symbol *hide;
 } add_info;
 
-typedef struct {
+struct symbol {
     const char *identifier;
     const addr_t addr[2]; // address is [FROM, TO), cuz TO - FROM = size
     const add_info _add_info; // TODO: union with address of PRZYKRYTA zmienna if it's iterator, to change it on POP() start_idx is uint64_t so w/e about memory
     uint8_t flags;
-} symbol;
+};
 
 typedef struct {
     vector v;

@@ -4,12 +4,12 @@
 #include "declarations.h"
 #include "getters.h"
 
-void declare(char *id) {
-    symbol_table const * const s_table = get_symbol_table();
+void declare_one(char *id) {
+    symbol_table *s_table = get_symbol_table();
     symbol *s_find = symbol_table_find_id(s_table, id, false, SYMBOL_NO_FLAGS); 
 
     if (s_find != NULL) {
-        fprintf(stderr, "[DECLARE]:Multiple declarations of one variable: %s!", id);
+        fprintf(stderr, "[DECLARE]:Multiple declarations of one variable: %s!\n", id);
         exit(EXIT_FAILURE);
     }
     add_info a_info = {
