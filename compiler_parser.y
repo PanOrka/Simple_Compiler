@@ -139,13 +139,17 @@ any: DECLARE declarations
 ;
 
 declarations: declarations COMA pidentifier {
-                declare_one($3);
+                declare_var($3);
             }
-            | declarations COMA pidentifier L_BRACE num ARRAY_IND num R_BRACE
+            | declarations COMA pidentifier L_BRACE num ARRAY_IND num R_BRACE {
+                declare_array($3, $5, $7);
+            }
             | pidentifier {
-                declare_one($1);
+                declare_var($1);
             }
-            | pidentifier L_BRACE num ARRAY_IND num R_BRACE
+            | pidentifier L_BRACE num ARRAY_IND num R_BRACE {
+                declare_array($1, $3, $5);
+            }
 
 expression: value
           | value ADD value
