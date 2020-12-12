@@ -28,7 +28,7 @@ static FILE *compiler_out;
 /*
 // BODY
 */
-%token _BEGIN
+%token BEGIN_P
 %token END
 
 /*
@@ -71,6 +71,12 @@ static FILE *compiler_out;
 %token ENDL
 
 /*
+// READ & WRITE
+*/
+%token READ
+%token WRITE
+
+/*
 // OPERATORS & Extra Symbols
 */
 %token ASSIGN // :=
@@ -94,10 +100,12 @@ static FILE *compiler_out;
 %token R_BRACE // )
 %token ARRAY_IND // :
 
+%token COMA // ,
+
 /*
 // SYMBOL & CONST VALUE
 */
-%token <id> pidentifier // make it struct or union or w/e
+%token <id> pidentifier
 %token <value> num
 
 /*//////////////////////////////////////////////
@@ -107,15 +115,55 @@ static FILE *compiler_out;
 *//////////////////////////////////////////////
 %%
 line: %empty
-    | expr ENDL line
+    | any ENDL line
 ;
 
-expr: END {
-        printf("END\n");
-    }
-    | DO {
-        printf("DO\n");
-    }
+any: DECLARE declarations
+   | BEGIN_P
+   | identifier ASSIGN expression END_EXPR
+   | IF condition THEN
+   | ELSE
+   | ENDIF
+   | WHILE condition DO
+   | ENDWHILE
+   | REPEAT
+   | UNTIL condition END_EXPR
+   | FOR pidentifier FROM value TO value DO
+   | FOR pidentifier FROM value DOWNTO value DO
+   | ENDFOR
+   | READ identifier END_EXPR
+   | WRITE value END_EXPR
+   | END
+;
+
+declarations: declarations COMA pidentifier
+            | declarations COMA pidentifier L_BRACE num ARRAY_IND num R_BRACE
+            | pidentifier
+            | pidentifier L_BRACE num ARRAY_IND num R_BRACE
+
+expression: value
+          | value ADD value
+          | value SUB value
+          | value MUL value
+          | value DIV value
+          | value MOD value
+;
+
+condition: value IS_EQUAL value
+         | value IS_N_EQUAL value
+         | value LESS value
+         | value GREATER value
+         | value LESS_EQ value
+         | value GREATER_EQ value
+;
+
+value: num
+     | identifier
+;
+
+identifier: pidentifier
+          | pidentifier L_BRACE pidentifier R_BRACE
+          | pidentifier L_BRACE num R_BRACE
 ;
 %%
 

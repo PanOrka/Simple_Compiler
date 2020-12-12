@@ -17,7 +17,7 @@ int yylex();
 
 
 "BEGIN" {
-    return _BEGIN;
+    return BEGIN_P;
 }
 
 "END" {
@@ -88,6 +88,15 @@ int yylex();
 
 [\n] {
     return ENDL;
+}
+
+
+"READ" {
+    return READ;
+}
+
+"WRITE" {
+    return WRITE;
 }
 
 
@@ -171,6 +180,10 @@ int yylex();
 
 ":" {
     return ARRAY_IND;
+}
+
+"," {
+    return COMA;
 }
 
 
