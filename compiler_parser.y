@@ -150,6 +150,7 @@ declarations: declarations COMA pidentifier {
             | pidentifier L_BRACE num ARRAY_IND num R_BRACE {
                 declare_array($1, $3, $5);
             }
+;
 
 expression: value
           | value ADD value
