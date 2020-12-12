@@ -1,6 +1,5 @@
 %{
 #include <stdio.h>
-#include "tokens.h"
 
 int yylex();
 int yyerror(char*);
@@ -11,6 +10,8 @@ int yyerror(char*);
 // TOKENS
 //
 *///////////////////////////////////////////////
+
+%token END
 
 /*
 // SYMBOL & CONST VALUE
@@ -24,5 +25,20 @@ int yyerror(char*);
 //
 *//////////////////////////////////////////////
 %%
-// TODO: RULES
+line: expr '\n'
+;
+
+expr: END {
+    printf("END\n");
+}
+;
 %%
+
+int yyerror(char *s) {
+    printf("%s\n",s);
+    return 0;
+}
+
+int main() {
+    yyparse();
+}

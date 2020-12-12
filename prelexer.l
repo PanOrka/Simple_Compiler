@@ -1,9 +1,7 @@
 %option noyywrap
 
 %{
-#include "compiler_parser.h"
-
-int yylex();
+int zzlex();
 %}
 
 %%
