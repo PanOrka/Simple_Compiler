@@ -38,7 +38,3 @@ int yyerror(char *s) {
     printf("%s\n",s);
     return 0;
 }
-
-int main() {
-    yyparse();
-}
