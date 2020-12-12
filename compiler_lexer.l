@@ -11,7 +11,6 @@ int yylex();
 %}
 
 %%
-
 "DECLARE" {
     return DECLARE;
 }
@@ -86,6 +85,12 @@ int yylex();
     return DO;
 }
 
+
+[\n] {
+    return ENDL;
+}
+
+
 [_a-z]+ {
     size_t len = strlen(yytext) + 1;
     char *id = malloc(len);
@@ -102,5 +107,75 @@ int yylex();
     yylval.value = strtoll(yytext, NULL, 10);
 
     return num;
+}
+
+":=" {
+    return ASSIGN;
+}
+
+";" {
+    return END_EXPR;
+}
+
+"+" {
+    return ADD;
+}
+
+"-" {
+    return SUB;
+}
+
+"*" {
+    return MUL;
+}
+
+"/" {
+    return DIV;
+}
+
+"%" {
+    return MOD;
+}
+
+"=" {
+    return IS_EQUAL;
+}
+
+"!=" {
+    return IS_N_EQUAL;
+}
+
+"<" {
+    return LESS;
+}
+
+">" {
+    return GREATER;
+}
+
+"<=" {
+    return LESS_EQ;
+}
+
+">=" {
+    return GREATER_EQ;
+}
+
+"(" {
+    return L_BRACE;
+}
+
+")" {
+    return R_BRACE;
+}
+
+":" {
+    return ARRAY_IND;
+}
+
+
+. {
+    fprintf(stderr, "Unexpected symbol: %s!", yytext);
+    exit(EXIT_FAILURE);
 }
 %%

@@ -66,6 +66,35 @@ static FILE *compiler_out;
 %token DO
 
 /*
+// ENDL
+*/
+%token ENDL
+
+/*
+// OPERATORS & Extra Symbols
+*/
+%token ASSIGN // :=
+%token END_EXPR // ;
+
+%token ADD // +
+%token SUB // -
+%token MUL // *
+%token DIV // /
+%token MOD // %
+
+%token IS_EQUAL // =
+%token IS_N_EQUAL // !=
+
+%token LESS // <
+%token GREATER // >
+%token LESS_EQ // <=
+%token GREATER_EQ // >=
+
+%token L_BRACE // (
+%token R_BRACE // )
+%token ARRAY_IND // :
+
+/*
 // SYMBOL & CONST VALUE
 */
 %token <id> pidentifier // make it struct or union or w/e
@@ -77,17 +106,21 @@ static FILE *compiler_out;
 //
 *//////////////////////////////////////////////
 %%
-line: expr '\n'
+line: %empty
+    | expr ENDL line
 ;
 
 expr: END {
-    printf("END\n");
-}
+        printf("END\n");
+    }
+    | DO {
+        printf("DO\n");
+    }
 ;
 %%
 
 int yyerror(char *s) {
-    printf("%s\n",s);
+    printf("%s\n", s);
     return 0;
 }
 
