@@ -1,25 +1,22 @@
 %option noyywrap
 
 %{
-#include <stdio.h>
+#include "prelexer.h"
 
 int zzlex();
-void prelex(FILE *in, FILE *out);
 %}
 
 %%
-<INITIAL>{
-    "END" {
-        printf("END\n");
-    }
+"END" {
+    printf("END\n");
+}
 
-    [ \t]+ ;
+[ \t]+ ;
 
-    [\n]+ ;
+[\n]+ ;
 
-    . {
-        printf("%s", yylex());
-    }
+. {
+    printf("%s", zztext);
 }
 %%
 
