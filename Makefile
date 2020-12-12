@@ -9,4 +9,4 @@ clean:
 
 cleanall:
 	rm -rf compiler && \
-	clean
+	make clean
