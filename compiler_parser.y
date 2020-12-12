@@ -2,7 +2,10 @@
 #include <stdio.h>
 
 int yylex();
+extern FILE *yyin;
 int yyerror(char*);
+
+FILE *compiler_out;
 %}
 
 /*//////////////////////////////////////////////
@@ -37,4 +40,10 @@ expr: END {
 int yyerror(char *s) {
     printf("%s\n",s);
     return 0;
+}
+
+void parse(FILE *in, FILE *out) {
+    yyin = in;
+    compiler_out = out;
+    yyparse();
 }

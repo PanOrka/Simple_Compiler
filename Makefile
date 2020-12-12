@@ -4,5 +4,9 @@ all:
 	flex -P zz -o prelexer.c prelexer.l && \
 	gcc -lfl compiler.c compiler_parser.c compiler_lexer.c prelexer.c -o compiler
 
+clean:
+	rm -rf compiler_parser.c compiler_parser.h compiler_lexer.c prelexer.c
+
 cleanall:
-	rm -rf compiler compiler_parser.c compiler_parser.h compiler_lexer.c prelexer.c
+	rm -rf compiler && \
+	clean

@@ -5,8 +5,7 @@
 
 int zzlex();
 
-FILE *_out;
-
+FILE *prelexer_out;
 %}
 
 %s DECLARE
@@ -14,52 +13,52 @@ FILE *_out;
 %%
 <INITIAL>{
     "DECLARE" {
-        fprintf(_out, "DECLARE");
+        fprintf(prelexer_out, "DECLARE");
         BEGIN(DECLARE);
     }
 
     "BEGIN" {
-        fprintf(_out, "BEGIN\n");
+        fprintf(prelexer_out, "BEGIN\n");
     }
 
     ";" {
-        fprintf(_out, ";\n");
+        fprintf(prelexer_out, ";\n");
     }
 
     "THEN" {
-        fprintf(_out, "THEN\n");
+        fprintf(prelexer_out, "THEN\n");
     }
 
     "ELSE" {
-        fprintf(_out, "ELSE\n");
+        fprintf(prelexer_out, "ELSE\n");
     }
 
     "DOWNTO" {
-        fprintf(_out, "DOWNTO");
+        fprintf(prelexer_out, "DOWNTO");
     }
 
     "DO" {
-        fprintf(_out, "DO\n");
+        fprintf(prelexer_out, "DO\n");
     }
 
     "REPEAT" {
-        fprintf(_out, "REPEAT\n");
+        fprintf(prelexer_out, "REPEAT\n");
     }
 
     "ENDIF" {
-        fprintf(_out, "ENDIF\n");
+        fprintf(prelexer_out, "ENDIF\n");
     }
 
     "ENDWHILE" {
-        fprintf(_out, "ENDWHILE\n");
+        fprintf(prelexer_out, "ENDWHILE\n");
     }
 
     "ENDFOR" {
-        fprintf(_out, "ENDFOR\n");
+        fprintf(prelexer_out, "ENDFOR\n");
     }
 
     "END" {
-        fprintf(_out, "END\n");
+        fprintf(prelexer_out, "END\n");
     }
 
     [ \t]+ ;
@@ -67,13 +66,13 @@ FILE *_out;
     [\n]+ ;
 
     . {
-        fprintf(_out, "%s", zztext);
+        fprintf(prelexer_out, "%s", zztext);
     }
 }
 
 <DECLARE>{
     "BEGIN" {
-        fprintf(_out, "\nBEGIN\n");
+        fprintf(prelexer_out, "\nBEGIN\n");
         BEGIN(INITIAL);
     }
 
@@ -82,13 +81,13 @@ FILE *_out;
     [\n]+ ;
 
     . {
-        fprintf(_out, "%s", zztext);
+        fprintf(prelexer_out, "%s", zztext);
     }
 }
 %%
 
 void prelex(FILE *in, FILE *out) {
-    _out = out;
+    prelexer_out = out;
     zzin = in;
     zzlex();
 }
