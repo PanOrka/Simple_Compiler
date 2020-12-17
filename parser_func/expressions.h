@@ -93,4 +93,11 @@ void expression_set_type(expr_type type);
 */
 expression_t expression_get();
 
+/**
+ * 
+ * print expression
+ * 
+*/
+void print_expression(expression_t *expr);
+
 #endif

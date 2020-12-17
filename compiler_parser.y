@@ -125,7 +125,7 @@ any: DECLARE declarations
    | BEGIN_P
    | identifier ASSIGN expression END_EXPR {
        expression_t expr = expression_get();
-       
+       print_expression(&expr);
    }
    | IF condition THEN
    | ELSE

@@ -101,3 +101,51 @@ expression_t expression_get() {
 
     return temp;
 }
+
+static char print_arr[] = {'v', '+', '-', '*', '/', '%'};
+
+void print_expression(expression_t *expr) {
+    printf("%s", expr->var_1[0].var->identifier);
+    if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
+        printf("(");
+        if (expr->mask & ASSIGN_SYM2_NUM) {
+            printf("%ld)", expr->var_2[0].num);
+        } else {
+            printf("%s)", expr->var_2[0].var->identifier);
+        }
+    }
+    printf(" := ");
+
+    if (expr->mask & LEFT_SYM1_NUM) {
+        printf("%ld", expr->var_1[1].num);
+    } else {
+        printf("%s", expr->var_1[1].var->identifier);
+        if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
+            printf("(");
+            if (expr->mask & LEFT_SYM2_NUM) {
+                printf("%ld)", expr->var_2[1].num);
+            } else {
+                printf("%s)", expr->var_2[1].var->identifier);
+            }
+        }
+    }
+
+    if (expr->type != expr_VALUE) {
+        printf(" %c ", print_arr[expr->type]);
+        if (expr->mask & RIGHT_SYM1_NUM) {
+            printf("%ld", expr->var_1[2].num);
+        } else {
+            printf("%s", expr->var_1[2].var->identifier);
+            if (expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) {
+                printf("(");
+                if (expr->mask & RIGHT_SYM2_NUM) {
+                    printf("%ld)", expr->var_2[2].num);
+                } else {
+                    printf("%s)", expr->var_2[2].var->identifier);
+                }
+            }
+        }
+    }
+
+    printf("\n");
+}
