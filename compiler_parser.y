@@ -125,8 +125,7 @@ any: DECLARE declarations
    | BEGIN_P
    | identifier ASSIGN expression END_EXPR {
        expression_t expr = expression_get();
-       printf("%s = ", expr.var_1[0].var);
-       printf("%s something %s\n", expr.var_1[1].var, expr.var_1[2].var);
+       
    }
    | IF condition THEN
    | ELSE
@@ -158,22 +157,22 @@ declarations: declarations COMA pidentifier {
 ;
 
 expression: value {
-              expression_set_type((expr_type)VALUE);
+              expression_set_type((expr_type)expr_VALUE);
           }
           | value ADD value {
-              expression_set_type((expr_type)ADD);
+              expression_set_type((expr_type)expr_ADD);
           }
           | value SUB value {
-              expression_set_type((expr_type)SUB);
+              expression_set_type((expr_type)expr_SUB);
           }
           | value MUL value {
-              expression_set_type((expr_type)MUL);
+              expression_set_type((expr_type)expr_MUL);
           }
           | value DIV value {
-              expression_set_type((expr_type)DIV);
+              expression_set_type((expr_type)expr_DIV);
           }
           | value MOD value {
-              expression_set_type((expr_type)MOD);
+              expression_set_type((expr_type)expr_MOD);
           }
 ;
 

@@ -29,12 +29,12 @@
 #endif
 
 typedef enum {
-    VALUE = 0,
-    ADD,
-    SUB,
-    MUL,
-    DIV,
-    MOD
+    expr_VALUE = 0,
+    expr_ADD,
+    expr_SUB,
+    expr_MUL,
+    expr_DIV,
+    expr_MOD
 } expr_type;
 
 typedef union {
