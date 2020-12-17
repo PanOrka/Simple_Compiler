@@ -20,6 +20,10 @@
 #define SYMBOL_INITIALIZED 0b00000010
 #endif
 
+#ifndef SYMBOL_IS_ARRAY
+#define SYMBOL_IS_ARRAY 0b00000100
+#endif
+
 typedef struct symbol symbol;
 
 typedef union {

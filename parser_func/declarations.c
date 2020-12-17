@@ -33,5 +33,5 @@ void declare_array(char *id, int64_t start_idx, int64_t end_idx) {
     add_info a_info = {
         .start_idx = start_idx
     };
-    symbol_table_add(s_table, id, a_info, end_idx - start_idx + 1, SYMBOL_NO_FLAGS);
+    symbol_table_add(s_table, id, a_info, end_idx - start_idx + 1, SYMBOL_IS_ARRAY);
 }

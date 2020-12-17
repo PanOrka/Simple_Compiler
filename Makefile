@@ -4,7 +4,7 @@ all:
 	flex -P zz -o prelexer.c prelexer.l && \
 	gcc -lfl compiler.c compiler_parser.c compiler_lexer.c prelexer.c \
 	vector/vector.c symbol_table/symbol_table.c register_machine/reg_m.c \
-	parser_func/declarations.c parser_func/getters.c \
+	parser_func/declarations.c parser_func/expressions.c parser_func/getters.c \
 	-o compiler
 
 clean:

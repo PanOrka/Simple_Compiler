@@ -9,6 +9,7 @@ int yyerror(char*);
 static FILE *compiler_out;
 
 #include "parser_func/declarations.h"
+#include "parser_func/expressions.h"
 %}
 
 %union {
@@ -81,14 +82,14 @@ static FILE *compiler_out;
 /*
 // OPERATORS & Extra Symbols
 */
-%token ASSIGN // :=
+%left ASSIGN // :=
 %token END_EXPR // ;
 
-%token ADD // +
-%token SUB // -
-%token MUL // *
-%token DIV // /
-%token MOD // %
+%left ADD // +
+%left SUB // -
+%left MUL // *
+%left DIV // /
+%left MOD // %
 
 %token IS_EQUAL // =
 %token IS_N_EQUAL // !=
@@ -122,7 +123,11 @@ line: %empty
 
 any: DECLARE declarations
    | BEGIN_P
-   | identifier ASSIGN expression END_EXPR
+   | identifier ASSIGN expression END_EXPR {
+       expression_t expr = expression_get();
+       printf("%s = ", expr.var_1[0].var);
+       printf("%s something %s\n", expr.var_1[1].var, expr.var_1[2].var);
+   }
    | IF condition THEN
    | ELSE
    | ENDIF
@@ -152,12 +157,24 @@ declarations: declarations COMA pidentifier {
             }
 ;
 
-expression: value
-          | value ADD value
-          | value SUB value
-          | value MUL value
-          | value DIV value
-          | value MOD value
+expression: value {
+              expression_set_type((expr_type)VALUE);
+          }
+          | value ADD value {
+              expression_set_type((expr_type)ADD);
+          }
+          | value SUB value {
+              expression_set_type((expr_type)SUB);
+          }
+          | value MUL value {
+              expression_set_type((expr_type)MUL);
+          }
+          | value DIV value {
+              expression_set_type((expr_type)DIV);
+          }
+          | value MOD value {
+              expression_set_type((expr_type)MOD);
+          }
 ;
 
 condition: value IS_EQUAL value
@@ -168,13 +185,21 @@ condition: value IS_EQUAL value
          | value GREATER_EQ value
 ;
 
-value: num
+value: num {
+         expression_set_num($1);
+     }
      | identifier
 ;
 
-identifier: pidentifier
-          | pidentifier L_BRACE pidentifier R_BRACE
-          | pidentifier L_BRACE num R_BRACE
+identifier: pidentifier {
+              expression_set_var($1);
+          }
+          | pidentifier L_BRACE pidentifier R_BRACE {
+              expression_set_var_arr_var($1, $3);
+          }
+          | pidentifier L_BRACE num R_BRACE {
+              expression_set_var_arr_num($1, $3);
+          }
 ;
 %%
 
