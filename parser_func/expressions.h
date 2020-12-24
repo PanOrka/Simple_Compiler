@@ -89,9 +89,9 @@ void expression_set_type(expr_type type);
  * 
  * Get expression
  * 
- * RETURN: Current executed expression
+ * RETURN: Copy of current expression allocated on heap
 */
-expression_t expression_get();
+expression_t * expression_get();
 
 /**
  * 

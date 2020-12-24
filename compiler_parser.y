@@ -10,6 +10,7 @@ static FILE *compiler_out;
 
 #include "parser_func/declarations.h"
 #include "parser_func/expressions.h"
+#include "instruction_graph/i_graph.h"
 %}
 
 %union {
@@ -124,8 +125,10 @@ line: %empty
 any: DECLARE declarations
    | BEGIN_P
    | identifier ASSIGN expression END_EXPR {
-       expression_t expr = expression_get();
-       print_expression(&expr);
+       expression_t *expr = expression_get();
+       // for debug purpose
+       print_expression(expr);
+       i_graph_add_instruction(expr, EXPR);
    }
    | IF condition THEN
    | ELSE
@@ -139,7 +142,9 @@ any: DECLARE declarations
    | ENDFOR
    | READ identifier END_EXPR
    | WRITE value END_EXPR
-   | END
+   | END {
+       i_graph_execute(compiler_out);
+   }
 ;
 
 declarations: declarations COMA pidentifier {
