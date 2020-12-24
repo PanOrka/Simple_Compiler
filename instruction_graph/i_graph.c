@@ -134,6 +134,8 @@ void i_graph_execute(FILE *file) {
             generate_stack_ptr(r2.r->addr, file, r.r);
             fprintf(file, "LOAD %c %c\n", r2.r->id, r.r->id);
         }
+
+        idx = idx->next;
     }
 }
 ///////////////////////////////////
