@@ -120,10 +120,11 @@ void i_graph_execute(FILE *file) {
         reg_allocator r = reg_m_get(regs, STACK_PTR);
         if (!r.was_allocated) {
             fprintf(file, "RESET %c\n", r.r->id);
+            r.r->addr = STACK_PTR;
             stack_ptr = 0;
         }
 
-        const addr_t address = expr->var_1[0].var->addr[0];
+        addr_t const address = expr->var_1[0].var->addr[0];
         reg_allocator r2 = reg_m_get(regs, address);
         if (!r2.was_allocated) {
             if (r2.r->addr != ADDR_UNDEF) {
