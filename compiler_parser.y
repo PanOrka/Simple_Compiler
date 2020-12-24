@@ -127,7 +127,7 @@ any: DECLARE declarations
    | identifier ASSIGN expression END_EXPR {
        expression_t *expr = expression_get();
        // for debug purpose
-       print_expression(expr);
+       print_expression(expr, stdout);
        i_graph_add_instruction(expr, EXPR);
    }
    | IF condition THEN

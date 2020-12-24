@@ -4,6 +4,8 @@
 #include "../definitions.h"
 #include "../symbol_table/symbol_table.h"
 
+#include <stdio.h>
+
 #ifndef LEFT_SYM1_NUM
 #define LEFT_SYM1_NUM 0b10000000
 #endif
@@ -98,6 +100,6 @@ expression_t * expression_get();
  * print expression
  * 
 */
-void print_expression(expression_t *expr);
+void print_expression(expression_t *expr, FILE *file);
 
 #endif

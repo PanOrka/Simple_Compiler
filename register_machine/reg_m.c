@@ -1,13 +1,21 @@
 #include "reg_m.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 reg_set reg_m_create() {
     char reg_id_arr[REG_SIZE] = REG_ID_SET;
     reg_set regs;
 
     for (int32_t i=0; i<REG_SIZE; ++i) {
-        regs.r[i].addr = ADDR_UNDEF;
-        regs.r[i].id = reg_id_arr[i];
-        regs.r[i].flags = REG_NO_FLAGS;
+        regs.r[i] = malloc(sizeof(reg));
+        if (!(regs.r[i])) {
+            fprintf(stderr, "[REG_M]: Couldn't allocate memory for register!\n");
+            exit(EXIT_FAILURE);
+        }
+        regs.r[i]->addr = ADDR_UNDEF;
+        regs.r[i]->id = reg_id_arr[i];
+        regs.r[i]->flags = REG_NO_FLAGS;
     }
 
     return regs;
@@ -22,7 +30,7 @@ reg_set reg_m_create() {
 #endif
 
 void reg_m_sort(reg_set *r_set, uint32_t idx, int32_t type) {
-    reg temp = r_set->r[idx];
+    reg *temp = r_set->r[idx];
 
     if (type == REG_M_SORT_UP) {
         for (uint32_t i=idx; i<REG_SIZE-1; ++i) {
@@ -41,28 +49,28 @@ void reg_m_sort(reg_set *r_set, uint32_t idx, int32_t type) {
 
 reg_allocator reg_m_get(reg_set *r_set, addr_t addr) {
     for (int32_t i=0; i<REG_SIZE; ++i) {
-        if (r_set->r[i].addr == addr) {
+        if (r_set->r[i]->addr == addr) {
             reg_m_sort(r_set, i, REG_M_SORT_UP);
 
-            return (reg_allocator){&(r_set->r[REG_SIZE-1]), i, true};
+            return (reg_allocator){r_set->r[REG_SIZE-1], i, true};
         }
     }
 
     reg_m_sort(r_set, 0, REG_M_SORT_UP);
-    return (reg_allocator){&(r_set->r[REG_SIZE-1]), 0, false};
+    return (reg_allocator){r_set->r[REG_SIZE-1], 0, false};
 }
 
 reg_allocator reg_m_LRU(reg_set *r_set) {
     reg_m_sort(r_set, 0, REG_M_SORT_UP);
 
-    return (reg_allocator){&(r_set->r[REG_SIZE-1]), 0, false};
+    return (reg_allocator){r_set->r[REG_SIZE-1], 0, false};
 }
 
 void reg_m_drop_addr(reg_set *r_set, addr_t addr) {
     for (int32_t i=0; i<REG_SIZE; ++i) {
-        if (r_set->r[i].addr == addr) {
-            r_set->r[i].addr = ADDR_UNDEF;
-            r_set->r[i].flags = REG_NO_FLAGS;
+        if (r_set->r[i]->addr == addr) {
+            r_set->r[i]->addr = ADDR_UNDEF;
+            r_set->r[i]->flags = REG_NO_FLAGS;
             reg_m_sort(r_set, i, REG_M_SORT_DOWN);
 
             return;

@@ -37,7 +37,7 @@ static void add_EXPR(expression_t *expr) {
         if (!(expr->mask & ASSIGN_SYM2_NUM) && !(expr->var_2[0].var->flags & SYMBOL_INITIALIZED)) {
             fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[0].var->identifier);
             fprintf(stderr, "[EXPRESSION]:\n");
-            print_expression(expr);
+            print_expression(expr, stderr);
             exit(EXIT_FAILURE);
         }
     } else {
@@ -49,13 +49,13 @@ static void add_EXPR(expression_t *expr) {
             if (!(expr->mask & LEFT_SYM2_NUM) && !(expr->var_2[1].var->flags & SYMBOL_INITIALIZED)) {
                 fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[1].var->identifier);
                 fprintf(stderr, "[EXPRESSION]:\n");
-                print_expression(expr);
+                print_expression(expr, stderr);
                 exit(EXIT_FAILURE);
             }
         } else if (!(expr->var_1[1].var->flags & SYMBOL_INITIALIZED)) {
             fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_1[1].var->identifier);
             fprintf(stderr, "[EXPRESSION]:\n");
-            print_expression(expr);
+            print_expression(expr, stderr);
             exit(EXIT_FAILURE);
         }
     }
@@ -66,13 +66,13 @@ static void add_EXPR(expression_t *expr) {
                 if (!(expr->mask & RIGHT_SYM2_NUM) && !(expr->var_2[2].var->flags & SYMBOL_INITIALIZED)) {
                     fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[2].var->identifier);
                     fprintf(stderr, "[EXPRESSION]:\n");
-                    print_expression(expr);
+                    print_expression(expr, stderr);
                     exit(EXIT_FAILURE);
                 }
             } else if (!(expr->var_1[2].var->flags & SYMBOL_INITIALIZED)) {
                 fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_1[2].var->identifier);
                 fprintf(stderr, "[EXPRESSION]:\n");
-                print_expression(expr);
+                print_expression(expr, stderr);
                 exit(EXIT_FAILURE);
             }
         }
@@ -117,6 +117,7 @@ void i_graph_execute(FILE *file) {
     // now it's just expressions
     while (idx) {
         expression_t *expr = idx->payload;
+        print_expression(expr, file);
         reg_allocator r = reg_m_get(regs, STACK_PTR);
         if (!r.was_allocated) {
             fprintf(file, "RESET %c\n", r.r->id);

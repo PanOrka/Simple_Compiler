@@ -1,7 +1,6 @@
 #include "expressions.h"
 #include "getters.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -107,50 +106,50 @@ expression_t * expression_get() {
     return temp;
 }
 
-static char print_arr[] = {'v', '+', '-', '*', '/', '%'};
+static char const print_arr[] = {'v', '+', '-', '*', '/', '%'};
 
-void print_expression(expression_t *expr) {
-    printf("%s", expr->var_1[0].var->identifier);
+void print_expression(expression_t *expr, FILE *file) {
+    fprintf(file, "%s", expr->var_1[0].var->identifier);
     if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
-        printf("(");
+        fprintf(file, "(");
         if (expr->mask & ASSIGN_SYM2_NUM) {
-            printf("%ld)", expr->var_2[0].num);
+            fprintf(file, "%ld)", expr->var_2[0].num);
         } else {
-            printf("%s)", expr->var_2[0].var->identifier);
+            fprintf(file, "%s)", expr->var_2[0].var->identifier);
         }
     }
-    printf(" := ");
+    fprintf(file, " := ");
 
     if (expr->mask & LEFT_SYM1_NUM) {
-        printf("%ld", expr->var_1[1].num);
+        fprintf(file, "%ld", expr->var_1[1].num);
     } else {
-        printf("%s", expr->var_1[1].var->identifier);
+        fprintf(file, "%s", expr->var_1[1].var->identifier);
         if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
-            printf("(");
+            fprintf(file, "(");
             if (expr->mask & LEFT_SYM2_NUM) {
-                printf("%ld)", expr->var_2[1].num);
+                fprintf(file, "%ld)", expr->var_2[1].num);
             } else {
-                printf("%s)", expr->var_2[1].var->identifier);
+                fprintf(file, "%s)", expr->var_2[1].var->identifier);
             }
         }
     }
 
     if (expr->type != expr_VALUE) {
-        printf(" %c ", print_arr[expr->type]);
+        fprintf(file, " %c ", print_arr[expr->type]);
         if (expr->mask & RIGHT_SYM1_NUM) {
-            printf("%ld", expr->var_1[2].num);
+            fprintf(file, "%ld", expr->var_1[2].num);
         } else {
-            printf("%s", expr->var_1[2].var->identifier);
+            fprintf(file, "%s", expr->var_1[2].var->identifier);
             if (expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) {
-                printf("(");
+                fprintf(file, "(");
                 if (expr->mask & RIGHT_SYM2_NUM) {
-                    printf("%ld)", expr->var_2[2].num);
+                    fprintf(file, "%ld)", expr->var_2[2].num);
                 } else {
-                    printf("%s)", expr->var_2[2].var->identifier);
+                    fprintf(file, "%s)", expr->var_2[2].var->identifier);
                 }
             }
         }
     }
 
-    printf("\n");
+    fprintf(file, "\n");
 }
