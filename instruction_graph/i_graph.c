@@ -41,7 +41,7 @@ static void add_EXPR(expression_t *expr) {
                 print_expression(expr, stderr);
                 exit(EXIT_FAILURE);
             } else {
-                expr->var_2[0].addr = expr->var_2[0].var->addr;
+                expr->var_2[0].addr = expr->var_2[0].var->addr[0];
                 expr->addr_mask |= ASSIGN_SYM2_ADDR;
             }
         }
@@ -61,7 +61,7 @@ static void add_EXPR(expression_t *expr) {
                     print_expression(expr, stderr);
                     exit(EXIT_FAILURE);
                 } else {
-                    expr->var_2[1].addr = expr->var_2[1].var->addr;
+                    expr->var_2[1].addr = expr->var_2[1].var->addr[0];
                     expr->addr_mask |= LEFT_SYM2_ADDR;
                 }
             }
@@ -71,7 +71,7 @@ static void add_EXPR(expression_t *expr) {
             print_expression(expr, stderr);
             exit(EXIT_FAILURE);
         } else {
-            expr->var_1[1].addr = expr->var_1[1].var->addr;
+            expr->var_1[1].addr = expr->var_1[1].var->addr[0];
             expr->addr_mask |= LEFT_SYM1_ADDR;
         }
     }
@@ -86,7 +86,7 @@ static void add_EXPR(expression_t *expr) {
                         print_expression(expr, stderr);
                         exit(EXIT_FAILURE);
                     } else {
-                        expr->var_2[2].addr = expr->var_2[2].var->addr;
+                        expr->var_2[2].addr = expr->var_2[2].var->addr[0];
                         expr->addr_mask |= RIGHT_SYM2_ADDR;
                     }
                 }
@@ -96,7 +96,7 @@ static void add_EXPR(expression_t *expr) {
                 print_expression(expr, stderr);
                 exit(EXIT_FAILURE);
             } else {
-                expr->var_1[2].addr = expr->var_1[2].var->addr;
+                expr->var_1[2].addr = expr->var_1[2].var->addr[0];
                 expr->addr_mask |= RIGHT_SYM1_ADDR;
             }
         }
