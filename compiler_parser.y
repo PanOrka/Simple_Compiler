@@ -227,7 +227,7 @@ int yyerror(char *s) {
     rewind(yyin);
     int line_ctr = 1;
     char c;
-    while ((c = fgetc(yyin)) != EOF && line_ctr != yylineno) {
+    while (line_ctr != yylineno && (c = fgetc(yyin)) != EOF) {
         if (c == '\n') {
             ++line_ctr;
         }
@@ -236,9 +236,9 @@ int yyerror(char *s) {
     if (line_ctr == yylineno) {
         fprintf(stderr, "Error in line: %d!\n", line_ctr);
         while ((c = fgetc(yyin)) != '\n') {
-            fprintf(stderr, "%c", c);
+            fprintf(stderr, "\033[0;32m%c", c);
         }
-        fprintf(stderr, "\n");
+        fprintf(stderr, "\n\033[0m");
     } else {
         fprintf(stderr, "[PARSER]: Something went wrong, line_ctr = %d!\n", line_ctr);
     }
