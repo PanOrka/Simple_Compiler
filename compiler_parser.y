@@ -125,7 +125,8 @@ line: %empty
 any: DECLARE declarations
    | BEGIN_P
    | identifier ASSIGN expression END_EXPR {
-       expression_t *expr = expression_get();
+       expression_t *expr = malloc(sizeof(expression_t));
+       expression_get(expr);
        // for debug purpose
        print_expression(expr, stdout);
        i_graph_add_instruction(expr, EXPR);

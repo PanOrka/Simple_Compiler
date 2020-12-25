@@ -26,6 +26,26 @@
 #define ASSIGN_SYM2_NUM 0b00000001
 #endif
 
+#ifndef LEFT_SYM1_ADDR
+#define LEFT_SYM1_ADDR 0b10000000
+#endif
+
+#ifndef LEFT_SYM2_ADDR
+#define LEFT_SYM2_ADDR 0b01000000
+#endif
+
+#ifndef RIGHT_SYM1_ADDR
+#define RIGHT_SYM1_ADDR 0b00100000
+#endif
+
+#ifndef RIGHT_SYM2_ADDR
+#define RIGHT_SYM2_ADDR 0b00010000
+#endif
+
+#ifndef ASSIGN_SYM2_ADDR
+#define ASSIGN_SYM2_ADDR 0b00000001
+#endif
+
 #ifndef EXPR_NONE
 #define EXPR_NONE 0b00000000
 #endif
@@ -40,8 +60,9 @@ typedef enum {
 } expr_type;
 
 typedef union {
-    symbol *var;
+    addr_t addr;
     int64_t num;
+    symbol *var;
 } value_t;
 
 typedef struct {
@@ -50,6 +71,7 @@ typedef struct {
     expr_type type;
     uint8_t mask;
     uint8_t spin;
+    uint8_t addr_mask;
 } expression_t;
 
 /**
@@ -91,9 +113,9 @@ void expression_set_type(expr_type type);
  * 
  * Get expression
  * 
- * RETURN: Copy of current expression allocated on heap
+ * RETURN: Copy current expression to given pointer
 */
-expression_t * expression_get();
+void expression_get(expression_t *expr);
 
 /**
  * 

@@ -94,16 +94,13 @@ void expression_set_type(expr_type type) {
     current.type = type;
 }
 
-expression_t * expression_get() {
-    expression_t *temp = malloc(sizeof(expression_t));
-    if (!temp) {
-        fprintf(stderr, "[EXPRESSIONS]: Couldn't allocate memory for expression!\n");
+void expression_get(expression_t *expr) {
+    if (!expr) {
+        fprintf(stderr, "[EXPRESSIONS]: NULLPTR!\n");
         exit(EXIT_FAILURE);
     }
-    memcpy(temp, &current, sizeof(expression_t));
+    memcpy(expr, &current, sizeof(expression_t));
     memset(&current, '\0', sizeof(expression_t));
-
-    return temp;
 }
 
 static char const print_arr[] = {'v', '+', '-', '*', '/', '%'};

@@ -34,46 +34,70 @@ static void add_to_list(void *payload, instruction_type i_type) {
 
 static void add_EXPR(expression_t *expr) {
     if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
-        if (!(expr->mask & ASSIGN_SYM2_NUM) && !(expr->var_2[0].var->flags & SYMBOL_INITIALIZED)) {
-            fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[0].var->identifier);
-            fprintf(stderr, "[EXPRESSION]:\n");
-            print_expression(expr, stderr);
-            exit(EXIT_FAILURE);
+        if (!(expr->mask & ASSIGN_SYM2_NUM)) {
+            if (!(expr->var_2[0].var->flags & SYMBOL_INITIALIZED)) {
+                fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[0].var->identifier);
+                fprintf(stderr, "[EXPRESSION]:\n");
+                print_expression(expr, stderr);
+                exit(EXIT_FAILURE);
+            } else {
+                expr->var_2[0].addr = expr->var_2[0].var->addr;
+                expr->addr_mask |= ASSIGN_SYM2_ADDR;
+            }
         }
     } else {
+        //
+        // LOOP ITERATORS CANNOT BE MODIFIED SO HANDLE IT HERE!!!!
+        //
         expr->var_1[0].var->flags |= SYMBOL_INITIALIZED;
     }
 
     if (!(expr->mask & LEFT_SYM1_NUM)) {
         if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
-            if (!(expr->mask & LEFT_SYM2_NUM) && !(expr->var_2[1].var->flags & SYMBOL_INITIALIZED)) {
-                fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[1].var->identifier);
-                fprintf(stderr, "[EXPRESSION]:\n");
-                print_expression(expr, stderr);
-                exit(EXIT_FAILURE);
+            if (!(expr->mask & LEFT_SYM2_NUM)) {
+                if (!(expr->var_2[1].var->flags & SYMBOL_INITIALIZED)) {
+                    fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[1].var->identifier);
+                    fprintf(stderr, "[EXPRESSION]:\n");
+                    print_expression(expr, stderr);
+                    exit(EXIT_FAILURE);
+                } else {
+                    expr->var_2[1].addr = expr->var_2[1].var->addr;
+                    expr->addr_mask |= LEFT_SYM2_ADDR;
+                }
             }
         } else if (!(expr->var_1[1].var->flags & SYMBOL_INITIALIZED)) {
             fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_1[1].var->identifier);
             fprintf(stderr, "[EXPRESSION]:\n");
             print_expression(expr, stderr);
             exit(EXIT_FAILURE);
+        } else {
+            expr->var_1[1].addr = expr->var_1[1].var->addr;
+            expr->addr_mask |= LEFT_SYM1_ADDR;
         }
     }
 
     if (expr->type != expr_VALUE) {
         if (!(expr->mask & RIGHT_SYM1_NUM)) {
             if (expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) {
-                if (!(expr->mask & RIGHT_SYM2_NUM) && !(expr->var_2[2].var->flags & SYMBOL_INITIALIZED)) {
-                    fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[2].var->identifier);
-                    fprintf(stderr, "[EXPRESSION]:\n");
-                    print_expression(expr, stderr);
-                    exit(EXIT_FAILURE);
+                if (!(expr->mask & RIGHT_SYM2_NUM)) {
+                    if (!(expr->var_2[2].var->flags & SYMBOL_INITIALIZED)) {
+                        fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_2[2].var->identifier);
+                        fprintf(stderr, "[EXPRESSION]:\n");
+                        print_expression(expr, stderr);
+                        exit(EXIT_FAILURE);
+                    } else {
+                        expr->var_2[2].addr = expr->var_2[2].var->addr;
+                        expr->addr_mask |= RIGHT_SYM2_ADDR;
+                    }
                 }
             } else if (!(expr->var_1[2].var->flags & SYMBOL_INITIALIZED)) {
                 fprintf(stderr, "[I_GRAPH]: Symbol %s is not initialized!\n", expr->var_1[2].var->identifier);
                 fprintf(stderr, "[EXPRESSION]:\n");
                 print_expression(expr, stderr);
                 exit(EXIT_FAILURE);
+            } else {
+                expr->var_1[2].addr = expr->var_1[2].var->addr;
+                expr->addr_mask |= RIGHT_SYM1_ADDR;
             }
         }
     }
