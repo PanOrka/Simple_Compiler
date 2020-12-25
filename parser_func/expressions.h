@@ -56,7 +56,13 @@ typedef enum {
     expr_SUB,
     expr_MUL,
     expr_DIV,
-    expr_MOD
+    expr_MOD,
+    cond_IS_EQUAL,
+    cond_IS_N_EQUAL,
+    cond_LESS,
+    cond_GREATER,
+    cond_LESS_EQ,
+    cond_GREATER_EQ
 } expr_type;
 
 typedef union {

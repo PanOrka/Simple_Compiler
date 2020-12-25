@@ -6,6 +6,8 @@ int yylex();
 extern FILE *yyin;
 int yyerror(char*);
 
+extern int yylineno;
+
 static FILE *compiler_out;
 
 #include "parser_func/declarations.h"
@@ -182,12 +184,24 @@ expression: value {
           }
 ;
 
-condition: value IS_EQUAL value
-         | value IS_N_EQUAL value
-         | value LESS value
-         | value GREATER value
-         | value LESS_EQ value
-         | value GREATER_EQ value
+condition: value IS_EQUAL value {
+             expression_set_type((expr_type)cond_IS_EQUAL);
+         }
+         | value IS_N_EQUAL value {
+             expression_set_type((expr_type)cond_IS_N_EQUAL);
+         }
+         | value LESS value {
+             expression_set_type((expr_type)cond_LESS);
+         }
+         | value GREATER value {
+             expression_set_type((expr_type)cond_GREATER);
+         }
+         | value LESS_EQ value {
+             expression_set_type((expr_type)cond_LESS_EQ);
+         }
+         | value GREATER_EQ value {
+             expression_set_type((expr_type)cond_GREATER_EQ);
+         }
 ;
 
 value: num {
@@ -210,6 +224,25 @@ identifier: pidentifier {
 
 int yyerror(char *s) {
     printf("%s\n", s);
+    rewind(yyin);
+    int line_ctr = 1;
+    char c;
+    while ((c = fgetc(yyin)) != EOF && line_ctr != yylineno) {
+        if (c == '\n') {
+            ++line_ctr;
+        }
+    }
+
+    if (line_ctr == yylineno) {
+        fprintf(stderr, "Error in line: %d!\n", line_ctr);
+        while ((c = fgetc(yyin)) != '\n') {
+            fprintf(stderr, "%c", c);
+        }
+        fprintf(stderr, "\n");
+    } else {
+        fprintf(stderr, "[PARSER]: Something went wrong, line_ctr = %d!\n", line_ctr);
+    }
+
     return 0;
 }
 
