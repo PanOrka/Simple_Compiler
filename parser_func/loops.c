@@ -2,7 +2,7 @@
 
 #include "getters.h"
 
-void loop_get(char const *iter, for_loop_t *loop) {
+void loop_get(char *iter, for_loop_t *loop) {
     if (!loop) {
         fprintf(stderr, "[LOOP]: NULLPTR!\n");
         exit(EXIT_FAILURE);

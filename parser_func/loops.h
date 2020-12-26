@@ -28,6 +28,6 @@ typedef struct {
  * 
  * ARGUMENTS: char * - iterator, for_loop_t * - allocated place for loop
 */
-void loop_get(char const *iter, for_loop_t *loop);
+void loop_get(char *iter, for_loop_t *loop);
 
 #endif
