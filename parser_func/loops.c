@@ -3,6 +3,11 @@
 #include "getters.h"
 
 void loop_get(char const *iter, for_loop_t *loop) {
+    if (!loop) {
+        fprintf(stderr, "[LOOP]: NULLPTR!\n");
+        exit(EXIT_FAILURE);
+    }
+
     symbol_table *s_table = get_symbol_table();
     symbol *hide = symbol_table_find_id(s_table, iter, true, SYMBOL_NO_HIDDEN);
 

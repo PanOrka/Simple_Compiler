@@ -4,7 +4,18 @@
 #include <stdio.h>
 
 typedef enum {
-    EXPR = 0
+    i_EXPR = 0,
+    i_IF,
+    i_ELSE,
+    i_ENDIF,
+    i_WHILE,
+    i_ENDWHILE,
+    i_REPEAT,
+    i_UNTIL,
+    i_FOR,
+    i_ENDFOR,
+    i_READ,
+    i_WRITE
 } instruction_type;
 
 typedef struct i_graph i_graph;

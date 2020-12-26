@@ -4,6 +4,9 @@
 #include "../parser_func/getters.h"
 #include "../definitions.h"
 
+extern void add_EXPR(expression_t *expr);
+
+
 static i_graph *start = NULL;
 static i_graph *end = NULL;
 
@@ -34,7 +37,7 @@ void add_to_list(void *payload, instruction_type i_type) {
 
 void i_graph_add_instruction(void *payload, instruction_type i_type) {
     switch (i_type) {
-        case EXPR:
+        case i_EXPR:
             add_EXPR(payload);
             break;
         default:
@@ -69,6 +72,7 @@ void i_graph_execute(FILE *file) {
     while (idx) {
         expression_t *expr = idx->payload;
         print_expression(expr, file);
+        fprintf(file, "\n");
         reg_allocator r = reg_m_get(regs, STACK_PTR);
         if (!r.was_allocated) {
             fprintf(file, "RESET %c\n", r.r->id);

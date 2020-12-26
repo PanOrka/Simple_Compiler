@@ -12,6 +12,7 @@ static FILE *compiler_out;
 
 #include "parser_func/declarations.h"
 #include "parser_func/expressions.h"
+#include "parser_func/loops.h"
 #include "instruction_graph/i_graph.h"
 %}
 
@@ -129,20 +130,109 @@ any: DECLARE declarations
    | identifier ASSIGN expression END_EXPR {
        expression_t *expr = malloc(sizeof(expression_t));
        expression_get(expr);
+
        // for debug purpose
        print_expression(expr, stdout);
-       i_graph_add_instruction(expr, EXPR);
+       fprintf(stdout, ";\n");
+       ////////////////////
+
+       i_graph_add_instruction(expr, i_EXPR);
    }
-   | IF condition THEN
-   | ELSE
-   | ENDIF
-   | WHILE condition DO
-   | ENDWHILE
-   | REPEAT
-   | UNTIL condition END_EXPR
-   | FOR pidentifier FROM value TO value DO
-   | FOR pidentifier FROM value DOWNTO value DO
-   | ENDFOR
+   | IF condition THEN {
+       expression_t *expr = malloc(sizeof(expression_t));
+       expression_get(expr);
+
+       // for debug purpose
+       fprintf(stdout, "IF ");
+       print_expression(expr, stdout);
+       fprintf(stdout, " THEN\n");
+       ////////////////////
+
+       i_graph_add_instruction(expr, i_IF);
+   }
+   | ELSE {
+       // for debug purpose
+       fprintf(stdout, "ELSE\n");
+       ////////////////////
+
+       i_graph_add_instruction(NULL, i_ELSE);
+   }
+   | ENDIF {
+       // for debug purpose
+       fprintf(stdout, "ENDIF\n");
+       ////////////////////
+
+       i_graph_add_instruction(NULL, i_ENDIF);
+   }
+   | WHILE condition DO {
+       expression_t *expr = malloc(sizeof(expression_t));
+       expression_get(expr);
+
+       // for debug purpose
+       fprintf(stdout, "WHILE ");
+       print_expression(expr, stdout);
+       fprintf(stdout, " DO\n");
+       ////////////////////
+
+       i_graph_add_instruction(expr, i_WHILE);
+   }
+   | ENDWHILE {
+       // for debug purpose
+       fprintf(stdout, "ENDWHILE\n");
+       ////////////////////
+
+       i_graph_add_instruction(NULL, i_ENDWHILE);
+   }
+   | REPEAT {
+       // for debug purpose
+       fprintf(stdout, "REPEAT\n");
+       ////////////////////
+
+       i_graph_add_instruction(NULL, i_REPEAT);
+   }
+   | UNTIL condition END_EXPR {
+       expression_t *expr = malloc(sizeof(expression_t));
+       expression_get(expr);
+
+       // for debug purpose
+       fprintf(stdout, "UNTIL ");
+       print_expression(expr, stdout);
+       fprintf(stdout, ";\n");
+       ////////////////////
+
+       i_graph_add_instruction(expr, i_UNTIL);
+   }
+   | FOR pidentifier FROM value TO value DO {
+       for_loop_t *loop = malloc(sizeof(for_loop_t));
+       loop_get($2, loop);
+
+       // for debug purpose
+       fprintf(stdout, "FOR %s ", $2);
+       print_expression(loop->range_vars, stdout);
+       fprintf(stdout, " DO (TO LOOP)\n");
+       ////////////////////
+
+       i_graph_add_instruction(loop, i_FOR);
+   }
+   | FOR pidentifier FROM value DOWNTO value DO {
+       for_loop_t *loop = malloc(sizeof(for_loop_t));
+       loop_get($2, loop);
+
+       // for debug purpose
+       fprintf(stdout, "FOR %s ", $2);
+       print_expression(loop->range_vars, stdout);
+       fprintf(stdout, " DO (DOWNTO LOOP)\n");
+       ////////////////////
+
+       i_graph_add_instruction(loop, i_FOR);
+   }
+   | ENDFOR {
+       // for debug purpose
+       fprintf(stdout, "ENDFOR\n");
+       ////////////////////
+
+       i_graph_add_instruction(NULL, i_ENDFOR);
+   }
    | READ identifier END_EXPR
    | WRITE value END_EXPR
    | END {

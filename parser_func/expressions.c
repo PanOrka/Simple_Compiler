@@ -103,7 +103,7 @@ void expression_get(expression_t *expr) {
     memset(&current, '\0', sizeof(expression_t));
 }
 
-static char const print_arr[] = {'v', '+', '-', '*', '/', '%'};
+static char const *print_arr[] = {"v", "+", "-", "*", "/", "%%", "=", "!=", "<", ">", "<=", ">="};
 
 void print_expression(expression_t *expr, FILE *file) {
     fprintf(file, "%s", expr->var_1[0].var->identifier);
@@ -115,7 +115,11 @@ void print_expression(expression_t *expr, FILE *file) {
             fprintf(file, "%s)", expr->var_2[0].var->identifier);
         }
     }
-    fprintf(file, " := ");
+    if (expr->type < cond_IS_EQUAL) {
+        fprintf(file, " := ");
+    } else {
+        fprintf(file, " %s ", print_arr[expr->type]);
+    }
 
     if (expr->mask & LEFT_SYM1_NUM) {
         fprintf(file, "%ld", expr->var_1[1].num);
@@ -132,7 +136,7 @@ void print_expression(expression_t *expr, FILE *file) {
     }
 
     if (expr->type != expr_VALUE) {
-        fprintf(file, " %c ", print_arr[expr->type]);
+        fprintf(file, " %s ", print_arr[expr->type]);
         if (expr->mask & RIGHT_SYM1_NUM) {
             fprintf(file, "%ld", expr->var_1[2].num);
         } else {
@@ -147,6 +151,4 @@ void print_expression(expression_t *expr, FILE *file) {
             }
         }
     }
-
-    fprintf(file, "\n");
 }
