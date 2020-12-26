@@ -5,6 +5,14 @@
 
 #include "i_graph.h"
 
+#ifndef i_POP
+#define i_POP 1
+#endif
+
+#ifndef i_NOPOP
+#define i_NOPOP 0
+#endif
+
 typedef struct i_level i_level;
 
 typedef instruction_type branch_type;

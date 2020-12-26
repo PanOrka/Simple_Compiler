@@ -13,12 +13,12 @@ void i_level_add(branch_type type) {
 
         if (start) {
             new_element->prev = end;
-            end = new_element;
         } else {
             new_element->prev = NULL;
             start = new_element;
-            end = new_element;
         }
+
+        end = new_element;
     } else {
         fprintf(stderr, "[I_LEVEL]: Couldn't allocate memory for I_LVL node!\n");
         exit(EXIT_FAILURE);
@@ -31,19 +31,18 @@ branch_type i_level_pop(bool pop) {
         exit(EXIT_FAILURE);
     }
 
+    branch_type temp = end->type;
     if (pop) {
-        branch_type temp = end->type;
-        i_level *to_free = end;
-        
+        i_level *to_free = end;        
         if (!(end->prev)) {
             start = NULL;
         }
 
         end = end->prev;
-
+        free(to_free);
     }
 
-    return end->type;
+    return temp;
 }
 
 bool i_level_is_empty() {

@@ -6,7 +6,8 @@ all:
 	vector/vector.c symbol_table/symbol_table.c register_machine/reg_m.c \
 	parser_func/declarations.c parser_func/expressions.c parser_func/getters.c \
 	instruction_graph/i_graph.c instruction_graph/expr.c parser_func/loops.c \
-	instruction_graph/expr_checker.c -o compiler
+	instruction_graph/expr_checker.c instruction_graph/if.c instruction_graph/i_level.c \
+	-o compiler
 
 clean:
 	rm -rf compiler_parser.c compiler_parser.h compiler_lexer.c prelexer.c

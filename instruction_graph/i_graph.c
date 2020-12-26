@@ -5,6 +5,34 @@
 #include "../parser_func/loops.h"
 #include "../definitions.h"
 
+static i_graph *start = NULL;
+static i_graph *end = NULL;
+
+void add_to_list(void *payload, instruction_type i_type) {
+    i_graph *new_element = malloc(sizeof(i_graph));
+    if (new_element) {
+        new_element->payload = payload;
+        new_element->i_type = i_type;
+
+        if (start) {
+            end->next = new_element;
+
+            new_element->next = NULL;
+            new_element->prev = end;
+        } else {
+            new_element->prev = NULL;
+            new_element->next = NULL;
+            start = new_element;
+        }
+
+        end = new_element;
+    } else {
+        fprintf(stderr, "[I_GRAPH]: Couldn't allocate memory for I_Graph node!\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+
 extern void add_EXPR(expression_t *expr);
 
 extern void add_IF(expression_t *expr);
@@ -23,34 +51,6 @@ extern void add_ENDFOR();
 extern void add_READ(expression_t *expr);
 extern void add_WRITE(expression_t *expr);
 
-
-static i_graph *start = NULL;
-static i_graph *end = NULL;
-
-void add_to_list(void *payload, instruction_type i_type) {
-    i_graph *new_element = malloc(sizeof(i_graph));
-    if (new_element) {
-        new_element->payload = payload;
-        new_element->i_type = i_type;
-
-        if (start) {
-            end->next = new_element;
-
-            new_element->next = NULL;
-            new_element->prev = end;
-
-            end = new_element;
-        } else {
-            new_element->prev = NULL;
-            new_element->next = NULL;
-            start = new_element;
-            end = new_element;
-        }
-    } else {
-        fprintf(stderr, "[I_GRAPH]: Couldn't allocate memory for I_Graph node!\n");
-        exit(EXIT_FAILURE);
-    }
-}
 
 void i_graph_add_instruction(void *payload, instruction_type i_type) {
     switch (i_type) {
