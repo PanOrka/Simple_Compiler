@@ -14,12 +14,20 @@ int symbol_comparator_eq_id(void *a, void *b) {
     symbol const * const _a = (symbol *)a;
     symbol const * const _b = (symbol *)b;
 
+    if (!(_a->identifier && _b->identifier)) {
+        return 0;
+    }
+
     return strcmp(_a->identifier, _b->identifier) == 0;
 }
 
 int symbol_comparator_eq_id_flags(void *a, void *b) {
     symbol const * const _a = (symbol *)a;
     symbol const * const _b = (symbol *)b;
+
+    if (!(_a->identifier && _b->identifier)) {
+        return 0;
+    }
 
     return strcmp(_a->identifier, _b->identifier) == 0 && (_a->flags & _b->flags);
 }
