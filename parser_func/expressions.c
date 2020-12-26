@@ -13,12 +13,12 @@ void expression_set_var_arr_var(char *symbol_1, char *symbol_2) {
     }
     symbol_table *s_table = get_symbol_table();
 
-    if (!(current.var_1[current.spin].var = symbol_table_find_id(s_table, symbol_1, false, SYMBOL_NO_FLAGS))) {
+    if (!(current.var_1[current.spin].var = symbol_table_find_id(s_table, symbol_1, true, SYMBOL_NO_HIDDEN))) {
         fprintf(stderr, "[EXPRESSIONS]: Symbol used but not declared, id: %s!\n", symbol_1);
         exit(EXIT_FAILURE);
     }
 
-    if (!(current.var_2[current.spin].var = symbol_table_find_id(s_table, symbol_2, false, SYMBOL_NO_FLAGS))) {
+    if (!(current.var_2[current.spin].var = symbol_table_find_id(s_table, symbol_2, true, SYMBOL_NO_HIDDEN))) {
         fprintf(stderr, "[EXPRESSIONS]: Symbol used but not declared, id: %s!\n", symbol_2);
         exit(EXIT_FAILURE);
     }
@@ -29,7 +29,7 @@ void expression_set_var_arr_var(char *symbol_1, char *symbol_2) {
 }
 
 void expression_set_var_arr_num(char *symbol_1, int64_t symbol_2) {
-    if (!(current.var_1[current.spin].var = symbol_table_find_id(get_symbol_table(), symbol_1, false, SYMBOL_NO_FLAGS))) {
+    if (!(current.var_1[current.spin].var = symbol_table_find_id(get_symbol_table(), symbol_1, true, SYMBOL_NO_HIDDEN))) {
         fprintf(stderr, "[EXPRESSIONS]: Symbol used but not declared, id: %s!\n", symbol_1);
         exit(EXIT_FAILURE);
     }
@@ -60,7 +60,7 @@ void expression_set_var(char *symbol_1) {
         exit(EXIT_FAILURE);
     }
 
-    if (!(current.var_1[current.spin].var = symbol_table_find_id(get_symbol_table(), symbol_1, false, SYMBOL_NO_FLAGS))) {
+    if (!(current.var_1[current.spin].var = symbol_table_find_id(get_symbol_table(), symbol_1, true, SYMBOL_NO_HIDDEN))) {
         fprintf(stderr, "[EXPRESSIONS]: Symbol used but not declared, id: %s!\n", symbol_1);
         exit(EXIT_FAILURE);
     }

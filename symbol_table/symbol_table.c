@@ -21,7 +21,7 @@ int symbol_comparator_eq_id_flags(void *a, void *b) {
     symbol const * const _a = (symbol *)a;
     symbol const * const _b = (symbol *)b;
 
-    return strcmp(_a->identifier, _b->identifier) == 0 && _a->flags == _b->flags;
+    return strcmp(_a->identifier, _b->identifier) == 0 && (_a->flags & _b->flags);
 }
 
 symbol * symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_flags, uint8_t flags) {
@@ -51,7 +51,7 @@ int symbol_comparator_eq_addr_flags(void *a, void *b) {
     symbol const * const _a = (symbol *)a;
     symbol const * const _b = (symbol *)b;
 
-    return _a->addr[0] <= _b->addr[0] && _b->addr[1] < _a->addr[1] && _a->flags == _b->flags;
+    return _a->addr[0] <= _b->addr[0] && _b->addr[1] < _a->addr[1] && (_a->flags & _b->flags);
 }
 
 symbol * symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_flags, uint8_t flags) {
@@ -70,7 +70,7 @@ symbol * symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_fla
     return element_found;
 }
 
-void symbol_table_add(symbol_table *s_table, const char *identifier, add_info _add_info, size_t size, uint8_t flags) {
+symbol * symbol_table_add(symbol_table *s_table, const char *identifier, add_info _add_info, size_t size, uint8_t flags) {
     if (size <= 0) {
         fprintf(stderr, "[symbol_table]: ADD symbol got size <= 0, size = %lu!\n", size);
         exit(EXIT_FAILURE);
@@ -86,6 +86,8 @@ void symbol_table_add(symbol_table *s_table, const char *identifier, add_info _a
     };
 
     VECTOR_ADD(s_table->v, new_symbol);
+
+    return VECTOR_POP(s_table->v, NO_POP);
 }
 
 symbol symbol_table_pop(symbol_table *s_table) {

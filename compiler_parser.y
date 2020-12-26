@@ -62,8 +62,8 @@ static FILE *compiler_out;
 */
 %token FOR
 %token FROM
-%token TO
-%token DOWNTO
+%left TO
+%left DOWNTO
 %token ENDFOR
 
 /*
