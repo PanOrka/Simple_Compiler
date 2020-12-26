@@ -6,8 +6,8 @@
 #include "../symbol_table/symbol_table.h"
 
 typedef enum {
-    TO = 0,
-    DOWNTO
+    loop_TO = 0,
+    loop_DOWNTO
 } loop_type;
 
 typedef union {

@@ -205,10 +205,11 @@ any: DECLARE declarations
    | FOR pidentifier FROM value TO value DO {
        for_loop_t *loop = malloc(sizeof(for_loop_t));
        loop_get($2, loop);
+       loop->type = loop_TO;
 
        // for debug purpose
        fprintf(stdout, "FOR %s ", $2);
-       print_expression(loop->range_vars, stdout);
+       print_expression(&(loop->range_vars), stdout);
        fprintf(stdout, " DO (TO LOOP)\n");
        ////////////////////
 
@@ -217,10 +218,11 @@ any: DECLARE declarations
    | FOR pidentifier FROM value DOWNTO value DO {
        for_loop_t *loop = malloc(sizeof(for_loop_t));
        loop_get($2, loop);
+       loop->type = loop_DOWNTO
 
        // for debug purpose
        fprintf(stdout, "FOR %s ", $2);
-       print_expression(loop->range_vars, stdout);
+       print_expression(&(loop->range_vars), stdout);
        fprintf(stdout, " DO (DOWNTO LOOP)\n");
        ////////////////////
 
