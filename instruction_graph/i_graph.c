@@ -2,9 +2,26 @@
 
 #include "../parser_func/expressions.h"
 #include "../parser_func/getters.h"
+#include "../parser_func/loops.h"
 #include "../definitions.h"
 
 extern void add_EXPR(expression_t *expr);
+
+extern void add_IF(expression_t *expr);
+extern void add_ELSE();
+extern void add_ENDIF();
+
+extern void add_WHILE(expression_t *expr);
+extern void add_ENDWHILE();
+
+extern void add_REPEAT();
+extern void add_UNTIL(expression_t *expr);
+
+extern void add_FOR(for_loop_t *loop);
+extern void add_ENDFOR();
+
+extern void add_READ(expression_t *expr);
+extern void add_WRITE(expression_t *expr);
 
 
 static i_graph *start = NULL;
@@ -39,6 +56,39 @@ void i_graph_add_instruction(void *payload, instruction_type i_type) {
     switch (i_type) {
         case i_EXPR:
             add_EXPR(payload);
+            break;
+        case i_IF:
+            add_IF(payload);
+            break;
+        case i_ELSE:
+            add_ELSE();
+            break;
+        case i_ENDIF:
+            add_ENDIF();
+            break;
+        case i_WHILE:
+            add_WHILE(payload);
+            break;
+        case i_ENDWHILE:
+            add_ENDWHILE();
+            break;
+        case i_REPEAT:
+            add_REPEAT();
+            break;
+        case i_UNTIL:
+            add_UNTIL(payload);
+            break;
+        case i_FOR:
+            add_FOR(payload);
+            break;
+        case i_ENDFOR:
+            add_ENDFOR();
+            break;
+        case i_READ:
+            add_READ(payload);
+            break;
+        case i_WRITE:
+            add_WRITE(payload);
             break;
         default:
             fprintf(stderr, "Unknown type of instruction: %d!\n", i_type);
