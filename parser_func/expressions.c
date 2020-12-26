@@ -113,7 +113,7 @@ void expression_get(expression_t *expr) {
 static char const *print_arr[] = {"v", "+", "-", "*", "/", "%%", "=", "!=", "<", ">", "<=", ">=", ":"};
 
 void print_expression(expression_t *expr, FILE *file) {
-    if (expr->type < cond_IS_EQUAL) {
+    if (expr->type < cond_IS_EQUAL || expr->type == expr_READ) {
         fprintf(file, "%s", expr->var_1[0].var->identifier);
         if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
             fprintf(file, "(");
@@ -124,35 +124,39 @@ void print_expression(expression_t *expr, FILE *file) {
             }
         }
 
-        fprintf(file, " := ");
-    }
-
-    if (expr->mask & LEFT_SYM1_NUM) {
-        fprintf(file, "%ld", expr->var_1[1].num);
-    } else {
-        fprintf(file, "%s", expr->var_1[1].var->identifier);
-        if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
-            fprintf(file, "(");
-            if (expr->mask & LEFT_SYM2_NUM) {
-                fprintf(file, "%ld)", expr->var_2[1].num);
-            } else {
-                fprintf(file, "%s)", expr->var_2[1].var->identifier);
-            }
+        if (expr->type < cond_IS_EQUAL) {
+            fprintf(file, " := ");
         }
     }
 
-    if (expr->type != expr_VALUE) {
-        fprintf(file, " %s ", print_arr[expr->type]);
-        if (expr->mask & RIGHT_SYM1_NUM) {
-            fprintf(file, "%ld", expr->var_1[2].num);
+    if (expr->type != expr_READ) {
+        if (expr->mask & LEFT_SYM1_NUM) {
+            fprintf(file, "%ld", expr->var_1[1].num);
         } else {
-            fprintf(file, "%s", expr->var_1[2].var->identifier);
-            if (expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) {
+            fprintf(file, "%s", expr->var_1[1].var->identifier);
+            if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
                 fprintf(file, "(");
-                if (expr->mask & RIGHT_SYM2_NUM) {
-                    fprintf(file, "%ld)", expr->var_2[2].num);
+                if (expr->mask & LEFT_SYM2_NUM) {
+                    fprintf(file, "%ld)", expr->var_2[1].num);
                 } else {
-                    fprintf(file, "%s)", expr->var_2[2].var->identifier);
+                    fprintf(file, "%s)", expr->var_2[1].var->identifier);
+                }
+            }
+        }
+
+        if (expr->type != expr_VALUE && expr->type != expr_WRITE) {
+            fprintf(file, " %s ", print_arr[expr->type]);
+            if (expr->mask & RIGHT_SYM1_NUM) {
+                fprintf(file, "%ld", expr->var_1[2].num);
+            } else {
+                fprintf(file, "%s", expr->var_1[2].var->identifier);
+                if (expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) {
+                    fprintf(file, "(");
+                    if (expr->mask & RIGHT_SYM2_NUM) {
+                        fprintf(file, "%ld)", expr->var_2[2].num);
+                    } else {
+                        fprintf(file, "%s)", expr->var_2[2].var->identifier);
+                    }
                 }
             }
         }

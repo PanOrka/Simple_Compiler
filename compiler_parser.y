@@ -235,8 +235,32 @@ any: DECLARE declarations
 
        i_graph_add_instruction(NULL, i_ENDFOR);
    }
-   | READ identifier END_EXPR
-   | WRITE value END_EXPR
+   | READ assignment END_EXPR {
+       expression_t *expr = malloc(sizeof(expression_t));
+       expression_get(expr);
+
+       // for debug purpose
+       expr->type = expr_READ;
+       fprintf(stdout, "READ ");
+       print_expression(expr, stdout);
+       fprintf(stdout, ";\n");
+       ////////////////////
+
+       i_graph_add_instruction(expr, i_READ);
+   }
+   | WRITE value END_EXPR {
+       expression_t *expr = malloc(sizeof(expression_t));
+       expression_get(expr);
+
+       // for debug purpose
+       expr->type = expr_WRITE;
+       fprintf(stdout, "WRITE ");
+       print_expression(expr, stdout);
+       fprintf(stdout, ";\n");
+       ////////////////////
+
+       i_graph_add_instruction(expr, i_WRITE);
+   }
    | END {
        //i_graph_execute(compiler_out);
    }

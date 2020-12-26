@@ -40,9 +40,9 @@ void i_graph_add_instruction(void *payload, instruction_type i_type) {
         case i_EXPR:
             add_EXPR(payload);
             break;
-        // default:
-        //     fprintf(stderr, "Unknown type of instruction: %d!\n", i_type);
-        //     exit(EXIT_FAILURE);
+        default:
+            fprintf(stderr, "Unknown type of instruction: %d!\n", i_type);
+            exit(EXIT_FAILURE);
     }
 }
 

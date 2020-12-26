@@ -63,7 +63,9 @@ typedef enum {
     cond_GREATER,
     cond_LESS_EQ,
     cond_GREATER_EQ,
-    loop_FOR // this is just for correct print, we don't need it rly
+    loop_FOR, // this is just for correct print, we don't need it rly
+    expr_READ, // same as above
+    expr_WRITE
 } expr_type;
 
 typedef union {
