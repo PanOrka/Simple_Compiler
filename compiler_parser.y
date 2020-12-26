@@ -218,7 +218,7 @@ any: DECLARE declarations
    | FOR pidentifier FROM value DOWNTO value DO {
        for_loop_t *loop = malloc(sizeof(for_loop_t));
        loop_get($2, loop);
-       loop->type = loop_DOWNTO
+       loop->type = loop_DOWNTO;
 
        // for debug purpose
        fprintf(stdout, "FOR %s ", $2);
