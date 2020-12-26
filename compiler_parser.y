@@ -86,22 +86,22 @@ static FILE *compiler_out;
 /*
 // OPERATORS & Extra Symbols
 */
-%left ASSIGN // :=
-%token END_EXPR // ;
-
 %left ADD // +
 %left SUB // -
 %left MUL // *
 %left DIV // /
 %left MOD // %
 
-%token IS_EQUAL // =
-%token IS_N_EQUAL // !=
+%left ASSIGN // :=
+%token END_EXPR // ;
 
-%token LESS // <
-%token GREATER // >
-%token LESS_EQ // <=
-%token GREATER_EQ // >=
+%left IS_EQUAL // =
+%left IS_N_EQUAL // !=
+
+%left LESS // <
+%left GREATER // >
+%left LESS_EQ // <=
+%left GREATER_EQ // >=
 
 %token L_BRACE // (
 %token R_BRACE // )
@@ -127,7 +127,7 @@ line: %empty
 
 any: DECLARE declarations
    | BEGIN_P
-   | identifier ASSIGN expression END_EXPR {
+   | assignment ASSIGN expression END_EXPR {
        expression_t *expr = malloc(sizeof(expression_t));
        expression_get(expr);
 
@@ -206,6 +206,7 @@ any: DECLARE declarations
        for_loop_t *loop = malloc(sizeof(for_loop_t));
        loop_get($2, loop);
        loop->type = loop_TO;
+       loop->range_vars.type = loop_FOR;
 
        // for debug purpose
        fprintf(stdout, "FOR %s ", $2);
@@ -219,6 +220,7 @@ any: DECLARE declarations
        for_loop_t *loop = malloc(sizeof(for_loop_t));
        loop_get($2, loop);
        loop->type = loop_DOWNTO;
+       loop->range_vars.type = loop_FOR;
 
        // for debug purpose
        fprintf(stdout, "FOR %s ", $2);
@@ -238,8 +240,22 @@ any: DECLARE declarations
    | READ identifier END_EXPR
    | WRITE value END_EXPR
    | END {
-       i_graph_execute(compiler_out);
+       //i_graph_execute(compiler_out);
    }
+;
+
+assignment: pidentifier {
+              expression_spin_reduce();
+              expression_set_var($1);
+          }
+          | pidentifier L_BRACE pidentifier R_BRACE {
+              expression_spin_reduce();
+              expression_set_var_arr_var($1, $3);
+          }
+          | pidentifier L_BRACE num R_BRACE {
+              expression_spin_reduce();
+              expression_set_var_arr_num($1, $3);
+          }
 ;
 
 declarations: declarations COMA pidentifier {

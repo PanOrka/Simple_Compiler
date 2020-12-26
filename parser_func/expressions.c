@@ -4,7 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-static expression_t current;
+static expression_t current = {
+    .spin = 1
+};
 
 void expression_set_var_arr_var(char *symbol_1, char *symbol_2) {
     if (current.spin >= 3) {
@@ -83,7 +85,7 @@ void expression_set_num(int64_t symbol_1) {
             current.mask |= RIGHT_SYM1_NUM;
             break;
         default:
-            fprintf(stderr, "[EXPRESSIONS]: Wrong spin value!\n");
+            fprintf(stderr, "[EXPRESSIONS]: Wrong spin value: %d!\n", current.spin);
             exit(EXIT_FAILURE);
     }
 
@@ -94,6 +96,10 @@ void expression_set_type(expr_type type) {
     current.type = type;
 }
 
+void expression_spin_reduce() {
+    --(current.spin);
+}
+
 void expression_get(expression_t *expr) {
     if (!expr) {
         fprintf(stderr, "[EXPRESSIONS]: NULLPTR!\n");
@@ -101,24 +107,24 @@ void expression_get(expression_t *expr) {
     }
     memcpy(expr, &current, sizeof(expression_t));
     memset(&current, '\0', sizeof(expression_t));
+    current.spin = 1;
 }
 
-static char const *print_arr[] = {"v", "+", "-", "*", "/", "%%", "=", "!=", "<", ">", "<=", ">="};
+static char const *print_arr[] = {"v", "+", "-", "*", "/", "%%", "=", "!=", "<", ">", "<=", ">=", ":"};
 
 void print_expression(expression_t *expr, FILE *file) {
-    fprintf(file, "%s", expr->var_1[0].var->identifier);
-    if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
-        fprintf(file, "(");
-        if (expr->mask & ASSIGN_SYM2_NUM) {
-            fprintf(file, "%ld)", expr->var_2[0].num);
-        } else {
-            fprintf(file, "%s)", expr->var_2[0].var->identifier);
-        }
-    }
     if (expr->type < cond_IS_EQUAL) {
+        fprintf(file, "%s", expr->var_1[0].var->identifier);
+        if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
+            fprintf(file, "(");
+            if (expr->mask & ASSIGN_SYM2_NUM) {
+                fprintf(file, "%ld)", expr->var_2[0].num);
+            } else {
+                fprintf(file, "%s)", expr->var_2[0].var->identifier);
+            }
+        }
+
         fprintf(file, " := ");
-    } else {
-        fprintf(file, " %s ", print_arr[expr->type]);
     }
 
     if (expr->mask & LEFT_SYM1_NUM) {

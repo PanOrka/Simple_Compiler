@@ -62,7 +62,8 @@ typedef enum {
     cond_LESS,
     cond_GREATER,
     cond_LESS_EQ,
-    cond_GREATER_EQ
+    cond_GREATER_EQ,
+    loop_FOR // this is just for correct print, we don't need it rly
 } expr_type;
 
 typedef union {
@@ -114,6 +115,13 @@ void expression_set_num(int64_t symbol_1);
  * 
 */
 void expression_set_type(expr_type type);
+
+/**
+ * 
+ * Reduces spin of current expression by one
+ * 
+*/
+void expression_spin_reduce();
 
 /**
  * 
