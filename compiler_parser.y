@@ -206,7 +206,6 @@ any: DECLARE declarations
        for_loop_t *loop = malloc(sizeof(for_loop_t));
        loop_get($2, loop);
        loop->type = loop_TO;
-       loop->range_vars.type = loop_FOR;
 
        // for debug purpose
        fprintf(stdout, "FOR %s ", $2);
@@ -220,7 +219,6 @@ any: DECLARE declarations
        for_loop_t *loop = malloc(sizeof(for_loop_t));
        loop_get($2, loop);
        loop->type = loop_DOWNTO;
-       loop->range_vars.type = loop_FOR;
 
        // for debug purpose
        fprintf(stdout, "FOR %s ", $2);
