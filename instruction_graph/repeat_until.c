@@ -2,7 +2,9 @@
 #include "i_level.h"
 #include "expr_checker.h"
 
-void add_REPEAT(); {
+extern void add_to_list(void *payload, instruction_type i_type);
+
+void add_REPEAT() {
     i_level_add(i_REPEAT);
     add_to_list(NULL, i_REPEAT);
 }

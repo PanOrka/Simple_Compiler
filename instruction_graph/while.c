@@ -2,6 +2,8 @@
 #include "i_level.h"
 #include "expr_checker.h"
 
+extern void add_to_list(void *payload, instruction_type i_type);
+
 void add_WHILE(expression_t *expr) {
     eval_check_1(expr);
     eval_check_2(expr);
