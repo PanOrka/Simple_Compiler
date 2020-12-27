@@ -9,6 +9,8 @@ static FILE *prelexer_out;
 %}
 
 %s DECLARE
+%s COMMENT_DECL
+%s COMMENT
 
 %%
 <INITIAL>{
@@ -61,6 +63,10 @@ static FILE *prelexer_out;
         fprintf(prelexer_out, "END\n");
     }
 
+    "[" {
+        BEGIN(COMMENT);
+    }
+
     [ \t]+ ;
 
     [\n]+ ;
@@ -76,6 +82,10 @@ static FILE *prelexer_out;
         BEGIN(INITIAL);
     }
 
+    "[" {
+        BEGIN(COMMENT_DECL);
+    }
+
     [ \t]+ ;
 
     [\n]+ ;
@@ -83,6 +93,32 @@ static FILE *prelexer_out;
     . {
         fprintf(prelexer_out, "%s", zztext);
     }
+}
+
+<COMMENT_DECL>{
+    "]" {
+        BEGIN(DECLARE);
+    }
+
+    [\n]+ {
+        fprintf(stderr, "[PRELEXER]: Comments should be one liners!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    . ;
+}
+
+<COMMENT>{
+    "]" {
+        BEGIN(INITIAL);
+    }
+
+    [\n]+ {
+        fprintf(stderr, "[PRELEXER]: Comments should be one liners!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    . ;
 }
 %%
 
