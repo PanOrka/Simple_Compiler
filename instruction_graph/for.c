@@ -27,7 +27,7 @@ void add_ENDFOR() {
             int32_t ctr = 0;
             while (true) {
                 symbol popped = symbol_table_pop(s_table);
-                free(popped.identifier);
+                free((void *)popped.identifier);
                 ++ctr;
 
                 if (popped.flags & SYMBOL_IS_ITER) {
