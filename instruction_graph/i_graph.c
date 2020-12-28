@@ -96,53 +96,77 @@ void i_graph_add_instruction(void *payload, instruction_type i_type) {
     }
 }
 
-static addr_t stack_ptr;
 
-// JUST FOR TESTS
-/////////////////////////////////// TESTING ZONE
-static void generate_stack_ptr(addr_t addr, FILE *file, reg *r) {
-    if (addr > stack_ptr) {
-        while (addr != stack_ptr) {
-            fprintf(file, "INC %c\n", r->id);
-            ++stack_ptr;
-        }
-    } else if (addr < stack_ptr) {
-        while (addr != stack_ptr) {
-            fprintf(file, "DEC %c\n", r->id);
-            --stack_ptr;
-        }
-    }
-}
+void eval_EXPR(i_graph **i_current, FILE *file);
+
+void eval_IF(i_graph **i_current, FILE *file);
+void eval_ELSE(i_graph **i_current, FILE *file);
+void eval_ENDIF(i_graph **i_current, FILE *file);
+
+void eval_WHILE(i_graph **i_current, FILE *file);
+void eval_ENDWHILE(i_graph **i_current, FILE *file);
+
+void eval_REPEAT(i_graph **i_current, FILE *file);
+void eval_UNTIL(i_graph **i_current, FILE *file);
+
+void eval_FOR(i_graph **i_current, FILE *file);
+void eval_ENDFOR(i_graph **i_current, FILE *file);
+
+void eval_READ(i_graph **i_current, FILE *file);
+void eval_WRITE(i_graph **i_current, FILE *file);
+
 
 void i_graph_execute(FILE *file) {
-    reg_set *regs = get_reg_set();
-
-    i_graph *idx = start;
-    // now it's just expressions
-    while (idx) {
-        expression_t *expr = idx->payload;
-        print_expression(expr, file);
-        fprintf(file, "\n");
-        reg_allocator r = reg_m_get(regs, STACK_PTR);
-        if (!r.was_allocated) {
-            fprintf(file, "RESET %c\n", r.r->id);
-            r.r->addr = STACK_PTR;
-            stack_ptr = 0;
+    while (start) {
+        switch (start->i_type) {
+            case i_EXPR:
+                eval_EXPR(&start, file);
+                break;
+            case i_IF:
+                eval_IF(&start, file);
+                break;
+            case i_ELSE:
+                eval_ELSE(&start, file);
+                break;
+            case i_ENDIF:
+                eval_ENDIF(&start, file);
+                break;
+            case i_WHILE:
+                eval_WHILE(&start, file);
+                break;
+            case i_ENDWHILE:
+                eval_ENDWHILE(&start, file);
+                break;
+            case i_REPEAT:
+                eval_REPEAT(&start, file);
+                break;
+            case i_UNTIL:
+                eval_UNTIL(&start, file);
+                break;
+            case i_FOR:
+                eval_FOR(&start, file);
+                break;
+            case i_ENDFOR:
+                eval_ENDFOR(&start, file);
+                break;
+            case i_READ:
+                eval_READ(&start, file);
+                break;
+            case i_WRITE:
+                eval_WRITE(&start, file);
+                break;
+            default:
+                fprintf(stderr, "Unknown type of instruction: %d!\n", start->i_type);
+                exit(EXIT_FAILURE);
         }
 
-        addr_t const address = expr->var_1[0].var->addr[0];
-        reg_allocator r2 = reg_m_get(regs, address);
-        if (!r2.was_allocated) {
-            if (r2.r->addr != ADDR_UNDEF) {
-                generate_stack_ptr(r2.r->addr, file, r.r);
-                fprintf(file, "STORE %c %c\n", r2.r->id, r.r->id);
-            }
-            r2.r->addr = address;
-            generate_stack_ptr(r2.r->addr, file, r.r);
-            fprintf(file, "LOAD %c %c\n", r2.r->id, r.r->id);
-        }
+        start = start->next;
+    }
 
-        idx = idx->next;
+    while (end) {
+        i_graph *to_free = end;
+        end = end->prev;
+        free(to_free->payload);
+        free(to_free);
     }
 }
-///////////////////////////////////

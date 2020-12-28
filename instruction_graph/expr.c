@@ -13,3 +13,7 @@ void add_EXPR(expression_t *expr) {
 
     add_to_list(expr, i_EXPR);
 }
+
+void eval_EXPR(i_graph **i_current, FILE *file) {
+    
+}

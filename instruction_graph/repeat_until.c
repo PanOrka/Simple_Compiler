@@ -9,6 +9,10 @@ void add_REPEAT() {
     add_to_list(NULL, i_REPEAT);
 }
 
+void eval_REPEAT(i_graph **i_current, FILE *file) {
+    
+}
+
 void add_UNTIL(expression_t *expr) {
     eval_check_1(expr);
     eval_check_2(expr);
@@ -23,4 +27,8 @@ void add_UNTIL(expression_t *expr) {
 
     fprintf(stderr, "[REPEAT_UNTIL]: There is no matching REPEAT for UNTIL!\n");
     exit(EXIT_FAILURE);
+}
+
+void eval_UNTIL(i_graph **i_current, FILE *file) {
+    
 }

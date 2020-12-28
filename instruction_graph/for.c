@@ -13,6 +13,10 @@ void add_FOR(for_loop_t *loop) {
     add_to_list(loop, i_FOR);
 }
 
+void eval_FOR(i_graph **i_current, FILE *file) {
+    
+}
+
 void add_ENDFOR() {
     if (!i_level_is_empty()) {
         branch_type b_type = i_level_pop(i_POP);
@@ -20,12 +24,28 @@ void add_ENDFOR() {
             add_to_list(NULL, i_ENDFOR);
 
             symbol_table *s_table = get_symbol_table();
+            int32_t ctr = 0;
             while (true) {
                 symbol popped = symbol_table_pop(s_table);
                 free(popped.identifier);
+                ++ctr;
 
                 if (popped.flags & SYMBOL_IS_ITER) {
+                    if (popped._add_info.hide) {
+                        popped._add_info.hide->flags |= SYMBOL_NO_HIDDEN;
+                    }
+
+                    if (ctr != 2) {
+                        fprintf(stderr, "[FOR]: Incorrect value of popped values counter: %d!\n", ctr);
+                        exit(EXIT_FAILURE);
+                    }
+
                     break;
+                }
+
+                if (ctr > 2) {
+                    fprintf(stderr, "[FOR]: Counter of popped values > 2!\n");
+                    exit(EXIT_FAILURE);
                 }
             }
             return;
@@ -34,4 +54,8 @@ void add_ENDFOR() {
 
     fprintf(stderr, "[FOR]: There is no matching FOR for ENDFOR!\n");
     exit(EXIT_FAILURE);
+}
+
+void eval_ENDFOR(i_graph **i_current, FILE *file) {
+    
 }

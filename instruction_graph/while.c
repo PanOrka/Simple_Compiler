@@ -12,6 +12,10 @@ void add_WHILE(expression_t *expr) {
     add_to_list(expr, i_WHILE);
 }
 
+void eval_WHILE(i_graph **i_current, FILE *file) {
+    
+}
+
 void add_ENDWHILE() {
     if (!i_level_is_empty()) {
         branch_type b_type = i_level_pop(i_POP);
@@ -23,4 +27,8 @@ void add_ENDWHILE() {
 
     fprintf(stderr, "[WHILE]: There is no matching WHILE for ENDWHILE!\n");
     exit(EXIT_FAILURE);
+}
+
+void eval_ENDWHILE(i_graph **i_current, FILE *file) {
+    
 }

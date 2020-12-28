@@ -12,6 +12,10 @@ void add_IF(expression_t *expr) {
     add_to_list(expr, i_IF);
 }
 
+void eval_IF(i_graph **i_current, FILE *file) {
+    
+}
+
 void add_ELSE() {
     if (!i_level_is_empty()) {
         branch_type b_type = i_level_pop(i_NOPOP);
@@ -25,6 +29,10 @@ void add_ELSE() {
     exit(EXIT_FAILURE);
 }
 
+void eval_ELSE(i_graph **i_current, FILE *file) {
+    
+}
+
 void add_ENDIF() {
     if (!i_level_is_empty()) {
         branch_type b_type = i_level_pop(i_POP);
@@ -36,4 +44,8 @@ void add_ENDIF() {
 
     fprintf(stderr, "[IF]: There is no matching IF for ENDIF!\n");
     exit(EXIT_FAILURE);
+}
+
+void eval_ENDIF(i_graph **i_current, FILE *file) {
+    
 }
