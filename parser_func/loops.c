@@ -19,6 +19,5 @@ void loop_get(char *iter, for_loop_t *loop) {
     expression_get(&(loop->range_vars));
     loop->range_vars.type = loop_FOR; // for debug
 
-    loop->range[0].var = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
-    loop->range[1].var = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
+    loop->range.var = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
 }

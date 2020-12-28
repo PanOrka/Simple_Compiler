@@ -17,7 +17,7 @@ typedef union {
 
 typedef struct {
     var_t iterator;
-    var_t range[2]; // FROM, TO
+    var_t range; // FROM, TO
     expression_t range_vars;
     loop_type type;
 } for_loop_t;

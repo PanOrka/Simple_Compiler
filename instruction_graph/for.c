@@ -22,6 +22,8 @@ void add_ENDFOR() {
             symbol_table *s_table = get_symbol_table();
             while (true) {
                 symbol popped = symbol_table_pop(s_table);
+                free(popped.identifier);
+
                 if (popped.flags & SYMBOL_IS_ITER) {
                     break;
                 }
