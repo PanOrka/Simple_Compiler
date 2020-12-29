@@ -1,0 +1,9 @@
+maszyna_wirtualna
+compiler
+compiler_lexer.c
+compiler_parser.c
+compiler_parser.h
+out.txt
+prelexer.c
+prelexer_temp_out
+test.txt
