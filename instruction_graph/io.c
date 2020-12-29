@@ -17,8 +17,8 @@ void eval_READ(i_graph **i_current, FILE *file) {
     if (expr_curr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
 
     } else {
-        stack_ptr_generate(expr_curr->var_1[0].var->addr, file);
-        fprintf("GET %c\n", r_set->stack_ptr.id);
+        stack_ptr_generate(expr_curr->var_1[0].var->addr[0], file);
+        fprintf(file, "GET %c\n", r_set->stack_ptr.id);
     }
 }
 
@@ -34,7 +34,7 @@ void eval_WRITE(i_graph **i_current, FILE *file) {
     if (expr_curr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
 
     } else {
-        stack_ptr_generate(expr_curr->var_1[1].var->addr, file);
-        fprintf("PUT %c\n", r_set->stack_ptr.id);
+        stack_ptr_generate(expr_curr->var_1[1].var->addr[0], file);
+        fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
     }
 }
