@@ -1,7 +1,7 @@
 #include "i_graph.h"
 
 #include "../parser_func/expressions.h"
-#include "../parser_func/getters.h"
+
 #include "../parser_func/loops.h"
 #include "../definitions.h"
 

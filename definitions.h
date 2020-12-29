@@ -23,4 +23,13 @@ typedef uint64_t addr_t;
 #define STACK_PTR 0xFFFFFFFFFFFFFFFE
 #endif
 
+/**
+ * 
+ * MSB
+ * 
+*/
+#ifndef ADDR_T_MSB
+#define ADDR_T_MSB 0x8000000000000000
+#endif
+
 #endif

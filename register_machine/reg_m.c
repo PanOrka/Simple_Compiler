@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 reg_set reg_m_create() {
-    char reg_id_arr[REG_SIZE] = REG_ID_SET;
+    char reg_id_arr[REG_SIZE + 1] = REG_ID_SET;
     reg_set regs;
 
     for (int32_t i=0; i<REG_SIZE; ++i) {
@@ -17,6 +17,10 @@ reg_set reg_m_create() {
         regs.r[i]->id = reg_id_arr[i];
         regs.r[i]->flags = REG_NO_FLAGS;
     }
+
+    regs.stack_ptr->addr = STACK_PTR;
+    regs.stack_ptr->id = reg_id_arr[REG_SIZE];
+    regs.stack_ptr->flags = REG_NO_FLAGS;
 
     return regs;
 }
@@ -47,21 +51,27 @@ void reg_m_sort(reg_set *r_set, uint32_t idx, int32_t type) {
     }
 }
 
-reg_allocator reg_m_get(reg_set *r_set, addr_t addr) {
+reg_allocator reg_m_get(reg_set *r_set, addr_t addr, bool do_sort) {
     for (int32_t i=0; i<REG_SIZE; ++i) {
         if (r_set->r[i]->addr == addr) {
-            reg_m_sort(r_set, i, REG_M_SORT_UP);
+            if (do_sort) {
+                reg_m_sort(r_set, i, REG_M_SORT_UP);
+            }
 
             return (reg_allocator){r_set->r[REG_SIZE-1], i, true};
         }
     }
 
-    reg_m_sort(r_set, 0, REG_M_SORT_UP);
+    if (do_sort) {
+        reg_m_sort(r_set, 0, REG_M_SORT_UP);
+    }
     return (reg_allocator){r_set->r[REG_SIZE-1], 0, false};
 }
 
-reg_allocator reg_m_LRU(reg_set *r_set) {
-    reg_m_sort(r_set, 0, REG_M_SORT_UP);
+reg_allocator reg_m_LRU(reg_set *r_set, bool do_sort) {
+    if (do_sort) {
+        reg_m_sort(r_set, 0, REG_M_SORT_UP);
+    }
 
     return (reg_allocator){r_set->r[REG_SIZE-1], 0, false};
 }

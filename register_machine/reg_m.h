@@ -2,7 +2,7 @@
 #define REG_M_H
 
 #if !defined REG_SIZE && !defined REG_ID_SET
-#define REG_SIZE 6
+#define REG_SIZE 5
 #define REG_ID_SET {'a', 'b', 'c', 'd', 'e', 'f'}
 #endif
 
@@ -26,6 +26,7 @@ typedef struct {
 
 typedef struct {
     reg *r[REG_SIZE];
+    reg *stack_ptr;
 } reg_set;
 
 typedef struct {
@@ -52,7 +53,7 @@ reg_set reg_m_create();
  * RETURN: reg_allocator: ptr to register set, old idx of register and was_allocated flag
  * 
 */
-reg_allocator reg_m_get(reg_set *r_set, addr_t addr);
+reg_allocator reg_m_get(reg_set *r_set, addr_t addr, bool do_sort);
 
 /**
  * 
@@ -63,7 +64,7 @@ reg_allocator reg_m_get(reg_set *r_set, addr_t addr);
  * RETURN: reg_allocator: ptr to register set, old idx of register and was_allocated flag
  * 
 */
-reg_allocator reg_m_LRU(reg_set *r_set);
+reg_allocator reg_m_LRU(reg_set *r_set, bool do_sort);
 
 /**
  * 
