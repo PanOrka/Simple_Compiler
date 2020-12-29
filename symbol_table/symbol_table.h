@@ -90,4 +90,12 @@ symbol * symbol_table_add(symbol_table *s_table, const char *identifier, add_inf
 */
 symbol symbol_table_pop(symbol_table *s_table);
 
+/**
+ * 
+ * Size of symbol
+ * 
+ * RETURN: Size of symbol
+*/
+addr_t symbol_ptr_size(symbol *sym);
+
 #endif

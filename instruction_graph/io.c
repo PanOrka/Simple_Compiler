@@ -16,7 +16,12 @@ void eval_READ(i_graph **i_current, FILE *file) {
     reg_set *r_set = get_reg_set();
 
     if (expr_curr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
-
+        if (!(expr_curr->mask & ASSIGN_SYM2_NUM)) {
+            
+        } else {
+            stack_ptr_generate(expr_curr->var_1[0].var->addr[0] + expr_curr->var_2[0].num, file);
+            fprintf(file, "GET %c\n", r_set->stack_ptr.id);
+        }
     } else {
         stack_ptr_generate(expr_curr->var_1[0].var->addr[0], file);
         fprintf(file, "GET %c\n", r_set->stack_ptr.id);
@@ -34,7 +39,12 @@ void eval_WRITE(i_graph **i_current, FILE *file) {
 
     if (!(expr_curr->mask & LEFT_SYM1_NUM)) {
         if (expr_curr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
-
+            if (!(expr_curr->mask & LEFT_SYM2_NUM)) {
+            
+            } else {
+                stack_ptr_generate(expr_curr->var_1[1].var->addr[0] + expr_curr->var_2[1].num, file);
+                fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
+            }
         } else {
             stack_ptr_generate(expr_curr->var_1[1].var->addr[0], file);
             fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
