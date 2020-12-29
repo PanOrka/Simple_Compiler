@@ -52,28 +52,36 @@ void reg_m_sort(reg_set *r_set, uint32_t idx, int32_t type) {
 }
 
 reg_allocator reg_m_get(reg_set *r_set, addr_t addr, bool do_sort) {
+    int32_t idx = 0;
     for (int32_t i=0; i<REG_SIZE; ++i) {
         if (r_set->r[i]->addr == addr) {
             if (do_sort) {
                 reg_m_sort(r_set, i, REG_M_SORT_UP);
+                idx = REG_SIZE - 1;
+            } else {
+                idx = i;
             }
 
-            return (reg_allocator){r_set->r[REG_SIZE-1], i, true};
+            return (reg_allocator){r_set->r[idx], i, true};
         }
     }
 
     if (do_sort) {
         reg_m_sort(r_set, 0, REG_M_SORT_UP);
+        idx = REG_SIZE - 1;
     }
-    return (reg_allocator){r_set->r[REG_SIZE-1], 0, false};
+
+    return (reg_allocator){r_set->r[idx], 0, false};
 }
 
 reg_allocator reg_m_LRU(reg_set *r_set, bool do_sort) {
+    int32_t idx = 0;
     if (do_sort) {
         reg_m_sort(r_set, 0, REG_M_SORT_UP);
+        idx = REG_SIZE - 1;
     }
 
-    return (reg_allocator){r_set->r[REG_SIZE-1], 0, false};
+    return (reg_allocator){r_set->r[idx], 0, false};
 }
 
 void reg_m_drop_addr(reg_set *r_set, addr_t addr) {

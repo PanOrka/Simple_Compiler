@@ -1,7 +1,6 @@
 #ifndef STACK_GENERATOR_H
 #define STACK_GENERATOR_H
 
-#include "../../parser_func/getters.h"
 #include "../../definitions.h"
 #include <stdio.h>
 
