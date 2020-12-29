@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct {
     reg *r[REG_SIZE];
-    reg *stack_ptr;
+    reg stack_ptr;
 } reg_set;
 
 typedef struct {

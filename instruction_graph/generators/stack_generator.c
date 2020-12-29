@@ -17,8 +17,7 @@ static void generate_value(reg *stack_ptr, addr_t addr, FILE *file) {
     }
 }
 
-reg * stack_ptr_generate(addr_t addr, FILE *file) {
+void stack_ptr_generate(addr_t addr, FILE *file) {
     reg_set *r_set = get_reg_set();
-    reg * const stack_ptr = r_set->stack_ptr;
-    generate_value(stack_ptr, addr, file);
+    generate_value(&(r_set->stack_ptr), addr, file);
 }

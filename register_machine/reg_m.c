@@ -18,9 +18,9 @@ reg_set reg_m_create() {
         regs.r[i]->flags = REG_NO_FLAGS;
     }
 
-    regs.stack_ptr->addr = STACK_PTR;
-    regs.stack_ptr->id = reg_id_arr[REG_SIZE];
-    regs.stack_ptr->flags = REG_NO_FLAGS;
+    regs.stack_ptr.addr = STACK_PTR;
+    regs.stack_ptr.id = reg_id_arr[REG_SIZE];
+    regs.stack_ptr.flags = REG_NO_FLAGS;
 
     return regs;
 }
