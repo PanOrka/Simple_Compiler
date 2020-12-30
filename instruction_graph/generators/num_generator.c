@@ -23,18 +23,28 @@ static uint64_t generate_from_reset_cost(addr_t val) {
     return cost + 1;
 }
 
-static void generate_from_reset(reg *r, addr_t val, FILE *file) {
+static void generate_from_reset(reg *r, addr_t target_val, FILE *file) {
     bool inc_once = false;
+
+    addr_t val = target_val;
+    addr_t test = 0;
     for (int32_t i=0; i<8*sizeof(addr_t); ++i) {
         if (inc_once) {
             fprintf(file, "SHL %c\n", r->id);
+            test *= 2;
         }
 
         if (val & ADDR_T_MSB) {
             fprintf(file, "INC %c\n", r->id);
             inc_once = true;
+            ++test;
         }
         val <<= 1;
+    }
+
+    if (test != target_val) {
+        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! Got: %ld Expected: %ld!\n", test, target_val);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -69,49 +79,122 @@ static uint64_t generate_from_current_div_cost(addr_t curr_val, addr_t target_va
     return cost + ABS(diff);
 }
 
+#include "../../vector/vector.h"
+
 static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
     int64_t diff = target_val - curr_val;
     while (diff >= 0 && curr_val < (uint64_t)diff) {
         curr_val *= 2;
         diff = target_val - curr_val;
-        //++cost;
+        fprintf(file, "SHL %c\n", r->id);
     }
+
+    vector v = vector_create(sizeof(int32_t), alignof(int32_t), 64);
 
     while (diff > 2 || diff < -2) {
         const int64_t alternative = diff - curr_val;
         if (ABS(alternative) < ABS(diff)) {
             curr_val *= 2;
             diff = alternative;
-            //++cost;
+            fprintf(file, "SHL %c\n", r->id);
         } else {
             int32_t reminder = (curr_val % 2) + (diff % 2);
             diff /= 2;
             curr_val /= 2;
-
-            //cost += 2;
-            if (reminder != 0) {
-                //++cost;
-            }
+            fprintf(file, "SHR %c\n", r->id);
+            VECTOR_ADD(v, reminder);
         }
     }
 
-    //return cost + ABS(diff);
+    uint64_t test = curr_val;
+    switch (diff) {
+        case 2:
+            fprintf(file, "INC %c\n", r->id);
+            fprintf(file, "INC %c\n", r->id);
+            test += 2;
+            break;
+        case 1:
+            fprintf(file, "INC %c\n", r->id);
+            ++test;
+            break;
+        case 0:
+            test += 0;
+            break;
+        case -1:
+            fprintf(file, "DEC %c\n", r->id);
+            --test;
+            break;
+        case -2:
+            fprintf(file, "DEC %c\n", r->id);
+            fprintf(file, "DEC %c\n", r->id);
+            test -= 2;
+            break;
+        default:
+            fprintf(stderr, "[NUMBER_GENERATOR]: Got wrong reminder: %ld!\n", diff);
+            exit(EXIT_FAILURE);
+    }
+
+    for (int32_t i=v.used_size; i>0; --i) {
+        int32_t reminders = *((int32_t *)VECTOR_POP(v, POP));
+        switch (reminders) {
+            case 2:
+                fprintf(file, "INC %c\n", r->id);
+                fprintf(file, "SHL %c\n", r->id);
+                test = 2*(++test);
+                break;
+            case 1:
+                fprintf(file, "SHL %c\n", r->id);
+                fprintf(file, "INC %c\n", r->id);
+                test *= 2;
+                ++test;
+                break;
+            case 0:
+                fprintf(file, "SHL %c\n", r->id);
+                test *= 2;
+                break;
+            case -1:
+                fprintf(file, "SHL %c\n", r->id);
+                fprintf(file, "DEC %c\n", r->id);
+                test *= 2;
+                --test;
+                break;
+            default:
+                fprintf(stderr, "[NUMBER_GENERATOR]: Got wrong reminder: %d!\n", reminders);
+                exit(EXIT_FAILURE);
+        }
+    }
+    free(v._mem_ptr);
+
+    if (test != target_val) {
+        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! Got: %ld Expected: %ld!\n", test, target_val);
+        exit(EXIT_FAILURE);
+    }
 }
 
 static uint64_t generate_from_current_inc_cost(addr_t curr_val, addr_t target_val) {
-    return ABS(target_val - curr_val);
+    int64_t diff = target_val - curr_val;
+    return ABS(diff);
 }
 
-static uint64_t generate_from_current_inc(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
+static void generate_from_current_inc(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
     int64_t diff = target_val - curr_val;
+    addr_t test = curr_val;
+
     while (diff != 0) {
         if (diff > 0) {
             fprintf(file, "INC %c\n", r->id);
             --diff;
+            ++test;
         } else {
             fprintf(file, "DEC %c\n", r->id);
             ++diff;
+            --test;
         }
+    }
+
+    if (test != target_val) {
+        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! Got: %ld Expected: %ld!\n", test, target_val);
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -121,7 +204,14 @@ void generate_value(reg *r, addr_t curr_val, addr_t target_val, FILE *file, bool
         uint64_t div_cost = generate_from_current_div_cost(curr_val, target_val);
         uint64_t inc_cost = generate_from_current_inc_cost(curr_val, target_val);
 
-        generate_from_current_inc(r, curr_val, target_val, file);
+        if (reset_cost <= div_cost && reset_cost < inc_cost) {
+            fprintf(file, "RESET %c\n", r->id);
+            generate_from_reset_cost(target_val);
+        } else if (div_cost < inc_cost) {
+            generate_from_current_div(r, curr_val, target_val, file);
+        } else {
+            generate_from_current_inc(r, curr_val, target_val, file);
+        }
     } else {
         if (reset) {
             fprintf(file, "RESET %c\n", r->id);

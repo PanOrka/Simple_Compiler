@@ -47,10 +47,10 @@ void vector_add(vector *vec, void *new_element) {
 void * vector_pop(vector *vec, bool do_pop) {
     if (vec->used_size) {
         if (do_pop) {
-            --(vec->used_size);
+            return vec->_mem_ptr + (--vec->used_size) * vec->_element_size;
+        } else {
+            return vec->_mem_ptr + (vec->used_size - 1) * vec->_element_size;
         }
-
-        return vec->_mem_ptr + (vec->used_size - 1) * vec->_element_size;
     }
 
     fprintf(stderr, "[vector]: POP of empty vector!\n"); // It can work this way :)
