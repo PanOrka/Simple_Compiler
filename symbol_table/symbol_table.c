@@ -102,6 +102,6 @@ symbol symbol_table_pop(symbol_table *s_table) {
     return *((symbol *)VECTOR_POP(s_table->v, POP));
 }
 
-addr_t symbol_ptr_size(symbol *sym) {
+int64_t symbol_ptr_size(symbol *sym) {
     return sym->addr[1] - sym->addr[0];
 }

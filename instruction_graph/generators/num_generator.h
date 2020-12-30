@@ -10,6 +10,6 @@
  * Generate value on given register
  * 
 */
-void generate_value(reg *r, addr_t cur_val, addr_t val, FILE *file, bool reset);
+void generate_value(reg *r, addr_t curr_val, addr_t target_val, FILE *file, bool reset);
 
 #endif

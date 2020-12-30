@@ -96,6 +96,6 @@ symbol symbol_table_pop(symbol_table *s_table);
  * 
  * RETURN: Size of symbol
 */
-addr_t symbol_ptr_size(symbol *sym);
+int64_t symbol_ptr_size(symbol *sym);
 
 #endif
