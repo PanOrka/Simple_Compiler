@@ -186,16 +186,16 @@ static void generate_from_current_inc(reg *r, addr_t curr_val, addr_t target_val
     __int128_t diff = target_val - curr_val;
     addr_t test = curr_val;
 
-    while (diff != 0) {
-        if (diff > 0) {
-            fprintf(file, "INC %c\n", r->id);
-            --diff;
-            ++test;
-        } else {
-            fprintf(file, "DEC %c\n", r->id);
-            ++diff;
-            --test;
-        }
+    while (diff > 0) {
+        fprintf(file, "INC %c\n", r->id);
+        --diff;
+        ++test;
+    }
+
+    while (diff < 0) {
+        fprintf(file, "DEC %c\n", r->id);
+        ++diff;
+        --test;
     }
 
     if (test != target_val) {
