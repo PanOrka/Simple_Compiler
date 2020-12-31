@@ -2,9 +2,21 @@
 
 #include <stdlib.h>
 
+#if !(defined __COMPILER_MINIMAL_REQ__) && (defined __SIZEOF_INT128__)
+    #define __COMPILER_MINIMAL_REQ__ 1
+#else
+    #define __COMPILER_MINIMAL_REQ__ 0
+#endif
+
 extern void parse(FILE *in, FILE *out);
 
 int main(int argc, char *argv[]) {
+    if (!__COMPILER_MINIMAL_REQ__) {
+        fprintf(stderr, "[COMPILER]: Minimal Requirements for Compiler aren't satisfied!\n");
+        fprintf(stderr, "There is no int128_t on this machine. Make sure you use 64-bit GCC!\n");
+        exit(EXIT_FAILURE);
+    }
+
     if (argc == 3) {
         FILE *in = fopen(argv[1], "r");
         if (in == NULL) {
