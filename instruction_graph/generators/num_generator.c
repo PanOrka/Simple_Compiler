@@ -51,7 +51,10 @@ static void generate_from_reset(reg *r, addr_t target_val, FILE *file) {
 static uint64_t generate_from_current_div_cost(addr_t curr_val, addr_t target_val) {
     uint64_t cost = 0;
 
-    int64_t diff = target_val - curr_val;
+    __int128_t diff = target_val - curr_val;
+    /*
+    // if diff >= 0 it can't be greater than MAX_uint64_t
+    */
     while (diff >= 0 && curr_val < (uint64_t)diff) {
         curr_val *= 2;
         diff = target_val - curr_val;
@@ -59,7 +62,7 @@ static uint64_t generate_from_current_div_cost(addr_t curr_val, addr_t target_va
     }
 
     while (diff > 2 || diff < -2) {
-        const int64_t alternative = diff - curr_val;
+        const __int128_t alternative = diff - curr_val;
         if (ABS(alternative) < ABS(diff)) {
             curr_val *= 2;
             diff = alternative;
@@ -76,13 +79,16 @@ static uint64_t generate_from_current_div_cost(addr_t curr_val, addr_t target_va
         }
     }
 
-    return cost + ABS(diff);
+    return cost + (uint64_t)ABS(diff);
 }
 
 #include "../../vector/vector.h"
 
 static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
-    int64_t diff = target_val - curr_val;
+    __int128_t diff = target_val - curr_val;
+    /*
+    // if diff >= 0 it can't be greater than MAX_uint64_t
+    */
     while (diff >= 0 && curr_val < (uint64_t)diff) {
         curr_val *= 2;
         diff = target_val - curr_val;
@@ -92,7 +98,7 @@ static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val
     vector v = vector_create(sizeof(int32_t), alignof(int32_t), 64);
 
     while (diff > 2 || diff < -2) {
-        const int64_t alternative = diff - curr_val;
+        const __int128_t alternative = diff - curr_val;
         if (ABS(alternative) < ABS(diff)) {
             curr_val *= 2;
             diff = alternative;
@@ -130,7 +136,7 @@ static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val
             test -= 2;
             break;
         default:
-            fprintf(stderr, "[NUMBER_GENERATOR]: Got wrong reminder: %ld!\n", diff);
+            fprintf(stderr, "[NUMBER_GENERATOR]: Got wrong reminder on diff!\n");
             exit(EXIT_FAILURE);
     }
 
@@ -172,12 +178,12 @@ static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val
 }
 
 static uint64_t generate_from_current_inc_cost(addr_t curr_val, addr_t target_val) {
-    int64_t diff = target_val - curr_val;
+    __int128_t diff = target_val - curr_val;
     return ABS(diff);
 }
 
 static void generate_from_current_inc(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
-    int64_t diff = target_val - curr_val;
+    __int128_t diff = target_val - curr_val;
     addr_t test = curr_val;
 
     while (diff != 0) {
