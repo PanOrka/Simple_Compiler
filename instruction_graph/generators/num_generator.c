@@ -51,24 +51,24 @@ static void generate_from_reset(reg *r, addr_t target_val, FILE *file) {
 static uint64_t generate_from_current_div_cost(addr_t curr_val, addr_t target_val) {
     uint64_t cost = 0;
 
-    __int128_t diff = target_val - curr_val;
+    __int128_t diff = (__int128_t)target_val - (__int128_t)curr_val;
     /*
     // if diff >= 0 it can't be greater than MAX_uint64_t
     */
     while (diff >= 0 && curr_val < (uint64_t)diff) {
         curr_val *= 2;
-        diff = target_val - curr_val;
+        diff = (__int128_t)target_val - (__int128_t)curr_val;
         ++cost;
     }
 
     while (diff > 2 || diff < -2) {
-        const __int128_t alternative = diff - curr_val;
+        const __int128_t alternative = diff - (__int128_t)curr_val;
         if (ABS(alternative) < ABS(diff)) {
             curr_val *= 2;
             diff = alternative;
             ++cost;
         } else {
-            int32_t reminder = (curr_val % 2) + (diff % 2);
+            int32_t reminder = (int32_t)(curr_val % 2) + (int32_t)(diff % 2);
             diff /= 2;
             curr_val /= 2;
 
@@ -85,26 +85,26 @@ static uint64_t generate_from_current_div_cost(addr_t curr_val, addr_t target_va
 #include "../../vector/vector.h"
 
 static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
-    __int128_t diff = target_val - curr_val;
+    __int128_t diff = (__int128_t)target_val - (__int128_t)curr_val;
     /*
     // if diff >= 0 it can't be greater than MAX_uint64_t
     */
     while (diff >= 0 && curr_val < (uint64_t)diff) {
         curr_val *= 2;
-        diff = target_val - curr_val;
+        diff = (__int128_t)target_val - (__int128_t)curr_val;
         fprintf(file, "SHL %c\n", r->id);
     }
 
     vector v = vector_create(sizeof(int32_t), alignof(int32_t), 64);
 
     while (diff > 2 || diff < -2) {
-        const __int128_t alternative = diff - curr_val;
+        const __int128_t alternative = diff - (__int128_t)curr_val;
         if (ABS(alternative) < ABS(diff)) {
             curr_val *= 2;
             diff = alternative;
             fprintf(file, "SHL %c\n", r->id);
         } else {
-            int32_t reminder = (curr_val % 2) + (diff % 2);
+            int32_t reminder = (int32_t)(curr_val % 2) + (int32_t)(diff % 2);
             diff /= 2;
             curr_val /= 2;
             fprintf(file, "SHR %c\n", r->id);
@@ -178,12 +178,12 @@ static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val
 }
 
 static uint64_t generate_from_current_inc_cost(addr_t curr_val, addr_t target_val) {
-    __int128_t diff = target_val - curr_val;
+    __int128_t diff = (__int128_t)target_val - (__int128_t)curr_val;
     return ABS(diff);
 }
 
 static void generate_from_current_inc(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
-    __int128_t diff = target_val - curr_val;
+    __int128_t diff = (__int128_t)target_val - (__int128_t)curr_val;
     addr_t test = curr_val;
 
     while (diff > 0) {
