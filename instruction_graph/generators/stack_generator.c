@@ -1,7 +1,7 @@
 #include "stack_generator.h"
 #include "num_generator.h"
 
-static addr_t stack_value;
+static num_t stack_value = 0;
 static bool stack_initialized = false;
 
 void stack_ptr_generate(addr_t addr, FILE *file) {

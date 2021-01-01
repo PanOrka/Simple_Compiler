@@ -19,7 +19,7 @@ void eval_READ(i_graph **i_current, FILE *file) {
         if (!(expr_curr->mask & ASSIGN_SYM2_NUM)) {
             
         } else {
-            stack_ptr_generate(expr_curr->var_1[0].var->addr[0] + (uint64_t)expr_curr->var_2[0].num, file);
+            stack_ptr_generate(expr_curr->var_1[0].var->addr[0] + (addr_t)expr_curr->var_2[0].num, file);
             fprintf(file, "GET %c\n", r_set->stack_ptr.id);
         }
     } else {
@@ -42,7 +42,7 @@ void eval_WRITE(i_graph **i_current, FILE *file) {
             if (!(expr_curr->mask & LEFT_SYM2_NUM)) {
             
             } else {
-                stack_ptr_generate(expr_curr->var_1[1].var->addr[0] + (uint64_t)expr_curr->var_2[1].num, file);
+                stack_ptr_generate(expr_curr->var_1[1].var->addr[0] + (addr_t)expr_curr->var_2[1].num, file);
                 fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
             }
         } else {

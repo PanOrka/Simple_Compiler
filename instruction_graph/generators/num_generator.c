@@ -4,37 +4,44 @@
 #define ABS(x) (x >= 0 ? x : -x)
 #endif
 
-static uint64_t generate_from_reset_cost(addr_t val) {
+/**
+ * 
+ * NUM_T MSB
+ * 
+*/
+const num_t num_t_msb = ((num_t)1) << 127;
+
+static uint64_t generate_from_reset_cost(num_t target_val) {
     uint64_t cost = 0;
 
     bool inc_once = false;
-    for (int32_t i=0; i<8*sizeof(addr_t); ++i) {
+    for (int32_t i=0; i<8*sizeof(target_val); ++i) {
         if (inc_once) {
             ++cost;
         }
 
-        if (val & ADDR_T_MSB) {
+        if (target_val & num_t_msb) {
             ++cost;
             inc_once = true;
         }
-        val <<= 1;
+        target_val <<= 1;
     }
 
     return cost + 1;
 }
 
-static void generate_from_reset(reg *r, addr_t target_val, FILE *file) {
+static void generate_from_reset(reg *r, num_t target_val, FILE *file) {
     bool inc_once = false;
 
-    addr_t val = target_val;
-    addr_t test = 0;
-    for (int32_t i=0; i<8*sizeof(addr_t); ++i) {
+    num_t val = target_val;
+    num_t test = 0;
+    for (int32_t i=0; i<8*sizeof(val); ++i) {
         if (inc_once) {
             fprintf(file, "SHL %c\n", r->id);
             test *= 2;
         }
 
-        if (val & ADDR_T_MSB) {
+        if (val & num_t_msb) {
             fprintf(file, "INC %c\n", r->id);
             inc_once = true;
             ++test;
@@ -43,32 +50,32 @@ static void generate_from_reset(reg *r, addr_t target_val, FILE *file) {
     }
 
     if (test != target_val) {
-        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! Got: %ld Expected: %ld!\n", test, target_val);
+        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! (RESET_GEN)\n");
         exit(EXIT_FAILURE);
     }
 }
 
-static uint64_t generate_from_current_div_cost(addr_t curr_val, addr_t target_val) {
+static uint64_t generate_from_current_div_cost(num_t curr_val, num_t target_val) {
     uint64_t cost = 0;
 
-    __int128_t diff = (__int128_t)target_val - (__int128_t)curr_val;
+    num_t diff = target_val - curr_val;
     /*
     // if diff >= 0 it can't be greater than MAX_uint64_t
     */
-    while (diff >= 0 && curr_val < (uint64_t)diff) {
+    while (curr_val < diff) {
         curr_val *= 2;
-        diff = (__int128_t)target_val - (__int128_t)curr_val;
+        diff = target_val - curr_val;
         ++cost;
     }
 
     while (diff > 2 || diff < -2) {
-        const __int128_t alternative = diff - (__int128_t)curr_val;
+        const num_t alternative = diff - curr_val;
         if (ABS(alternative) < ABS(diff)) {
             curr_val *= 2;
             diff = alternative;
             ++cost;
         } else {
-            int32_t reminder = (int32_t)(curr_val % 2) + (int32_t)(diff % 2);
+            int32_t reminder = (curr_val % 2) + (diff % 2);
             diff /= 2;
             curr_val /= 2;
 
@@ -84,27 +91,27 @@ static uint64_t generate_from_current_div_cost(addr_t curr_val, addr_t target_va
 
 #include "../../vector/vector.h"
 
-static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
-    __int128_t diff = (__int128_t)target_val - (__int128_t)curr_val;
+static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val, FILE *file) {
+    num_t diff = target_val - curr_val;
     /*
     // if diff >= 0 it can't be greater than MAX_uint64_t
     */
-    while (diff >= 0 && curr_val < (uint64_t)diff) {
+    while (curr_val < diff) {
         curr_val *= 2;
-        diff = (__int128_t)target_val - (__int128_t)curr_val;
+        diff = target_val - curr_val;
         fprintf(file, "SHL %c\n", r->id);
     }
 
     vector v = vector_create(sizeof(int32_t), alignof(int32_t), 64);
 
     while (diff > 2 || diff < -2) {
-        const __int128_t alternative = diff - (__int128_t)curr_val;
+        const num_t alternative = diff - curr_val;
         if (ABS(alternative) < ABS(diff)) {
             curr_val *= 2;
             diff = alternative;
             fprintf(file, "SHL %c\n", r->id);
         } else {
-            int32_t reminder = (int32_t)(curr_val % 2) + (int32_t)(diff % 2);
+            int32_t reminder = (curr_val % 2) + (diff % 2);
             diff /= 2;
             curr_val /= 2;
             fprintf(file, "SHR %c\n", r->id);
@@ -112,7 +119,7 @@ static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val
         }
     }
 
-    uint64_t test = curr_val;
+    num_t test = curr_val;
     switch (diff) {
         case 2:
             fprintf(file, "INC %c\n", r->id);
@@ -172,19 +179,19 @@ static void generate_from_current_div(reg *r, addr_t curr_val, addr_t target_val
     free(v._mem_ptr);
 
     if (test != target_val) {
-        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! Got: %ld Expected: %ld!\n", test, target_val);
+        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! (DIV_GEN)\n");
         exit(EXIT_FAILURE);
     }
 }
 
-static uint64_t generate_from_current_inc_cost(addr_t curr_val, addr_t target_val) {
-    __int128_t diff = (__int128_t)target_val - (__int128_t)curr_val;
+static uint64_t generate_from_current_inc_cost(num_t curr_val, num_t target_val) {
+    num_t diff = target_val - curr_val;
     return ABS(diff);
 }
 
-static void generate_from_current_inc(reg *r, addr_t curr_val, addr_t target_val, FILE *file) {
-    __int128_t diff = (__int128_t)target_val - (__int128_t)curr_val;
-    addr_t test = curr_val;
+static void generate_from_current_inc(reg *r, num_t curr_val, num_t target_val, FILE *file) {
+    num_t diff = target_val - curr_val;
+    num_t test = curr_val;
 
     while (diff > 0) {
         fprintf(file, "INC %c\n", r->id);
@@ -199,12 +206,12 @@ static void generate_from_current_inc(reg *r, addr_t curr_val, addr_t target_val
     }
 
     if (test != target_val) {
-        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! Got: %ld Expected: %ld!\n", test, target_val);
+        fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! (INC_GEN)\n");
         exit(EXIT_FAILURE);
     }
 }
 
-void generate_value(reg *r, addr_t curr_val, addr_t target_val, FILE *file, bool reset) {
+void generate_value(reg *r, num_t curr_val, num_t target_val, FILE *file, bool reset) {
     if (curr_val != 0 && !reset) {
         uint64_t reset_cost = generate_from_reset_cost(target_val);
         uint64_t div_cost = generate_from_current_div_cost(curr_val, target_val);
@@ -212,7 +219,7 @@ void generate_value(reg *r, addr_t curr_val, addr_t target_val, FILE *file, bool
 
         if (reset_cost <= div_cost && reset_cost < inc_cost) {
             fprintf(file, "RESET %c\n", r->id);
-            generate_from_reset_cost(target_val);
+            generate_from_reset(r, target_val, file);
         } else if (div_cost < inc_cost) {
             generate_from_current_div(r, curr_val, target_val, file);
         } else {
