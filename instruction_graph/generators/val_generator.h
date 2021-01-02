@@ -2,8 +2,7 @@
 #define VAL_GENERATOR_H
 
 #include "../../definitions.h"
-#include "../../register_machine/reg_m.h"
-#include <stdio.h>
+#include "../std_oper/std_oper.h"
 
 /**
  * 

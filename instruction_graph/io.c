@@ -3,6 +3,7 @@
 #include "../parser_func/getters.h"
 #include "generators/stack_generator.h"
 #include "generators/val_generator.h"
+#include "std_oper/std_oper.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -46,7 +47,7 @@ void eval_WRITE(i_graph **i_current, FILE *file) {
     if (!(expr_curr->mask & LEFT_SYM1_NUM)) {
         if (expr_curr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
             if (!(expr_curr->mask & LEFT_SYM2_NUM)) {
-            
+                
             } else {
                 stack_ptr_generate(expr_curr->var_1[1].var->addr[0] + (addr_t)expr_curr->var_2[1].num, file);
                 fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
