@@ -2,7 +2,7 @@
 #include "i_graph.h"
 #include "../parser_func/getters.h"
 #include "generators/stack_generator.h"
-#include "generators/num_generator.h"
+#include "generators/val_generator.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -30,6 +30,12 @@ void eval_READ(i_graph **i_current, FILE *file) {
 
 void add_WRITE(expression_t *expr) {
     eval_check_1(expr);
+    if (!(expr->mask & LEFT_SYM1_NUM)) {
+        symbol_table *s_table = get_symbol_table();
+        symbol *sym = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
+        expr->var_1[0].addr = sym->addr[0];
+        symbol_table_pop(s_table);
+    }
     add_to_list(expr, i_WRITE);
 }
 
@@ -50,23 +56,10 @@ void eval_WRITE(i_graph **i_current, FILE *file) {
             fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
         }
     } else {
-        symbol_table *s_table = get_symbol_table();
-        symbol *sym = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
-
-        reg_allocator r_alloc = reg_m_LRU(r_set, false);
-        if (r_alloc.r->flags & REG_MODIFIED) {
-            stack_ptr_generate(r_alloc.r->addr, file);
-            fprintf(file, "STORE %c %c\n", r_alloc.r->id, r_set->stack_ptr.id);
-        }
-
-        generate_value(r_alloc.r, 0, (addr_t)expr_curr->var_1[1].num, file, true);
-        stack_ptr_generate(sym->addr[0], file);
-        fprintf(file, "STORE %c %c\n", r_alloc.r->id, r_set->stack_ptr.id);
-        r_alloc.r->addr = ADDR_UNDEF;
-        r_alloc.r->flags = REG_NO_FLAGS;
-
+        addr_t const temp_write_addr = expr_curr->var_1[0].addr;
+        reg *write_reg = val_generate(expr_curr->var_1[1].num, file);
+        stack_ptr_generate(temp_write_addr, file);
+        fprintf(file, "STORE %c %c\n", write_reg->id, r_set->stack_ptr.id);
         fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
-
-        symbol_table_pop(s_table);
     }
 }

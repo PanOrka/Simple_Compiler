@@ -33,4 +33,13 @@ typedef __int128_t num_t;
 #define ADDR_T_MSB 0x8000000000000000
 #endif
 
+/**
+ * 
+ * VAL_GEN_ADDR - address specified for value generator
+ * 
+*/
+#ifndef VAL_GEN_ADDR
+#define VAL_GEN_ADDR 0xFFFFFFFFFFFFFFFD
+#endif
+
 #endif
