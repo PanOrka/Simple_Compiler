@@ -15,6 +15,8 @@ reg_allocator oper_get_reg_for_variable(addr_t addr, FILE *file) {
         r_alloc.r->addr = ADDR_UNDEF;
         r_alloc.r->flags = REG_NO_FLAGS;
     }
+
+    return r_alloc;
 }
 
 void oper_load_variable_to_reg(reg *r, addr_t addr, FILE *file) {
