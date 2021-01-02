@@ -5,7 +5,13 @@
 
 reg_allocator oper_get_reg_for_variable(addr_t addr, FILE *file) {
     reg_set *r_set = get_reg_set();
-    reg_allocator r_alloc = reg_m_get(r_set, addr, true);
+    reg_allocator r_alloc;
+    if (addr == ADDR_UNDEF) {
+        r_alloc = reg_m_LRU(r_set, false);
+    } else {
+        r_alloc = reg_m_get(r_set, addr, true);
+    }
+
     if (!r_alloc.was_allocated) {
         if (r_alloc.r->flags & REG_MODIFIED) {
             stack_ptr_generate(r_alloc.r->addr, file);
