@@ -1,4 +1,5 @@
 #include "val_generator.h"
+#include "stack_generator.h"
 #include "num_generator.h"
 
 static num_t current_val = 0;
@@ -18,6 +19,7 @@ reg * val_generate(num_t target_value, FILE *file) {
         r_alloc.r->addr = VAL_GEN_ADDR;
         r_alloc.r->flags = REG_NO_FLAGS;
     }
-
     generate_value(r_alloc.r, current_val, target_value, file, val_reset);
+
+    return r_alloc.r;
 }
