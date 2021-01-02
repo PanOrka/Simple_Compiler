@@ -6,7 +6,7 @@ static num_t current_val = 0;
 
 reg * val_generate(num_t target_value, FILE *file) {
     reg_set *r_set = get_reg_set();
-    reg_allocator r_alloc = oper_load_variable(VAL_GEN_ADDR, file);
+    reg_allocator r_alloc = oper_get_reg_for_variable(VAL_GEN_ADDR, file);
 
     bool reset = false;
     if (!r_alloc.was_allocated) {
@@ -15,6 +15,7 @@ reg * val_generate(num_t target_value, FILE *file) {
     }
     generate_value(r_alloc.r, current_val, target_value, file, reset);
     current_val = target_value;
+    r_alloc.r->addr = VAL_GEN_ADDR;
 
     return r_alloc.r;
 }

@@ -10,3 +10,7 @@ void stack_ptr_generate(addr_t addr, FILE *file) {
     stack_value = addr;
     stack_initialized = true;
 }
+
+void stack_ptr_clear() {
+    stack_initialized = false;
+}

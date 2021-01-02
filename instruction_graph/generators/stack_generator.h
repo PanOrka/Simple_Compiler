@@ -11,4 +11,11 @@
 */
 void stack_ptr_generate(addr_t addr, FILE *file);
 
+/**
+ * 
+ * Clear stack_ptr
+ * 
+*/
+void stack_ptr_clear();
+
 #endif

@@ -47,7 +47,12 @@ void eval_WRITE(i_graph **i_current, FILE *file) {
     if (!(expr_curr->mask & LEFT_SYM1_NUM)) {
         if (expr_curr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
             if (!(expr_curr->mask & LEFT_SYM2_NUM)) {
-                
+                addr_t const var_idx_addr = expr_curr->addr_mask & LEFT_SYM1_ADDR ? expr_curr->var_2[1].addr : expr_curr->var_2[1].var->addr[0];
+                oper_set_stack_ptr_addr_arr(var_idx_addr,
+                                            expr_curr->var_1[1].var->addr[0],
+                                            expr_curr->var_1[1].var->_add_info.start_idx,
+                                            file);
+                fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
             } else {
                 stack_ptr_generate(expr_curr->var_1[1].var->addr[0] + (addr_t)expr_curr->var_2[1].num, file);
                 fprintf(file, "PUT %c\n", r_set->stack_ptr.id);
