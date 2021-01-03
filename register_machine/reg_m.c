@@ -95,3 +95,16 @@ void reg_m_drop_addr(reg_set *r_set, addr_t addr) {
         }
     }
 }
+
+void reg_m_promote(reg_set *r_set, addr_t addr) {
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        if (r_set->r[i]->addr == addr) {
+            reg_m_sort(r_set, i, REG_M_SORT_UP);
+
+            return;
+        }
+    }
+
+    fprintf(stderr, "[REG_M]: Promotion of non-existent address!\n");
+    exit(EXIT_FAILURE);
+}

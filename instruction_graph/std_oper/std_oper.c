@@ -80,7 +80,7 @@ void oper_reg_swap(reg *r1, reg *r2, FILE *file) {
     fprintf(file, "ADD %c %c\n", r1->id, r2->id);
 }
 
-void oper_store_array(const addr_t addr[2], FILE *file) {
+void oper_store_array(const addr_t addr[2], bool drop_all, FILE *file) {
     reg_set *r_set = get_reg_set();
 
     for (int32_t i=0; i<REG_SIZE; ++i) {
@@ -88,7 +88,11 @@ void oper_store_array(const addr_t addr[2], FILE *file) {
         if (r->addr >= addr[0] && r->addr < addr[1]) {
             stack_ptr_generate(r->addr, file);
             fprintf(file, "STORE %c %c\n", r->id, r_set->stack_ptr.id);
-            reg_m_drop_addr(r_set, r->addr);
+            if (drop_all) {
+                reg_m_drop_addr(r_set, r->addr);
+            } else {
+                r->flags &= ~REG_MODIFIED;
+            }
         }
     }
 }
@@ -99,20 +103,20 @@ void oper_set_assign_val_0(expression_t const * const expr,
                            FILE *file)
 {
     reg_set *r_set = get_reg_set();
-    if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
-        if (!(expr->mask & ASSIGN_SYM2_NUM)) {
-            oper_store_array(expr->var_1[0].var->addr, file);
+    if ((expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & ASSIGN_SYM2_NUM)) {
+        oper_store_array(expr->var_1[0].var->addr, true, file);
 
-            addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
-            oper_set_stack_ptr_addr_arr(var_idx_addr,
-                                        expr->var_1[0].var->addr[0],
-                                        expr->var_1[0].var->_add_info.start_idx,
-                                        file);
-            fprintf(file, "STORE %c %c\n", assign_val->id, r_set->stack_ptr.id);
-        } else {
-            addr_t const eff_addr = expr->var_1[0].var->addr[0] + (addr_t)expr->var_2[0].num;
-            if (eff_addr != assign_val->addr) {
-                if (!(expr->mask & LEFT_SYM1_NUM) || !(reg_m_LRU(r_set, false).r->flags & REG_MODIFIED)) {
+        addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
+        oper_set_stack_ptr_addr_arr(var_idx_addr,
+                                    expr->var_1[0].var->addr[0],
+                                    expr->var_1[0].var->_add_info.start_idx,
+                                    file);
+        fprintf(file, "STORE %c %c\n", assign_val->id, r_set->stack_ptr.id);
+    } else {
+        addr_t const eff_addr = expr->var_1[0].var->addr[0] + (addr_t)expr->var_2[0].num;
+        if (eff_addr != assign_val->addr) {
+            if (assign_val_flags & ASSIGN_VAL_IS_NUM) {
+                if (!(reg_m_LRU(r_set, false).r->flags & REG_MODIFIED)) {
                     reg_allocator var = oper_get_reg_for_variable(eff_addr, file);
                     oper_reg_swap(var.r, assign_val, file);
 
@@ -122,22 +126,19 @@ void oper_set_assign_val_0(expression_t const * const expr,
                     reg_m_drop_addr(r_set, eff_addr);
                     assign_val->flags = REG_MODIFIED;
                     assign_val->addr = eff_addr;
+                    reg_m_promote(r_set, assign_val->addr);
                 }
-            }
-        }
-    } else {
-        addr_t const eff_addr = expr->var_1[0].var->addr[0];
-        if (eff_addr != assign_val->addr) {
-            if (!(expr->mask & LEFT_SYM1_NUM) || !(reg_m_LRU(r_set, false).r->flags & REG_MODIFIED)) {
+            } else if (assign_val_flags & ASSIGN_VAL_STASH) {
+                reg_m_drop_addr(r_set, eff_addr);
+                assign_val->flags = REG_MODIFIED;
+                assign_val->addr = eff_addr;
+                reg_m_promote(r_set, assign_val->addr);
+            } else {
                 reg_allocator var = oper_get_reg_for_variable(eff_addr, file);
                 oper_reg_swap(var.r, assign_val, file);
 
                 var.r->addr = eff_addr;
                 var.r->flags |= REG_MODIFIED;
-            } else {
-                reg_m_drop_addr(r_set, eff_addr);
-                assign_val->flags = REG_MODIFIED;
-                assign_val->addr = eff_addr;
             }
         }
     }
@@ -149,7 +150,7 @@ reg * oper_get_assign_val_1(expression_t const * const expr, FILE *file) {
 
     if (!(expr->mask & LEFT_SYM1_NUM)) {
         if ((expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & LEFT_SYM2_NUM)) {
-            oper_store_array(expr->var_1[1].var->addr, file);
+            oper_store_array(expr->var_1[1].var->addr, false, file);
 
             addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM1_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
@@ -184,7 +185,7 @@ reg * oper_get_assign_val_2(expression_t const * const expr, FILE *file) {
 
     if (!(expr->mask & RIGHT_SYM1_NUM)) {
         if ((expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & RIGHT_SYM2_NUM)) {
-            oper_store_array(expr->var_1[2].var->addr, file);
+            oper_store_array(expr->var_1[2].var->addr, false, file);
 
             addr_t const var_idx_addr = (expr->addr_mask & RIGHT_SYM1_ADDR) ? expr->var_2[2].addr : expr->var_2[2].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,

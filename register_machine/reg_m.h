@@ -74,4 +74,12 @@ reg_allocator reg_m_LRU(reg_set *r_set, bool do_sort);
 */
 void reg_m_drop_addr(reg_set *r_set, addr_t addr);
 
+/**
+ * 
+ * Promotes register with given address
+ * Used to promote register after assignment
+ * 
+*/
+void reg_m_promote(reg_set *r_set, addr_t addr);
+
 #endif

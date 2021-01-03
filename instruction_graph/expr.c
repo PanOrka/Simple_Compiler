@@ -21,49 +21,8 @@ void add_EXPR(expression_t *expr) {
 static void eval_expr_VALUE(expression_t const * const expr, FILE *file) {
     reg_set *r_set = get_reg_set();
     reg *assign_val = oper_get_assign_val_1(expr, file);
-
-    if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
-        if (!(expr->mask & ASSIGN_SYM2_NUM)) {
-            oper_store_array(expr->var_1[0].var->addr, file);
-
-            addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
-            oper_set_stack_ptr_addr_arr(var_idx_addr,
-                                        expr->var_1[0].var->addr[0],
-                                        expr->var_1[0].var->_add_info.start_idx,
-                                        file);
-            fprintf(file, "STORE %c %c\n", assign_val->id, r_set->stack_ptr.id);
-        } else {
-            addr_t const eff_addr = expr->var_1[0].var->addr[0] + (addr_t)expr->var_2[0].num;
-            if (eff_addr != assign_val->addr) {
-                if (!(expr->mask & LEFT_SYM1_NUM) || !(reg_m_LRU(r_set, false).r->flags & REG_MODIFIED)) {
-                    reg_allocator var = oper_get_reg_for_variable(eff_addr, file);
-                    oper_reg_swap(var.r, assign_val, file);
-
-                    var.r->addr = eff_addr;
-                    var.r->flags |= REG_MODIFIED;
-                } else {
-                    reg_m_drop_addr(r_set, eff_addr);
-                    assign_val->flags = REG_MODIFIED;
-                    assign_val->addr = eff_addr;
-                }
-            }
-        }
-    } else {
-        addr_t const eff_addr = expr->var_1[0].var->addr[0];
-        if (eff_addr != assign_val->addr) {
-            if (!(expr->mask & LEFT_SYM1_NUM) || !(reg_m_LRU(r_set, false).r->flags & REG_MODIFIED)) {
-                reg_allocator var = oper_get_reg_for_variable(eff_addr, file);
-                oper_reg_swap(var.r, assign_val, file);
-
-                var.r->addr = eff_addr;
-                var.r->flags |= REG_MODIFIED;
-            } else {
-                reg_m_drop_addr(r_set, eff_addr);
-                assign_val->flags = REG_MODIFIED;
-                assign_val->addr = eff_addr;
-            }
-        }
-    }
+    uint8_t const assign_val_flags = (expr->mask & LEFT_SYM1_NUM) ? ASSIGN_VAL_IS_NUM : ASSIGN_VAL_NO_FLAGS;
+    oper_set_assign_val_0(expr, assign_val, assign_val_flags, file);
 
     reg_m_drop_addr(r_set, TEMP_ADDR_1);
 }
@@ -74,6 +33,7 @@ static void eval_expr_ADD(expression_t const * const expr, FILE *file) {
     if ((expr->mask & LEFT_SYM1_NUM) && (expr->mask & RIGHT_SYM1_NUM)) {
         num_t val = (num_t)expr->var_1[1].num + (num_t)expr->var_1[2].num;
         reg *assign_val = val_generate(val, file);
+        oper_set_assign_val_0(expr, assign_val, ASSIGN_VAL_IS_NUM, file);
     } else {
 
     }
