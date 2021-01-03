@@ -24,6 +24,8 @@ static void eval_expr_VALUE(expression_t const * const expr, FILE *file) {
 
     if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
         if (!(expr->mask & ASSIGN_SYM2_NUM)) {
+            oper_store_array(expr->var_1[0].var->addr, file);
+
             addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
                                         expr->var_1[0].var->addr[0],
