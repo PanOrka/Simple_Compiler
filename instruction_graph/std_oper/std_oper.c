@@ -140,6 +140,8 @@ void oper_set_assign_val_0(expression_t const * const expr,
                 var.r->addr = eff_addr;
                 var.r->flags |= REG_MODIFIED;
             }
+        } else {
+            assign_val->flags |= REG_MODIFIED;
         }
     }
 }
