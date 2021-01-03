@@ -92,3 +92,49 @@ void oper_store_array(const addr_t addr[2], FILE *file) {
         }
     }
 }
+
+reg * oper_get_assign_val_1(expression_t const * const expr, FILE *file) {
+    reg_set *r_set = get_reg_set();
+    reg *assign_val = NULL;
+
+    if (!(expr->mask & LEFT_SYM1_NUM)) {
+        if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
+            if (!(expr->mask & LEFT_SYM2_NUM)) {
+                oper_store_array(expr->var_1[1].var->addr, file);
+
+                reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_1, file);
+
+                addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM1_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
+                oper_set_stack_ptr_addr_arr(var_idx_addr,
+                                            expr->var_1[1].var->addr[0],
+                                            expr->var_1[1].var->_add_info.start_idx,
+                                            file);
+                fprintf(file, "LOAD %c %c\n", var.r->id, r_set->stack_ptr.id);
+
+                assign_val = var.r;
+            } else {
+                addr_t const eff_addr = expr->var_1[1].var->addr[0] + (addr_t)expr->var_2[1].num;
+                reg_allocator var = oper_get_reg_for_variable(eff_addr, file);
+
+                if (!var.was_allocated) {
+                    oper_load_variable_to_reg(var.r, eff_addr, file);
+                }
+
+                assign_val = var.r;
+            }
+        } else {
+            addr_t const eff_addr = expr->var_1[1].var->addr[0];
+            reg_allocator var = oper_get_reg_for_variable(eff_addr, file);
+
+            if (!var.was_allocated) {
+                oper_load_variable_to_reg(var.r, eff_addr, file);
+            }
+
+            assign_val = var.r;
+        }
+    } else {
+        assign_val = val_generate(expr->var_1[1].num, file);
+    }
+
+    return assign_val;
+}

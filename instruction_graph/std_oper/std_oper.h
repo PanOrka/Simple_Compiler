@@ -2,6 +2,7 @@
 #define STD_OPER_H
 
 #include "../../register_machine/reg_m.h"
+#include "../../parser_func/expressions.h"
 #include <stdio.h>
 
 /**
@@ -41,5 +42,13 @@ void oper_reg_swap(reg *r1, reg *r2, FILE *file);
  * 
 */
 void oper_store_array(const addr_t addr[2], FILE *file);
+
+/**
+ * 
+ * Get assign_val_1 of expression to register
+ * 
+ * RETURN: Pointer to register with variable
+*/
+reg * oper_get_assign_val_1(expression_t const * const expr, FILE *file);
 
 #endif
