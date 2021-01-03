@@ -68,6 +68,17 @@ static void eval_expr_VALUE(expression_t const * const expr, FILE *file) {
     reg_m_drop_addr(r_set, TEMP_ADDR_1);
 }
 
+static void eval_expr_ADD(expression_t const * const expr, FILE *file) {
+    reg_set *r_set = get_reg_set();
+    
+    if ((expr->mask & LEFT_SYM1_NUM) && (expr->mask & RIGHT_SYM1_NUM)) {
+        num_t val = (num_t)expr->var_1[1].num + (num_t)expr->var_1[2].num;
+        reg *assign_val = val_generate(val, file);
+    } else {
+
+    }
+}
+
 void eval_EXPR(i_graph **i_current, FILE *file) {
     expression_t const * const expr_curr = (*i_current)->payload;
 
@@ -76,6 +87,7 @@ void eval_EXPR(i_graph **i_current, FILE *file) {
             eval_expr_VALUE(expr_curr, file);
             break;
         case expr_ADD:
+            eval_expr_ADD(expr_curr, file);
             break;
         case expr_SUB:
             break;

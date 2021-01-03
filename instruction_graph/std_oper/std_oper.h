@@ -45,10 +45,31 @@ void oper_store_array(const addr_t addr[2], FILE *file);
 
 /**
  * 
+ * Set assign_var with given ready register
+ * 
+ * ARGUMENTS: expression_t const * const expr <= from here we assign var[0]
+ *            reg *assign_val <= register with value that we set assign_var
+ *            uint8_t assign_val_flags <= information about assign_val
+*/
+void oper_set_assign_val_0(expression_t const * const expr,
+                           reg *assign_val,
+                           uint8_t assign_val_flags,
+                           FILE *file);
+
+/**
+ * 
  * Get assign_val_1 of expression to register
  * 
  * RETURN: Pointer to register with variable
 */
 reg * oper_get_assign_val_1(expression_t const * const expr, FILE *file);
+
+/**
+ * 
+ * Get assign_val_2 of expression to register
+ * 
+ * RETURN: Pointer to register with variable
+*/
+reg * oper_get_assign_val_2(expression_t const * const expr, FILE *file);
 
 #endif
