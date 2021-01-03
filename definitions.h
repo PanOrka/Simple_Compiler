@@ -42,4 +42,23 @@ typedef __int128_t num_t;
 #define VAL_GEN_ADDR 0xFFFFFFFFFFFFFFFD
 #endif
 
+/**
+ * 
+ * TEMP_ADDR_1 - temporary address for later drop, !DON'T LEAVE THAT IN REGISTERS!
+ * OR don't give flag REG_MODIFIED
+ * 
+*/
+#ifndef TEMP_ADDR_1
+#define TEMP_ADDR_1 0xFFFFFFFFFFFFFFFC
+#endif
+
+/**
+ * 
+ * TEMP_ADDR_2
+ * 
+*/
+#ifndef TEMP_ADDR_2
+#define TEMP_ADDR_2 0xFFFFFFFFFFFFFFFB
+#endif
+
 #endif

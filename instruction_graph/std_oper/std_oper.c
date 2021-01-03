@@ -74,3 +74,21 @@ void oper_set_stack_ptr_addr_arr(addr_t var_idx_addr, addr_t arr_addr, uint64_t 
         add_sub_val_gen(&(r_set->stack_ptr), arr_addr, var_idx.r, start_idx, file);
     }
 }
+
+void oper_reg_swap(reg *r1, reg *r2, FILE *file) {
+    fprintf(file, "RESET %c\n", r1->id);
+    fprintf(file, "ADD %c %c\n", r1->id, r2->id);
+}
+
+void oper_store_array(const addr_t addr[2], FILE *file) {
+    reg_set *r_set = get_reg_set();
+
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        reg * const r = r_set->r[i];
+        if (r->addr >= addr[0] && r->addr < addr[1]) {
+            stack_ptr_generate(r->addr, file);
+            fprintf(file, "STORE %c %c\n", r->id, r_set->stack_ptr.id);
+            reg_m_drop_addr(r_set, r->addr);
+        }
+    }
+}

@@ -26,4 +26,20 @@ void oper_load_variable_to_reg(reg *r, addr_t addr, FILE *file);
 */
 void oper_set_stack_ptr_addr_arr(addr_t var_idx_addr, addr_t arr_addr, uint64_t start_idx, FILE *file);
 
+/**
+ * 
+ * r1 <= r2
+ * Puts value of r2 to r1
+ * 
+*/
+void oper_reg_swap(reg *r1, reg *r2, FILE *file);
+
+/**
+ * 
+ * Store elements of array that were in registers
+ * ARGUMENTS: [From, To) addresses of array
+ * 
+*/
+void oper_store_array(const addr_t addr[2], FILE *file);
+
 #endif
