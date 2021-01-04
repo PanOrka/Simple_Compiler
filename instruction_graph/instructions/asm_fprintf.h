@@ -18,13 +18,30 @@ void PUT(reg *x);
 void LOAD(reg *x, reg *y);
 void STORE(reg *x, reg *y);
 
-void ADD(reg *x, reg *y);
-void SUB(reg *x, reg *y);
+reg * ADD(reg *x, reg *y);
+reg * SUB(reg *x, reg *y);
+/** 
+ * x <= x * y
+*/
+reg * MUL(reg *x, reg *y);
+/** 
+ * x <= x / y
+*/
+reg * DIV(reg *x, reg *y);
+/** 
+ * x <= x % y
+*/
+reg * MOD(reg *x, reg *y);
+
 void RESET(reg *x);
 void INC(reg *x);
 void DEC(reg *x);
 void SHR(reg *x);
 void SHL(reg *x);
+
+void JUMP_i_idx(int64_t j);
+void JZERO_i_idx(reg *x, int64_t j);
+void JODD_i_idx(reg *x, int64_t j);
 
 void JUMP();
 void JZERO(reg *x);

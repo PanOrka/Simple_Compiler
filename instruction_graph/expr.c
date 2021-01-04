@@ -50,7 +50,7 @@ static num_t num_mod(num_t x, num_t y) {
 
 typedef struct {
     num_t (*func_num) (num_t x, num_t y);
-    void (*func_reg) (reg *x, reg *y);
+    reg * (*func_reg) (reg *x, reg *y);
 } arithmetic_func;
 
 static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_func func) {
@@ -82,11 +82,16 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
             assign_val_1->addr = TEMP_ADDR_2;
         }
 
-        func.func_reg(assign_val_1, assign_val_2);
+        reg * new_reg = func.func_reg(assign_val_1, assign_val_2);
+        if (new_reg) {
+            assign_val_1 = new_reg;
+        }
+
         oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
 
         reg_m_drop_addr(r_set, TEMP_ADDR_1);
         reg_m_drop_addr(r_set, TEMP_ADDR_2);
+        reg_m_drop_addr(r_set, TEMP_ADDR_3);
     }
 }
 
@@ -107,7 +112,7 @@ void eval_EXPR(i_graph **i_current) {
             break;
         case expr_MUL:
             eval_expr_ARITHMETIC(expr_curr,
-                (arithmetic_func){ .func_num = &num_mul, .func_reg = &ADD });
+                (arithmetic_func){ .func_num = &num_mul, .func_reg = &MUL });
             break;
         case expr_DIV:
             eval_expr_ARITHMETIC(expr_curr,

@@ -61,4 +61,13 @@ typedef __int128_t num_t;
 #define TEMP_ADDR_2 0xFFFFFFFFFFFFFFFB
 #endif
 
+/**
+ * 
+ * TEMP_ADDR_3
+ * 
+*/
+#ifndef TEMP_ADDR_3
+#define TEMP_ADDR_3 0xFFFFFFFFFFFFFFFA
+#endif
+
 #endif

@@ -165,7 +165,7 @@ void i_graph_execute(FILE *file) {
         start = start->next;
     }
 
-    fprintf(file, "HALT");
+    HALT();
 
     while (end) {
         i_graph *to_free = end;
