@@ -46,11 +46,16 @@ reg * MUL(reg *x, reg *y) {
     acc->addr = TEMP_ADDR_3;
     RESET(acc);
 
-    JODD_i_idx(y, 2);
+    // please rethink your life
+    JODD_i_idx(y, 5);
+    SHL(x);
+    SHR(y);
+    JZERO_i_idx(y, 6);
+    JUMP_i_idx(-4);
     ADD(acc, x);
     SHL(x);
     SHR(y);
-    JZERO_i_idx(y, -4);
+    JUMP_i_idx(-8);
 
     reg_m_drop_addr(r_set, x->addr);
     reg_m_drop_addr(r_set, y->addr);
