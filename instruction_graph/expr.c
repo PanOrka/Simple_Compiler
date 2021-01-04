@@ -70,7 +70,7 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         reg *assign_val_1 = oper_get_assign_val_1(expr);
         if (assign_val_1->addr == VAL_GEN_ADDR) {
             assign_val_1->addr = TEMP_ADDR_1;
-        } else if (assign_val_1->flags & REG_MODIFIED) {
+        } else if (assign_val_1->flags & REG_MODIFIED) { // First register is always stashed
             stack_ptr_generate(assign_val_1->addr);
             STORE(assign_val_1, &(r_set->stack_ptr));
             assign_val_1->flags &= ~REG_MODIFIED;

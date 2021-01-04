@@ -2,6 +2,7 @@
 
 #include "../../parser_func/getters.h"
 #include "../std_oper/std_oper.h"
+#include "../generators/stack_generator.h"
 
 static FILE *asm_out = NULL;
 
@@ -46,6 +47,12 @@ reg * MUL(reg *x, reg *y) {
     acc->addr = TEMP_ADDR_3;
     RESET(acc);
 
+    if (y->flags & REG_MODIFIED) {
+        // JZERO_i_idx(y, ) <= totally not needed store if value under y is 0
+        stack_ptr_generate(y->addr);
+        STORE(y, &(r_set->stack_ptr));
+        y->flags &= ~REG_MODIFIED;
+    }
     JZERO_i_idx(y, 9);
     JODD_i_idx(y, 4);
     SHL(x);
