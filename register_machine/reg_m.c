@@ -51,6 +51,14 @@ void reg_m_sort(reg_set *r_set, uint32_t idx, int32_t type) {
     }
 }
 
+static void print_regs(reg_set *r_set) {
+    fprintf(stdout, "\n");
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        fprintf(stdout, "REG: %c, ADDR: %lu\n", r_set->r[i]->id, r_set->r[i]->addr);
+    }
+    fprintf(stdout, "REG: %c, ADDR: %lu\n", r_set->stack_ptr.id, r_set->stack_ptr.addr);
+}
+
 reg_allocator reg_m_get(reg_set *r_set, addr_t addr, bool do_sort) {
     int32_t idx = 0;
     for (int32_t i=0; i<REG_SIZE; ++i) {
@@ -71,6 +79,9 @@ reg_allocator reg_m_get(reg_set *r_set, addr_t addr, bool do_sort) {
         idx = REG_SIZE - 1;
     }
 
+    // for debug
+    print_regs(r_set);
+
     return (reg_allocator){r_set->r[idx], 0, false};
 }
 
@@ -80,6 +91,9 @@ reg_allocator reg_m_LRU(reg_set *r_set, bool do_sort) {
         reg_m_sort(r_set, 0, REG_M_SORT_UP);
         idx = REG_SIZE - 1;
     }
+
+    // for debug
+    print_regs(r_set);
 
     return (reg_allocator){r_set->r[idx], 0, false};
 }
@@ -91,6 +105,9 @@ void reg_m_drop_addr(reg_set *r_set, addr_t addr) {
             r_set->r[i]->flags = REG_NO_FLAGS;
             reg_m_sort(r_set, i, REG_M_SORT_DOWN);
 
+            // for debug
+            print_regs(r_set);
+
             return;
         }
     }
@@ -100,6 +117,9 @@ void reg_m_promote(reg_set *r_set, addr_t addr) {
     for (int32_t i=0; i<REG_SIZE; ++i) {
         if (r_set->r[i]->addr == addr) {
             reg_m_sort(r_set, i, REG_M_SORT_UP);
+
+            // for debug
+            print_regs(r_set);
 
             return;
         }

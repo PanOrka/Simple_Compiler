@@ -119,7 +119,9 @@ void oper_set_assign_val_0(expression_t const * const expr,
         oper_set_stack_ptr_addr_arr(var_idx_addr,
                                     expr->var_1[0].var->addr[0],
                                     expr->var_1[0].var->_add_info.start_idx);
+
         oper_drop_array(expr->var_1[0].var->addr);
+
         STORE(assign_val, &(r_set->stack_ptr));
         if (assign_val_flags & ASSIGN_VAL_STASH) {
             reg_m_drop_addr(r_set, assign_val->addr);
