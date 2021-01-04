@@ -37,6 +37,7 @@ static void eval_expr_ADD(expression_t const * const expr, FILE *file) {
     } else {
         reg *assign_val_1 = oper_get_assign_val_1(expr, file);
         reg *assign_val_2 = oper_get_assign_val_2(expr, file);
+        reg_m_promote(r_set, assign_val_1->addr);
 
         // if (!(expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) || (expr->mask & ASSIGN_SYM2_NUM)) {
         //     addr_t const eff_addr = expr->var_1[0].var->addr[0] + (addr_t)expr->var_2[0].num;
