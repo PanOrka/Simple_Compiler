@@ -38,11 +38,17 @@ void oper_reg_swap(reg *r1, reg *r2, FILE *file);
 /**
  * 
  * Store elements of array that were in registers
- * ARGUMENTS: [From, To) addresses of array,
- *            bool drop_all - flag whether to drop every reg with element of array
+ * ARGUMENTS: [From, To) addresses of array
  * 
 */
-void oper_store_array(const addr_t addr[2], bool drop_all, FILE *file);
+void oper_store_array(const addr_t addr[2], FILE *file);
+
+/**
+ * 
+ * Drop all elements of array from registers
+ * 
+*/
+void oper_drop_array(const addr_t addr[2], FILE *file);
 
 /**
  * 

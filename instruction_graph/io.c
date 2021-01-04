@@ -17,7 +17,8 @@ void eval_READ(i_graph **i_current, FILE *file) {
     reg_set *r_set = get_reg_set();
 
     if ((expr_curr->var_1[0].var->flags & SYMBOL_IS_ARRAY) && !(expr_curr->mask & ASSIGN_SYM2_NUM)) {
-        oper_store_array(expr_curr->var_1[0].var->addr, true, file);
+        oper_store_array(expr_curr->var_1[0].var->addr, file);
+        oper_drop_array(expr_curr->var_1[0].var->addr, file);
 
         addr_t const var_idx_addr = (expr_curr->addr_mask & ASSIGN_SYM2_ADDR) ? expr_curr->var_2[0].addr : expr_curr->var_2[0].var->addr[0];
         oper_set_stack_ptr_addr_arr(var_idx_addr,
@@ -50,7 +51,7 @@ void eval_WRITE(i_graph **i_current, FILE *file) {
 
     if (!(expr_curr->mask & LEFT_SYM1_NUM)) {
         if ((expr_curr->var_1[1].var->flags & SYMBOL_IS_ARRAY) && !(expr_curr->mask & LEFT_SYM2_NUM)) {
-            oper_store_array(expr_curr->var_1[1].var->addr, false, file);
+            oper_store_array(expr_curr->var_1[1].var->addr, file);
 
             addr_t const var_idx_addr = (expr_curr->addr_mask & LEFT_SYM1_ADDR) ? expr_curr->var_2[1].addr : expr_curr->var_2[1].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
