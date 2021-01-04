@@ -32,6 +32,22 @@ static num_t num_add(num_t x, num_t y) {
     return x + y;
 }
 
+static num_t num_sub(num_t x, num_t y) {
+    return (x - y >= 0) ? x - y : 0;
+}
+
+static num_t num_mul(num_t x, num_t y) {
+    return x * y;
+}
+
+static num_t num_div(num_t x, num_t y) {
+    return (y != 0) ? x / y : 0;
+}
+
+static num_t num_mod(num_t x, num_t y) {
+    return (y != 0) ? x % y : 0;
+}
+
 typedef struct {
     num_t (*func_num) (num_t x, num_t y);
     void (*func_reg) (reg *x, reg *y);
@@ -82,15 +98,24 @@ void eval_EXPR(i_graph **i_current) {
             eval_expr_VALUE(expr_curr);
             break;
         case expr_ADD:
-            eval_expr_ARITHMETIC(expr_curr, (arithmetic_func){ .func_num = &num_add, .func_reg = &ADD });
+            eval_expr_ARITHMETIC(expr_curr,
+                (arithmetic_func){ .func_num = &num_add, .func_reg = &ADD });
             break;
         case expr_SUB:
+            eval_expr_ARITHMETIC(expr_curr,
+                (arithmetic_func){ .func_num = &num_sub, .func_reg = &SUB });
             break;
         case expr_MUL:
+            eval_expr_ARITHMETIC(expr_curr,
+                (arithmetic_func){ .func_num = &num_mul, .func_reg = &ADD });
             break;
         case expr_DIV:
+            eval_expr_ARITHMETIC(expr_curr,
+                (arithmetic_func){ .func_num = &num_div, .func_reg = &ADD });
             break;
         case expr_MOD:
+            eval_expr_ARITHMETIC(expr_curr,
+                (arithmetic_func){ .func_num = &num_mod, .func_reg = &ADD });
             break;
         default:
             fprintf(stderr, "[EXPR]: Wrong type of expression!\n");
