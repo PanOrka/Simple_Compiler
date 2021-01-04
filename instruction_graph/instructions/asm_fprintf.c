@@ -99,16 +99,16 @@ reg * DIV(reg *x, reg *y) {
      * Integer division algorithm
      * pls kill me
     */
-    JZERO_i_idx(y, 52); // If y is 0 then we end with 0
+    JZERO_i_idx(y, 51); // If y is 0 then we end with 0
     DEC(y);
-    JZERO_i_idx(y, 48); // If y is 1 then we end with x
+    JZERO_i_idx(y, 47); // If y is 1 then we end with x
     INC(y);
 
     ADD(rem, x);
     RESET(x);
     // calculating size of reg_x value
     // and inversing x
-    JZERO_i_idx(rem, 46); // end of proc x = 0 so END
+    JZERO_i_idx(rem, 45); // end of proc x = 0 so END
     JODD_i_idx(rem, 4);
         SHR(rem);
         INC(size);
@@ -129,7 +129,6 @@ reg * DIV(reg *x, reg *y) {
     JUMP_i_idx(-9);
 
     // now div algo rem is definetly 0 here
-    JZERO_i_idx(size, 28); // end of proc
     JODD_i_idx(x, 4);
         DEC(size);
         SHR(x);
@@ -186,16 +185,16 @@ reg * MOD(reg *x, reg *y) {
      * Integer division algorithm
      * pls kill me
     */
-    JZERO_i_idx(y, 50); // If y is 0 then we end with 0
+    JZERO_i_idx(y, 49); // If y is 0 then we end with 0
     DEC(y);
-    JZERO_i_idx(y, 47); // If y is 1 then we end with 0
+    JZERO_i_idx(y, 46); // If y is 1 then we end with 0
     INC(y);
 
     ADD(rem, x);
     RESET(x);
     // calculating size of reg_x value
     // and inversing x
-    JZERO_i_idx(rem, 44); // end of proc x = 0 so END
+    JZERO_i_idx(rem, 43); // end of proc x = 0 so END
     JODD_i_idx(rem, 4);
         SHR(rem);
         INC(size);
@@ -216,7 +215,6 @@ reg * MOD(reg *x, reg *y) {
     JUMP_i_idx(-9);
 
     // now div algo rem is definetly 0 here
-    JZERO_i_idx(size, 25); // end of proc
     JODD_i_idx(x, 4);
         DEC(size);
         SHR(x);
