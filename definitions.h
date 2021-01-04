@@ -70,4 +70,22 @@ typedef __int128_t num_t;
 #define TEMP_ADDR_3 0xFFFFFFFFFFFFFFFA
 #endif
 
+/**
+ * 
+ * TEMP_ADDR_4
+ * 
+*/
+#ifndef TEMP_ADDR_4
+#define TEMP_ADDR_4 0xFFFFFFFFFFFFFFF9
+#endif
+
+/**
+ * 
+ * TEMP_ADDR_5
+ * 
+*/
+#ifndef TEMP_ADDR_5
+#define TEMP_ADDR_5 0xFFFFFFFFFFFFFFF8
+#endif
+
 #endif

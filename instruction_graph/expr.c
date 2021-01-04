@@ -85,6 +85,7 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         reg * new_reg = func.func_reg(assign_val_1, assign_val_2);
         if (new_reg) {
             assign_val_1 = new_reg;
+            reg_m_promote(r_set, assign_val_1->addr);
         }
 
         oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
@@ -92,6 +93,8 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         reg_m_drop_addr(r_set, TEMP_ADDR_1);
         reg_m_drop_addr(r_set, TEMP_ADDR_2);
         reg_m_drop_addr(r_set, TEMP_ADDR_3);
+        reg_m_drop_addr(r_set, TEMP_ADDR_4);
+        reg_m_drop_addr(r_set, TEMP_ADDR_5);
     }
 }
 
@@ -116,7 +119,7 @@ void eval_EXPR(i_graph **i_current) {
             break;
         case expr_DIV:
             eval_expr_ARITHMETIC(expr_curr,
-                (arithmetic_func){ .func_num = &num_div, .func_reg = &ADD });
+                (arithmetic_func){ .func_num = &num_div, .func_reg = &DIV });
             break;
         case expr_MOD:
             eval_expr_ARITHMETIC(expr_curr,

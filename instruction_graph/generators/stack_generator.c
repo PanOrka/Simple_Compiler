@@ -14,3 +14,11 @@ void stack_ptr_generate(addr_t addr) {
 void stack_ptr_clear() {
     stack_initialized = false;
 }
+
+bool stack_ptr_initialized() {
+    return stack_initialized;
+}
+
+bool stack_ptr_is_null() {
+    return (stack_value == 0);
+}
