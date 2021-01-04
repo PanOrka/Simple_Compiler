@@ -13,7 +13,7 @@ void add_FOR(for_loop_t *loop) {
     add_to_list(loop, i_FOR);
 }
 
-void eval_FOR(i_graph **i_current, FILE *file) {
+void eval_FOR(i_graph **i_current) {
     
 }
 
@@ -56,6 +56,6 @@ void add_ENDFOR() {
     exit(EXIT_FAILURE);
 }
 
-void eval_ENDFOR(i_graph **i_current, FILE *file) {
+void eval_ENDFOR(i_graph **i_current) {
     
 }

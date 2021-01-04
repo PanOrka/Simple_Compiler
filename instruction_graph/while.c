@@ -12,7 +12,7 @@ void add_WHILE(expression_t *expr) {
     add_to_list(expr, i_WHILE);
 }
 
-void eval_WHILE(i_graph **i_current, FILE *file) {
+void eval_WHILE(i_graph **i_current) {
     
 }
 
@@ -29,6 +29,6 @@ void add_ENDWHILE() {
     exit(EXIT_FAILURE);
 }
 
-void eval_ENDWHILE(i_graph **i_current, FILE *file) {
+void eval_ENDWHILE(i_graph **i_current) {
     
 }

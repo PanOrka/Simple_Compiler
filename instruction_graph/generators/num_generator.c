@@ -1,4 +1,5 @@
 #include "num_generator.h"
+#include "../instructions/asm_fprintf.h"
 
 #ifndef ABS
 #define ABS(x) (x >= 0 ? x : -x)
@@ -30,19 +31,19 @@ static uint64_t generate_from_reset_cost(num_t target_val) {
     return cost + 1;
 }
 
-static void generate_from_reset(reg *r, num_t target_val, FILE *file) {
+static void generate_from_reset(reg *r, num_t target_val) {
     bool inc_once = false;
 
     num_t val = target_val;
     num_t test = 0;
     for (int32_t i=0; i<8*sizeof(val); ++i) {
         if (inc_once) {
-            fprintf(file, "SHL %c\n", r->id);
+            SHL(r);
             test *= 2;
         }
 
         if (val & num_t_msb) {
-            fprintf(file, "INC %c\n", r->id);
+            INC(r);
             inc_once = true;
             ++test;
         }
@@ -91,7 +92,7 @@ static uint64_t generate_from_current_div_cost(num_t curr_val, num_t target_val)
 
 #include "../../vector/vector.h"
 
-static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val, FILE *file) {
+static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val) {
     num_t diff = target_val - curr_val;
     /*
     // if diff >= 0 it can't be greater than MAX_uint64_t
@@ -99,7 +100,7 @@ static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val, 
     while (curr_val < diff) {
         curr_val *= 2;
         diff = target_val - curr_val;
-        fprintf(file, "SHL %c\n", r->id);
+        SHL(r);
     }
 
     vector v = vector_create(sizeof(int32_t), alignof(int32_t), 64);
@@ -109,12 +110,12 @@ static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val, 
         if (ABS(alternative) < ABS(diff)) {
             curr_val *= 2;
             diff = alternative;
-            fprintf(file, "SHL %c\n", r->id);
+            SHL(r);
         } else {
             int32_t reminder = (curr_val % 2) + (diff % 2);
             diff /= 2;
             curr_val /= 2;
-            fprintf(file, "SHR %c\n", r->id);
+            SHR(r);
             VECTOR_ADD(v, reminder);
         }
     }
@@ -122,24 +123,24 @@ static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val, 
     num_t test = curr_val;
     switch (diff) {
         case 2:
-            fprintf(file, "INC %c\n", r->id);
-            fprintf(file, "INC %c\n", r->id);
+            INC(r);
+            INC(r);
             test += 2;
             break;
         case 1:
-            fprintf(file, "INC %c\n", r->id);
+            INC(r);
             ++test;
             break;
         case 0:
             test += 0;
             break;
         case -1:
-            fprintf(file, "DEC %c\n", r->id);
+            DEC(r);
             --test;
             break;
         case -2:
-            fprintf(file, "DEC %c\n", r->id);
-            fprintf(file, "DEC %c\n", r->id);
+            DEC(r);
+            DEC(r);
             test -= 2;
             break;
         default:
@@ -151,23 +152,23 @@ static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val, 
         int32_t reminders = *((int32_t *)VECTOR_POP(v, POP));
         switch (reminders) {
             case 2:
-                fprintf(file, "INC %c\n", r->id);
-                fprintf(file, "SHL %c\n", r->id);
+                INC(r);
+                SHL(r);
                 test = 2*(++test);
                 break;
             case 1:
-                fprintf(file, "SHL %c\n", r->id);
-                fprintf(file, "INC %c\n", r->id);
+                SHL(r);
+                INC(r);
                 test *= 2;
                 ++test;
                 break;
             case 0:
-                fprintf(file, "SHL %c\n", r->id);
+                SHL(r);
                 test *= 2;
                 break;
             case -1:
-                fprintf(file, "SHL %c\n", r->id);
-                fprintf(file, "DEC %c\n", r->id);
+                SHL(r);
+                DEC(r);
                 test *= 2;
                 --test;
                 break;
@@ -189,18 +190,18 @@ static uint64_t generate_from_current_inc_cost(num_t curr_val, num_t target_val)
     return ABS(diff);
 }
 
-static void generate_from_current_inc(reg *r, num_t curr_val, num_t target_val, FILE *file) {
+static void generate_from_current_inc(reg *r, num_t curr_val, num_t target_val) {
     num_t diff = target_val - curr_val;
     num_t test = curr_val;
 
     while (diff > 0) {
-        fprintf(file, "INC %c\n", r->id);
+        INC(r);
         --diff;
         ++test;
     }
 
     while (diff < 0) {
-        fprintf(file, "DEC %c\n", r->id);
+        DEC(r);
         ++diff;
         --test;
     }
@@ -211,25 +212,25 @@ static void generate_from_current_inc(reg *r, num_t curr_val, num_t target_val, 
     }
 }
 
-void generate_value(reg *r, num_t curr_val, num_t target_val, FILE *file, bool reset) {
+void generate_value(reg *r, num_t curr_val, num_t target_val, bool reset) {
     if (curr_val != 0 && !reset) {
         uint64_t reset_cost = generate_from_reset_cost(target_val);
         uint64_t div_cost = generate_from_current_div_cost(curr_val, target_val);
         uint64_t inc_cost = generate_from_current_inc_cost(curr_val, target_val);
 
         if (reset_cost <= div_cost && reset_cost < inc_cost) {
-            fprintf(file, "RESET %c\n", r->id);
-            generate_from_reset(r, target_val, file);
+            RESET(r);
+            generate_from_reset(r, target_val);
         } else if (div_cost < inc_cost) {
-            generate_from_current_div(r, curr_val, target_val, file);
+            generate_from_current_div(r, curr_val, target_val);
         } else {
-            generate_from_current_inc(r, curr_val, target_val, file);
+            generate_from_current_inc(r, curr_val, target_val);
         }
     } else {
         if (reset) {
-            fprintf(file, "RESET %c\n", r->id);
+            RESET(r);
         }
 
-        generate_from_reset(r, target_val, file);
+        generate_from_reset(r, target_val);
     }
 }

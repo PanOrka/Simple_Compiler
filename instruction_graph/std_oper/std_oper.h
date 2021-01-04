@@ -11,21 +11,21 @@
  *
  * RETURN: reg_allocator with ready to use register
 */
-reg_allocator oper_get_reg_for_variable(addr_t addr, FILE *file);
+reg_allocator oper_get_reg_for_variable(addr_t addr);
 
 /**
  * 
  * Load variable to register
  * 
 */
-void oper_load_variable_to_reg(reg *r, addr_t addr, FILE *file);
+void oper_load_variable_to_reg(reg *r, addr_t addr);
 
 /**
  * 
  * Set stack pointer to address of array element from variable
  * 
 */
-void oper_set_stack_ptr_addr_arr(addr_t var_idx_addr, addr_t arr_addr, uint64_t start_idx, FILE *file);
+void oper_set_stack_ptr_addr_arr(addr_t var_idx_addr, addr_t arr_addr, uint64_t start_idx);
 
 /**
  * 
@@ -33,7 +33,7 @@ void oper_set_stack_ptr_addr_arr(addr_t var_idx_addr, addr_t arr_addr, uint64_t 
  * Puts value of r2 to r1
  * 
 */
-void oper_reg_swap(reg *r1, reg *r2, FILE *file);
+void oper_reg_swap(reg *r1, reg *r2);
 
 /**
  * 
@@ -41,14 +41,14 @@ void oper_reg_swap(reg *r1, reg *r2, FILE *file);
  * ARGUMENTS: [From, To) addresses of array
  * 
 */
-void oper_store_array(const addr_t addr[2], FILE *file);
+void oper_store_array(const addr_t addr[2]);
 
 /**
  * 
  * Drop all elements of array from registers
  * 
 */
-void oper_drop_array(const addr_t addr[2], FILE *file);
+void oper_drop_array(const addr_t addr[2]);
 
 /**
  * 
@@ -77,8 +77,7 @@ void oper_drop_array(const addr_t addr[2], FILE *file);
 */
 void oper_set_assign_val_0(expression_t const * const expr,
                            reg *assign_val,
-                           uint8_t assign_val_flags,
-                           FILE *file);
+                           uint8_t assign_val_flags);
 
 /**
  * 
@@ -86,7 +85,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
  * 
  * RETURN: Pointer to register with variable
 */
-reg * oper_get_assign_val_1(expression_t const * const expr, FILE *file);
+reg * oper_get_assign_val_1(expression_t const * const expr);
 
 /**
  * 
@@ -94,6 +93,6 @@ reg * oper_get_assign_val_1(expression_t const * const expr, FILE *file);
  * 
  * RETURN: Pointer to register with variable
 */
-reg * oper_get_assign_val_2(expression_t const * const expr, FILE *file);
+reg * oper_get_assign_val_2(expression_t const * const expr);
 
 #endif

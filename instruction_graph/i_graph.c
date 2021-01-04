@@ -1,4 +1,5 @@
 #include "i_graph.h"
+#include "instructions/asm_fprintf.h"
 
 #include "../parser_func/expressions.h"
 
@@ -97,63 +98,64 @@ void i_graph_add_instruction(void *payload, instruction_type i_type) {
 }
 
 
-void eval_EXPR(i_graph **i_current, FILE *file);
+void eval_EXPR(i_graph **i_current);
 
-void eval_IF(i_graph **i_current, FILE *file);
-void eval_ELSE(i_graph **i_current, FILE *file);
-void eval_ENDIF(i_graph **i_current, FILE *file);
+void eval_IF(i_graph **i_current);
+void eval_ELSE(i_graph **i_current);
+void eval_ENDIF(i_graph **i_current);
 
-void eval_WHILE(i_graph **i_current, FILE *file);
-void eval_ENDWHILE(i_graph **i_current, FILE *file);
+void eval_WHILE(i_graph **i_current);
+void eval_ENDWHILE(i_graph **i_current);
 
-void eval_REPEAT(i_graph **i_current, FILE *file);
-void eval_UNTIL(i_graph **i_current, FILE *file);
+void eval_REPEAT(i_graph **i_current);
+void eval_UNTIL(i_graph **i_current);
 
-void eval_FOR(i_graph **i_current, FILE *file);
-void eval_ENDFOR(i_graph **i_current, FILE *file);
+void eval_FOR(i_graph **i_current);
+void eval_ENDFOR(i_graph **i_current);
 
-void eval_READ(i_graph **i_current, FILE *file);
-void eval_WRITE(i_graph **i_current, FILE *file);
+void eval_READ(i_graph **i_current);
+void eval_WRITE(i_graph **i_current);
 
 
 void i_graph_execute(FILE *file) {
+    asm_fprintf_set_file(file);
     while (start) {
         switch (start->i_type) {
             case i_EXPR:
-                eval_EXPR(&start, file);
+                eval_EXPR(&start);
                 break;
             case i_IF:
-                eval_IF(&start, file);
+                eval_IF(&start);
                 break;
             case i_ELSE:
-                eval_ELSE(&start, file);
+                eval_ELSE(&start);
                 break;
             case i_ENDIF:
-                eval_ENDIF(&start, file);
+                eval_ENDIF(&start);
                 break;
             case i_WHILE:
-                eval_WHILE(&start, file);
+                eval_WHILE(&start);
                 break;
             case i_ENDWHILE:
-                eval_ENDWHILE(&start, file);
+                eval_ENDWHILE(&start);
                 break;
             case i_REPEAT:
-                eval_REPEAT(&start, file);
+                eval_REPEAT(&start);
                 break;
             case i_UNTIL:
-                eval_UNTIL(&start, file);
+                eval_UNTIL(&start);
                 break;
             case i_FOR:
-                eval_FOR(&start, file);
+                eval_FOR(&start);
                 break;
             case i_ENDFOR:
-                eval_ENDFOR(&start, file);
+                eval_ENDFOR(&start);
                 break;
             case i_READ:
-                eval_READ(&start, file);
+                eval_READ(&start);
                 break;
             case i_WRITE:
-                eval_WRITE(&start, file);
+                eval_WRITE(&start);
                 break;
             default:
                 fprintf(stderr, "Unknown type of instruction: %d!\n", start->i_type);

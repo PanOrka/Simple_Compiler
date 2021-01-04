@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
         parse(prelex_out, compiler_out);
         fclose(prelex_out);
-        //remove(temp_out); // commented for debug
+        remove(temp_out); // comment for debug
         fclose(compiler_out);
     } else {
         fprintf(stderr, "WRONG AMOUNT OF INPUT ARGUMENTS!\n");

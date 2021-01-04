@@ -10,6 +10,6 @@
  *
  * RETURN: Pointer to register of value generator register
 */
-reg * val_generate(num_t target_value, FILE *file);
+reg * val_generate(num_t target_value);
 
 #endif

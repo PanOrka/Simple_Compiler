@@ -9,7 +9,7 @@ void add_REPEAT() {
     add_to_list(NULL, i_REPEAT);
 }
 
-void eval_REPEAT(i_graph **i_current, FILE *file) {
+void eval_REPEAT(i_graph **i_current) {
     
 }
 
@@ -29,6 +29,6 @@ void add_UNTIL(expression_t *expr) {
     exit(EXIT_FAILURE);
 }
 
-void eval_UNTIL(i_graph **i_current, FILE *file) {
+void eval_UNTIL(i_graph **i_current) {
     
 }

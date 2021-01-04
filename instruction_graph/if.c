@@ -12,7 +12,7 @@ void add_IF(expression_t *expr) {
     add_to_list(expr, i_IF);
 }
 
-void eval_IF(i_graph **i_current, FILE *file) {
+void eval_IF(i_graph **i_current) {
     
 }
 
@@ -29,7 +29,7 @@ void add_ELSE() {
     exit(EXIT_FAILURE);
 }
 
-void eval_ELSE(i_graph **i_current, FILE *file) {
+void eval_ELSE(i_graph **i_current) {
     
 }
 
@@ -46,6 +46,6 @@ void add_ENDIF() {
     exit(EXIT_FAILURE);
 }
 
-void eval_ENDIF(i_graph **i_current, FILE *file) {
+void eval_ENDIF(i_graph **i_current) {
     
 }
