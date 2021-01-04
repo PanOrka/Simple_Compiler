@@ -122,7 +122,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                                     file);
         oper_drop_array(expr->var_1[0].var->addr, file);
         fprintf(file, "STORE %c %c\n", assign_val->id, r_set->stack_ptr.id);
-        if (!(assign_val_flags & ASSIGN_VAL_IS_NUM)) {
+        if (assign_val_flags & ASSIGN_VAL_STASH) {
             reg_m_drop_addr(r_set, assign_val->addr);
         }
     } else {
