@@ -161,14 +161,15 @@ reg * oper_get_assign_val_1(expression_t const * const expr, FILE *file) {
     if (!(expr->mask & LEFT_SYM1_NUM)) {
         if ((expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & LEFT_SYM2_NUM)) {
             oper_store_array(expr->var_1[1].var->addr, file);
+            reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_1, file);
 
-            addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM1_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
+            addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM2_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
                                         expr->var_1[1].var->addr[0],
                                         expr->var_1[1].var->_add_info.start_idx,
                                         file);
 
-            reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_1, file);
+            reg_m_promote(r_set, TEMP_ADDR_1);
             fprintf(file, "LOAD %c %c\n", var.r->id, r_set->stack_ptr.id);
 
             assign_val = var.r;
@@ -196,14 +197,15 @@ reg * oper_get_assign_val_2(expression_t const * const expr, FILE *file) {
     if (!(expr->mask & RIGHT_SYM1_NUM)) {
         if ((expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & RIGHT_SYM2_NUM)) {
             oper_store_array(expr->var_1[2].var->addr, file);
+            reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_2, file);
 
-            addr_t const var_idx_addr = (expr->addr_mask & RIGHT_SYM1_ADDR) ? expr->var_2[2].addr : expr->var_2[2].var->addr[0];
+            addr_t const var_idx_addr = (expr->addr_mask & RIGHT_SYM2_ADDR) ? expr->var_2[2].addr : expr->var_2[2].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
                                         expr->var_1[2].var->addr[0],
                                         expr->var_1[2].var->_add_info.start_idx,
                                         file);
 
-            reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_2, file);
+            reg_m_promote(r_set, TEMP_ADDR_2);
             fprintf(file, "LOAD %c %c\n", var.r->id, r_set->stack_ptr.id);
 
             assign_val = var.r;
@@ -218,6 +220,7 @@ reg * oper_get_assign_val_2(expression_t const * const expr, FILE *file) {
             assign_val = var.r;
         }
     } else {
+        // TODO: it's bad because later oper_set_stack_ptr_addr_arr can use val_generate!!!
         assign_val = val_generate(expr->var_1[2].num, file);
     }
 
