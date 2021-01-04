@@ -36,7 +36,7 @@ void eval_READ(i_graph **i_current) {
 
 void add_WRITE(expression_t *expr) {
     eval_check_1(expr);
-    if (!(expr->mask & LEFT_SYM1_NUM)) {
+    if (expr->mask & LEFT_SYM1_NUM) {
         symbol_table *s_table = get_symbol_table();
         symbol *sym = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
         expr->var_1[0].addr = sym->addr[0];

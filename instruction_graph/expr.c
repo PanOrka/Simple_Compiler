@@ -123,7 +123,7 @@ void eval_EXPR(i_graph **i_current) {
             break;
         case expr_MOD:
             eval_expr_ARITHMETIC(expr_curr,
-                (arithmetic_func){ .func_num = &num_mod, .func_reg = &ADD });
+                (arithmetic_func){ .func_num = &num_mod, .func_reg = &MOD });
             break;
         default:
             fprintf(stderr, "[EXPR]: Wrong type of expression!\n");
