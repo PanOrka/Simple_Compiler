@@ -171,11 +171,11 @@ reg * MOD(reg *x, reg *y) {
     // Or if x is 0, for future optimizations
     reg *size = oper_get_reg_for_variable(TEMP_ADDR_3).r;
     size->addr = TEMP_ADDR_3;
-    RESET(size);
 
-    reg *rem = oper_get_reg_for_variable(TEMP_ADDR_4).r;
-    rem->addr = TEMP_ADDR_4;
-    RESET(rem);
+    reg *rem = x;
+    rem->addr = TEMP_ADDR_1; // to make sure it won't be stored + It's available for this register
+    x = oper_get_reg_for_variable(TEMP_ADDR_4).r;
+    x->addr = TEMP_ADDR_4;
 
     reg *temp = &(r_set->stack_ptr);
     stack_ptr_clear();
@@ -184,16 +184,16 @@ reg * MOD(reg *x, reg *y) {
      * Integer division algorithm
      * pls kill me
     */
-    JZERO_i_idx(y, 49); // If y is 0 then we end with 0
+    JZERO_i_idx(y, 48); // If y is 0 then we end with 0
     DEC(y);
     JZERO_i_idx(y, 46); // If y is 1 then we end with 0
     INC(y);
 
-    ADD(rem, x);
-    RESET(x);
     // calculating size of reg_x value
     // and inversing x
-    JZERO_i_idx(rem, 43); // end of proc x = 0 so END
+    JZERO_i_idx(rem, 46); // end of proc x = 0 so END
+    RESET(x);
+    RESET(size);
     JODD_i_idx(rem, 4);
         SHR(rem);
         INC(size);
@@ -223,7 +223,7 @@ reg * MOD(reg *x, reg *y) {
         SHR(x);
         // here we test 1 >= divisor so if divisor == 1 we should test it b4
         // return x if y == 1
-    JZERO_i_idx(size, 17); // end of proc
+    JZERO_i_idx(size, 18); // end of proc
         SHL(rem);
     JODD_i_idx(x, 10);
         DEC(size);
@@ -242,8 +242,8 @@ reg * MOD(reg *x, reg *y) {
     JUMP_i_idx(-10); // jump to if R >= D
 
     INC(y); // reset y value when y = 1
+    RESET(rem);
 
-    reg_m_drop_addr(r_set, x->addr);
     return rem;
 }
 
