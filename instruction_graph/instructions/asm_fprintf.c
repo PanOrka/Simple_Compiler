@@ -160,7 +160,7 @@ reg * DIV(reg *x, reg *y) {
     INC(y); // reset y value when y = 1
     ADD(quotient, rem); // set quotient to x
 
-    reg_m_drop_addr(r_set, x->addr);
+    reg_m_drop_addr(r_set, rem->addr);
     return quotient;
 }
 
