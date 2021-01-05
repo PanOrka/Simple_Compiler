@@ -100,10 +100,9 @@ static FILE *prelexer_out;
         BEGIN(DECLARE);
     }
 
-    [\n]+ {
-        fprintf(stderr, "[PRELEXER]: Comments should be one liners!\n");
-        exit(EXIT_FAILURE);
-    }
+    [ \t]+ ;
+
+    [\n]+ ;
 
     . ;
 }
@@ -113,10 +112,9 @@ static FILE *prelexer_out;
         BEGIN(INITIAL);
     }
 
-    [\n]+ {
-        fprintf(stderr, "[PRELEXER]: Comments should be one liners!\n");
-        exit(EXIT_FAILURE);
-    }
+    [ \t]+ ;
+
+    [\n]+ ;
 
     . ;
 }
