@@ -82,11 +82,10 @@ reg * DIV(reg *x, reg *y) {
     // Or if x is 0, for future optimizations
     reg *size = oper_get_reg_for_variable(TEMP_ADDR_3).r;
     size->addr = TEMP_ADDR_3;
-    RESET(size);
 
-    reg *rem = oper_get_reg_for_variable(TEMP_ADDR_4).r;
-    rem->addr = TEMP_ADDR_4;
-    RESET(rem);
+    reg *rem = x;
+    x = oper_get_reg_for_variable(TEMP_ADDR_4).r;
+    x->addr = TEMP_ADDR_4;
 
     reg *quotient = oper_get_reg_for_variable(TEMP_ADDR_5).r;
     quotient->addr = TEMP_ADDR_5;
@@ -104,11 +103,11 @@ reg * DIV(reg *x, reg *y) {
     JZERO_i_idx(y, 47); // If y is 1 then we end with x
     INC(y);
 
-    ADD(rem, x);
-    RESET(x);
     // calculating size of reg_x value
     // and inversing x
-    JZERO_i_idx(rem, 45); // end of proc x = 0 so END
+    JZERO_i_idx(rem, 47); // end of proc x = 0 so END
+    RESET(x);
+    RESET(size);
     JODD_i_idx(rem, 4);
         SHR(rem);
         INC(size);
@@ -159,7 +158,7 @@ reg * DIV(reg *x, reg *y) {
     JUMP_i_idx(-11); // jump to if R >= D
 
     INC(y); // reset y value when y = 1
-    ADD(quotient, x); // set quotient to x
+    ADD(quotient, rem); // set quotient to x
 
     reg_m_drop_addr(r_set, x->addr);
     return quotient;
