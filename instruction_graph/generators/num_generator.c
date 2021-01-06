@@ -79,8 +79,8 @@ static uint64_t generate_from_current_div_cost(mpz_t curr_val, mpz_t target_val)
             mpz_tdiv_r_ui(alternative, curr_val, 2);
             reminder += mpz_get_si(alternative);
 
-            mpz_tdiv_q(diff, diff, 2);
-            mpz_tdiv_q(curr_val, curr_val, 2);
+            mpz_tdiv_q_ui(diff, diff, 2);
+            mpz_tdiv_q_ui(curr_val, curr_val, 2);
 
             cost += 2;
             if (reminder != 0) {
@@ -129,8 +129,8 @@ static void generate_from_current_div(reg *r, mpz_t curr_val, mpz_t target_val) 
             mpz_tdiv_r_ui(alternative, curr_val, 2);
             reminder += mpz_get_si(alternative);
 
-            mpz_tdiv_q(diff, diff, 2);
-            mpz_tdiv_q(curr_val, curr_val, 2);
+            mpz_tdiv_q_ui(diff, diff, 2);
+            mpz_tdiv_q_ui(curr_val, curr_val, 2);
             SHR(r);
             VECTOR_ADD(v, reminder);
         }
