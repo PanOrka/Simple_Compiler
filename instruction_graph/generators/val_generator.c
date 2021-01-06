@@ -8,8 +8,11 @@ static bool mpz_initialized = false;
 reg * val_generate(uint64_t target_value) {
     mpz_t temp_target_value;
     mpz_init_set_ui(temp_target_value, target_value);
-    val_generate_from_mpz(temp_target_value);
+
+    reg * ret_reg = val_generate_from_mpz(temp_target_value);
     mpz_clear(temp_target_value);
+
+    return ret_reg;
 }
 
 reg * val_generate_from_mpz(mpz_t target_value) {
