@@ -10,6 +10,13 @@
  *
  * RETURN: Pointer to register of value generator register
 */
-reg * val_generate(mpz_t target_value);
+reg * val_generate(uint64_t target_value);
+
+/**
+ * 
+ * Same as above but from mpz
+ * 
+*/
+reg * val_generate_from_mpz(mpz_t target_value);
 
 #endif

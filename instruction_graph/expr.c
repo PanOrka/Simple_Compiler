@@ -28,28 +28,39 @@ static void eval_expr_VALUE(expression_t const * const expr) {
     reg_m_drop_addr(r_set, TEMP_ADDR_1);
 }
 
-static num_t num_add(num_t x, num_t y) {
-    return x + y;
+static void num_add(mpz_t val, int64_t x, int64_t y) {
+    mpz_set_si(val, x);
+    mpz_add_ui(val, val, (uint64_t)y);
 }
 
-static num_t num_sub(num_t x, num_t y) {
-    return (x - y >= 0) ? x - y : 0;
+static void num_sub(mpz_t val, int64_t x, int64_t y) {
+    if (x - y > 0) {
+        mpz_set_si(val, x);
+        mpz_sub_ui(val, val, (uint64_t)y);
+    }
 }
 
-static num_t num_mul(num_t x, num_t y) {
-    return x * y;
+static void num_mul(mpz_t val, int64_t x, int64_t y) {
+    mpz_set_si(val, x);
+    mpz_mul_si(val, val, y);
 }
 
-static num_t num_div(num_t x, num_t y) {
-    return (y != 0) ? x / y : 0;
+static void num_div(mpz_t val, int64_t x, int64_t y) {
+    if (y != 0) {
+        mpz_set_si(val, x);
+        mpz_tdiv_q_ui(val, val, (uint64_t)y);
+    }
 }
 
-static num_t num_mod(num_t x, num_t y) {
-    return (y != 0) ? x % y : 0;
+static void num_mod(mpz_t val, int64_t x, int64_t y) {
+    if (y != 0) {
+        mpz_set_si(val, x);
+        mpz_tdiv_r_ui(val, val, (uint64_t)y);
+    }
 }
 
 typedef struct {
-    num_t (*func_num) (num_t x, num_t y);
+    void (*func_num) (mpz_t val, int64_t x, int64_t y);
     reg * (*func_reg) (reg *x, reg *y);
 } arithmetic_func;
 
@@ -57,8 +68,13 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
     reg_set *r_set = get_reg_set();
     
     if ((expr->mask & LEFT_SYM1_NUM) && (expr->mask & RIGHT_SYM1_NUM)) {
-        num_t val = func.func_num(expr->var_1[1].num, expr->var_1[2].num);
-        reg *assign_val = val_generate(val);
+        mpz_t val;
+        mpz_init(val);
+        func.func_num(val, expr->var_1[1].num, expr->var_1[2].num);
+
+        reg *assign_val = val_generate_from_mpz(val);
+        mpz_clear(val);
+
         oper_set_assign_val_0(expr, assign_val, ASSIGN_VAL_IS_NUM);
     } else {
         // FOR NOW it's glued up with TODO in std_oper get_assign functions

@@ -5,7 +5,14 @@
 static mpz_t current_val;
 static bool mpz_initialized = false;
 
-reg * val_generate(mpz_t target_value) {
+reg * val_generate(uint64_t target_value) {
+    mpz_t temp_target_value;
+    mpz_init_set_ui(temp_target_value, target_value);
+    val_generate_from_mpz(temp_target_value);
+    mpz_clear(temp_target_value);
+}
+
+reg * val_generate_from_mpz(mpz_t target_value) {
     if (!mpz_initialized) {
         mpz_init(current_val);
         mpz_initialized = true;
