@@ -67,6 +67,14 @@ void oper_drop_array(const addr_t addr[2]);
 #define ASSIGN_VAL_STASH 0b00000010
 #endif
 
+typedef struct {
+    union {
+        reg *reg;
+        mpz_t constant;
+    };
+    bool is_reg;
+} val;
+
 /**
  * 
  * Set assign_var with given ready register
@@ -84,15 +92,17 @@ void oper_set_assign_val_0(expression_t const * const expr,
  * Get assign_val_1 of expression to register
  * 
  * RETURN: Pointer to register with variable
+ * WARNING: mpz_t constant in val will be initialized, please free this!!!!
 */
-reg * oper_get_assign_val_1(expression_t const * const expr);
+val oper_get_assign_val_1(expression_t const * const expr);
 
 /**
  * 
  * Get assign_val_2 of expression to register
  * 
  * RETURN: Pointer to register with variable
+ * WARNING: mpz_t constant in val will be initialized, please free this!!!!
 */
-reg * oper_get_assign_val_2(expression_t const * const expr);
+val oper_get_assign_val_2(expression_t const * const expr);
 
 #endif

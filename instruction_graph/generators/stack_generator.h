@@ -4,6 +4,7 @@
 #include "../../definitions.h"
 #include <stdio.h>
 #include <stdbool.h>
+#include <gmp.h>
 
 /**
  * 
@@ -11,6 +12,13 @@
  *
 */
 void stack_ptr_generate(addr_t addr);
+
+/**
+ * 
+ * Generate given address on stack_ptr from mpz
+ * 
+*/
+void stack_ptr_generate_from_mpz(mpz_t addr);
 
 /**
  * 

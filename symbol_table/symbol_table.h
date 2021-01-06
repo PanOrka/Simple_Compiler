@@ -47,6 +47,7 @@ struct array_value {
     array_value *next;
     mpz_t value;
     uint64_t n;
+    bool is_in_memory;
 };
 
 typedef union {

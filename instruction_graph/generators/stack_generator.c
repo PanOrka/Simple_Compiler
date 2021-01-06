@@ -6,19 +6,22 @@ static bool stack_initialized = false;
 static bool mpz_initialized = false;
 
 void stack_ptr_generate(addr_t addr) {
+    mpz_t addr_mpz;
+    mpz_init_set_ui(addr_mpz, addr);
+
+    stack_ptr_generate_from_mpz(addr_mpz);
+    mpz_clear(addr_mpz);
+}
+
+void stack_ptr_generate_from_mpz(mpz_t addr) {
     if (!mpz_initialized) {
         mpz_init(stack_value);
         mpz_initialized = true;
     }
-
     reg_set *r_set = get_reg_set();
 
-    mpz_t addr_mpz;
-    mpz_init_set_ui(addr_mpz, addr);
-    generate_value(&(r_set->stack_ptr), stack_value, addr_mpz, !stack_initialized);
-
-    mpz_set(stack_value, addr_mpz);
-    mpz_clear(addr_mpz);
+    generate_value(&(r_set->stack_ptr), stack_value, addr, !stack_initialized);
+    mpz_set(stack_value, addr);
     stack_initialized = true;
 }
 
