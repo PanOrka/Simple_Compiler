@@ -93,6 +93,14 @@ symbol * symbol_table_add(symbol_table *s_table, const char *identifier, add_inf
         .flags = flags
     };
 
+    if (flags & SYMBOL_IS_CONSTANT) {
+        if (flags & SYMBOL_IS_ARRAY) {
+            new_symbol.consts.arr_value = NULL;
+        } else {
+            mpz_init(new_symbol.consts.value);
+        }
+    }
+
     VECTOR_ADD(s_table->v, new_symbol);
 
     return VECTOR_POP(s_table->v, NO_POP);

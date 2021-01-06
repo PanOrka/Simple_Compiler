@@ -4,6 +4,8 @@
 #include "../definitions.h"
 #include "../vector/vector.h"
 
+#include <gmp.h>
+
 #ifndef SYMBOL_TABLE_INIT_SIZE
 #define SYMBOL_TABLE_INIT_SIZE 32
 #endif
@@ -28,6 +30,10 @@
 #define SYMBOL_IS_ITER 0b00001000
 #endif
 
+#ifndef SYMBOL_IS_CONSTANT
+#define SYMBOL_IS_CONSTANT 0b00010000
+#endif
+
 typedef struct symbol symbol;
 
 typedef union {
@@ -35,10 +41,24 @@ typedef union {
     symbol *hide;
 } add_info;
 
+typedef struct array_value array_value;
+
+struct array_value {
+    array_value *next;
+    mpz_t value;
+    uint64_t n;
+};
+
+typedef union {
+    mpz_t value;
+    array_value *arr_value;
+} const_info;
+
 struct symbol {
     const char *identifier;
     const addr_t addr[2]; // address is [FROM, TO), cuz TO - FROM = size
     const add_info _add_info; // TODO: union with address of PRZYKRYTA zmienna if it's iterator, to change it on POP() start_idx is uint64_t so w/e about memory
+    const_info consts;
     uint8_t flags;
 };
 
