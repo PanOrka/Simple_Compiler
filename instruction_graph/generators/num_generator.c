@@ -249,7 +249,7 @@ static void generate_from_current_inc(reg *r, mpz_t curr_val, mpz_t target_val) 
 }
 
 void generate_value(reg *r, mpz_t curr_val, mpz_t target_val, bool reset) {
-    if (curr_val != 0 && !reset) {
+    if (mpz_cmp_si(curr_val, 0) != 0 && !reset) {
         uint64_t reset_cost = generate_from_reset_cost(target_val);
 
         mpz_t temp_curr_val;
