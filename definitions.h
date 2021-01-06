@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 typedef uint64_t addr_t;
-typedef __int128_t num_t;
 
 /**
  * 
