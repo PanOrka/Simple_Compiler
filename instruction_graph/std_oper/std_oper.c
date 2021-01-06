@@ -187,7 +187,7 @@ val oper_get_assign_val_1(expression_t const * const expr) {
             const bool left_sym_2_const = !left_sym_2_addr && (expr->var_2[1].var->flags & SYMBOL_IS_CONSTANT);
             const bool left_sym_1_const = expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
 
-            if (left_sym_2_const && left_sym_1_const) {
+            if (left_sym_2_const && left_sym_1_const) { // on left_sym_1_const we can have non constant values in array
                 assign_val.is_reg = false;
                 array_value *arr_val = expr->var_1[1].var->consts.arr_value;
 
