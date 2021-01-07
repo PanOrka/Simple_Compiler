@@ -148,17 +148,14 @@ static void oper_arr_val_add(symbol *arr, array_value new_arr_val) {
     }
 }
 
-static void oper_arr_delete(symbol *arr) {
+static void oper_arr_set_non_constant(symbol *arr) {
     array_value *arr_val = arr->consts.arr_value;
     while (arr_val) {
-        array_value *to_free = arr_val;
+        mpz_set_si(arr_val->value, 0);
+        arr_val->is_in_memory = true;
+        arr_val->is_constant = false;
         arr_val = arr_val->next;
-
-        mpz_clear(to_free->value);
-        free(to_free);
     }
-
-    arr->consts.arr_value = NULL;
 }
 
 static void oper_set_reg(reg *assign_val, addr_t eff_addr, uint8_t assign_val_flags) {
@@ -207,6 +204,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                     addr_t const eff_addr = expr->var_1[0].var->addr[0] + idx_ui;
                     arr_val->is_constant = false;
                     arr_val->is_in_memory = false;
+                    mpz_set_si(arr_val->value, 0);
 
                     oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
                 } else {
@@ -224,7 +222,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                         .n = idx_ui
                     };
                     mpz_init(new_arr_val.value);
-                    oper_arr_val_add(&(expr->var_1[0].var->consts.arr_value), new_arr_val);
+                    oper_arr_val_add(expr->var_1[0].var, new_arr_val);
                     oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
                 } else {
                     array_value new_arr_val = {
@@ -233,7 +231,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                         .n = idx_ui
                     };
                     mpz_init_set(new_arr_val.value, assign_val.constant);
-                    oper_arr_val_add(&(expr->var_1[0].var->consts.arr_value), new_arr_val);
+                    oper_arr_val_add(expr->var_1[0].var, new_arr_val);
                 }
             }
         } else if (assign_sym_2_const) {
@@ -253,11 +251,12 @@ void oper_set_assign_val_0(expression_t const * const expr,
         } else if (assign_sym_1_const && assign_sym_2_addr) { // during loops impl
         
         } else {
-            expr->var_1[0].var->flags &= ~SYMBOL_IS_CONSTANT;
-
-            oper_flush_array_to_mem(expr->var_1[0].var);
+            if (assign_sym_1_const) {
+                oper_flush_array_to_mem(expr->var_1[0].var);
+                oper_arr_set_non_constant(expr->var_1[0].var);
+            }
+            
             oper_store_array(expr->var_1[0].var->addr);
-            oper_arr_delete(expr->var_1[0].var);
 
             addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
@@ -268,46 +267,76 @@ void oper_set_assign_val_0(expression_t const * const expr,
             reg *store_reg;
             if (assign_val.is_reg) {
                 store_reg = assign_val.reg;
+                if (assign_val_flags & ASSIGN_VAL_STASH) {
+                    reg_m_drop_addr(r_set, store_reg->addr);
+                }
             } else {
                 store_reg = val_generate_from_mpz(assign_val.constant);
             }
 
             STORE(store_reg, &(r_set->stack_ptr));
-            if (assign_val_flags & ASSIGN_VAL_STASH) {
-                reg_m_drop_addr(r_set, store_reg->addr);
-            }
         }
     } else {
-        // addr_t const eff_addr = expr->var_1[0].var->addr[0] + (addr_t)expr->var_2[0].num;
-        // if (eff_addr != assign_val->addr) {
-        //     if (assign_val_flags & ASSIGN_VAL_IS_NUM) {
-        //         if (!(reg_m_LRU(r_set, false).r->flags & REG_MODIFIED)) {
-        //             reg_allocator var = oper_get_reg_for_variable(eff_addr);
-        //             oper_reg_swap(var.r, assign_val);
+        const bool assign_sym_1_const = expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT;
 
-        //             var.r->addr = eff_addr;
-        //             var.r->flags |= REG_MODIFIED;
-        //         } else {
-        //             reg_m_drop_addr(r_set, eff_addr);
-        //             assign_val->flags = REG_MODIFIED;
-        //             assign_val->addr = eff_addr;
-        //             reg_m_promote(r_set, assign_val->addr);
-        //         }
-        //     } else if (assign_val_flags & ASSIGN_VAL_STASH) {
-        //         reg_m_drop_addr(r_set, eff_addr);
-        //         assign_val->flags = REG_MODIFIED;
-        //         assign_val->addr = eff_addr;
-        //         reg_m_promote(r_set, assign_val->addr);
-        //     } else {
-        //         reg_allocator var = oper_get_reg_for_variable(eff_addr);
-        //         oper_reg_swap(var.r, assign_val);
+        if (assign_sym_1_const) {
+            const uint64_t idx = expr->var_2[0].num;
+            addr_t const eff_addr = expr->var_1[0].var->addr[0] + idx;
+            if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
+                array_value *arr_val = expr->var_1[0].var->consts.arr_value;
+                arr_val = oper_arr_val_find(arr_val, idx);
 
-        //         var.r->addr = eff_addr;
-        //         var.r->flags |= REG_MODIFIED;
-        //     }
-        // } else {
-        //     assign_val->flags |= REG_MODIFIED;
-        // }
+                if (arr_val) {
+                    if (assign_val.is_reg) {
+                        arr_val->is_in_memory = false;
+                        arr_val->is_constant = false;
+                        mpz_set_si(arr_val->value, 0);
+                        oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
+                    } else {
+                        reg_m_drop_addr(r_set, eff_addr);
+                        arr_val->is_in_memory = false;
+                        arr_val->is_constant = true;
+                        mpz_set(expr->var_1[0].var->consts.value, assign_val.constant);
+                    }
+                } else {
+                    if (assign_val.is_reg) {
+                        array_value new_arr_val = {
+                            .is_constant = false,
+                            .is_in_memory = false,
+                            .n = idx
+                        };
+                        mpz_init(new_arr_val.value);
+                        oper_arr_val_add(expr->var_1[0].var, new_arr_val);
+                        oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
+                    } else {
+                        array_value new_arr_val = {
+                            .is_constant = true,
+                            .is_in_memory = false,
+                            .n = idx
+                        };
+                        mpz_init_set(new_arr_val.value, assign_val.constant);
+                        oper_arr_val_add(expr->var_1[0].var, new_arr_val);
+                    }
+                }
+            } else {
+                if (assign_val.is_reg) {
+                    expr->var_1[0].var->flags &= ~SYMBOL_IS_CONSTANT;
+                    mpz_set_si(expr->var_1[0].var->consts.value, 0);
+                    oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
+                } else {
+                    expr->var_1[0].var->flags |= SYMBOL_IS_CONSTANT;
+                    mpz_set(expr->var_1[0].var->consts.value, assign_val.constant);
+                }
+            }
+        } else {
+            addr_t const eff_addr = expr->var_1[0].var->addr[0] + (addr_t)expr->var_2[0].num;
+            if (assign_val.is_reg) {
+                oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
+            } else {
+                reg *val_reg = val_generate_from_mpz(assign_val.constant);
+                oper_set_reg(val_reg, eff_addr, assign_val_flags);
+            }
+        }
     }
 }
 
