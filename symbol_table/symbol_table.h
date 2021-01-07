@@ -48,6 +48,7 @@ struct array_value {
     mpz_t value;
     uint64_t n;
     bool is_in_memory;
+    bool is_constant;
 };
 
 typedef union {

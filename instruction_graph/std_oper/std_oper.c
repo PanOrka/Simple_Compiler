@@ -111,7 +111,7 @@ static void oper_flush_array_to_mem(symbol *arr) {
     reg_set *r_set = get_reg_set();
     array_value *arr_val = arr->consts.arr_value;
     while (arr_val) {
-        if (!(arr_val->is_in_memory)) {
+        if (arr_val->is_constant && !(arr_val->is_in_memory)) {
             reg *val_reg = val_generate_from_mpz(arr_val->value);
             stack_ptr_generate(arr->addr[0] + arr_val->n);
             STORE(val_reg, &(r_set->stack_ptr));
@@ -203,29 +203,37 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                 mpz_clear(idx);
 
                 if (arr_val) {
-                    mpz_init_set(assign_val.constant, arr_val->value);
+                    if (arr_val->is_constant) {
+                        mpz_init_set(assign_val.constant, arr_val->value);
+                    } else {
+                        assign_val.is_reg = true;
+                        goto REG_LOAD_LEFT1;
+                    }
                 } else {
                     mpz_init_set_si(assign_val.constant, 0);
                 }
             } else if (left_sym_2_const) {
-                oper_store_array(expr->var_1[1].var->addr);
-                reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_1);
-                var.r->addr = TEMP_ADDR_1;
-
-                mpz_t eff_addr;
+REG_LOAD_LEFT1: mpz_t eff_addr;
                 mpz_init_set_ui(eff_addr, expr->var_1[1].var->addr[0]);
                 mpz_sub_ui(eff_addr, eff_addr, expr->var_1[1].var->_add_info.start_idx);
                 mpz_add(eff_addr, eff_addr, expr->var_2[1].var->consts.value);
-                stack_ptr_generate_from_mpz(eff_addr);
+
+                const addr_t eff_addr_ui = mpz_get_ui(eff_addr);
                 mpz_clear(eff_addr);
 
-                LOAD(var.r, &(r_set->stack_ptr));
+                reg_allocator var = oper_get_reg_for_variable(eff_addr_ui);
+
+                if (!var.was_allocated) {
+                    oper_load_variable_to_reg(var.r, eff_addr_ui);
+                }
+
                 assign_val.reg = var.r;
             } else if (left_sym_1_const && left_sym_2_addr) { // during loops impl
             
             } else {
                 if (left_sym_1_const) {
                     oper_flush_array_to_mem(expr->var_1[1].var);
+                    oper_store_array(expr->var_1[1].var->addr);
                 } else {
                     oper_store_array(expr->var_1[1].var->addr);
                 }
@@ -258,7 +266,12 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                     }
 
                     if (arr_val) {
-                        mpz_init_set(assign_val.constant, arr_val->value);
+                        if (arr_val->is_constant) {
+                            mpz_init_set(assign_val.constant, arr_val->value);
+                        } else {
+                            assign_val.is_reg = true;
+                            goto REG_LOAD_LEFT2;
+                        }
                     } else {
                         mpz_init_set_si(assign_val.constant, 0);
                     }
@@ -266,7 +279,7 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                     mpz_init_set(assign_val.constant, expr->var_1[1].var->consts.value);
                 }
             } else {
-                addr_t const eff_addr = expr->var_1[1].var->addr[0] + (addr_t)expr->var_2[1].num;
+REG_LOAD_LEFT2: addr_t const eff_addr = expr->var_1[1].var->addr[0] + (addr_t)expr->var_2[1].num;
                 reg_allocator var = oper_get_reg_for_variable(eff_addr);
 
                 if (!var.was_allocated) {
@@ -313,29 +326,37 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                 mpz_clear(idx);
 
                 if (arr_val) {
-                    mpz_init_set(assign_val.constant, arr_val->value);
+                    if (arr_val->is_constant) {
+                        mpz_init_set(assign_val.constant, arr_val->value);
+                    } else {
+                        assign_val.is_reg = true;
+                        goto REG_LOAD_RIGHT1;
+                    }
                 } else {
                     mpz_init_set_si(assign_val.constant, 0);
                 }
             } else if (right_sym_2_const) {
-                oper_store_array(expr->var_1[2].var->addr);
-                reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_2);
-                var.r->addr = TEMP_ADDR_2;
-
-                mpz_t eff_addr;
+REG_LOAD_RIGHT1:mpz_t eff_addr;
                 mpz_init_set_ui(eff_addr, expr->var_1[2].var->addr[0]);
                 mpz_sub_ui(eff_addr, eff_addr, expr->var_1[2].var->_add_info.start_idx);
                 mpz_add(eff_addr, eff_addr, expr->var_2[2].var->consts.value);
-                stack_ptr_generate_from_mpz(eff_addr);
+
+                const addr_t eff_addr_ui = mpz_get_ui(eff_addr);
                 mpz_clear(eff_addr);
 
-                LOAD(var.r, &(r_set->stack_ptr));
+                reg_allocator var = oper_get_reg_for_variable(eff_addr_ui);
+
+                if (!var.was_allocated) {
+                    oper_load_variable_to_reg(var.r, eff_addr_ui);
+                }
+
                 assign_val.reg = var.r;
             } else if (right_sym_1_const && right_sym_2_addr) { // during loops impl
             
             } else {
                 if (right_sym_1_const) {
                     oper_flush_array_to_mem(expr->var_1[2].var);
+                    oper_store_array(expr->var_1[2].var->addr);
                 } else {
                     oper_store_array(expr->var_1[2].var->addr);
                 }
@@ -368,7 +389,12 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                     }
 
                     if (arr_val) {
-                        mpz_init_set(assign_val.constant, arr_val->value);
+                        if (arr_val->is_constant) {
+                            mpz_init_set(assign_val.constant, arr_val->value);
+                        } else {
+                            assign_val.is_reg = true;
+                            goto REG_LOAD_RIGHT2;
+                        }
                     } else {
                         mpz_init_set_si(assign_val.constant, 0);
                     }
@@ -376,7 +402,7 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                     mpz_init_set(assign_val.constant, expr->var_1[2].var->consts.value);
                 }
             } else {
-                addr_t const eff_addr = expr->var_1[2].var->addr[0] + (addr_t)expr->var_2[2].num;
+REG_LOAD_RIGHT2:addr_t const eff_addr = expr->var_1[2].var->addr[0] + (addr_t)expr->var_2[2].num;
                 reg_allocator var = oper_get_reg_for_variable(eff_addr);
 
                 if (!var.was_allocated) {
