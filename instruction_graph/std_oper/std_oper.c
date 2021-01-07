@@ -107,7 +107,7 @@ void oper_drop_array(const addr_t addr[2]) {
     }
 }
 
-static void oper_flush_array_to_mem(symbol *arr) {
+void oper_flush_array_to_mem(symbol *arr) {
     reg_set *r_set = get_reg_set();
     array_value *arr_val = arr->consts.arr_value;
     while (arr_val) {
@@ -216,20 +216,22 @@ val oper_get_assign_val_1(expression_t const * const expr) {
             const bool left_sym_2_const = !left_sym_2_addr && (expr->var_2[1].var->flags & SYMBOL_IS_CONSTANT);
             const bool left_sym_1_const = expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
 
-            if (left_sym_2_const && left_sym_1_const) { // on left_sym_1_const we can have non constant values in array
+            if (left_sym_2_const && left_sym_1_const) {
                 assign_val.is_reg = false;
                 array_value *arr_val = expr->var_1[1].var->consts.arr_value;
 
                 mpz_t idx;
                 mpz_init_set(idx, expr->var_2[1].var->consts.value);
                 mpz_sub_ui(idx, idx, expr->var_1[1].var->_add_info.start_idx);
+
+                const uint64_t idx_ui = mpz_get_ui(idx);
+                mpz_clear(idx);
                 while (arr_val) {
-                    if (mpz_cmp_ui(idx, arr_val->n) == 0) {
+                    if (idx_ui == arr_val->n) {
                         break;
                     }
                     arr_val = arr_val->next;
                 }
-                mpz_clear(idx);
 
                 if (arr_val) {
                     if (arr_val->is_constant) {
@@ -325,13 +327,15 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                 mpz_t idx;
                 mpz_init_set(idx, expr->var_2[2].var->consts.value);
                 mpz_sub_ui(idx, idx, expr->var_1[2].var->_add_info.start_idx);
+
+                const uint64_t idx_ui = mpz_get_ui(idx);
+                mpz_clear(idx);
                 while (arr_val) {
-                    if (mpz_cmp_ui(idx, arr_val->n) == 0) {
+                    if (idx_ui == arr_val->n) {
                         break;
                     }
                     arr_val = arr_val->next;
                 }
-                mpz_clear(idx);
 
                 if (arr_val) {
                     if (arr_val->is_constant) {

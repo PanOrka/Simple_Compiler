@@ -62,6 +62,7 @@ struct symbol {
     const add_info _add_info; // TODO: union with address of PRZYKRYTA zmienna if it's iterator, to change it on POP() start_idx is uint64_t so w/e about memory
     const_info consts;
     uint8_t flags;
+    bool symbol_in_memory; // Just for consts WRITE
 };
 
 typedef struct {

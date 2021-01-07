@@ -98,6 +98,7 @@ symbol * symbol_table_add(symbol_table *s_table, const char *identifier, add_inf
             new_symbol.consts.arr_value = NULL;
         } else {
             mpz_init(new_symbol.consts.value);
+            new_symbol.symbol_in_memory = true;
         }
     }
 

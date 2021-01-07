@@ -77,6 +77,13 @@ typedef struct {
 
 /**
  * 
+ * Flush all non before stored elements of constant array to memory
+ * 
+*/
+void oper_flush_array_to_mem(symbol *arr);
+
+/**
+ * 
  * Set assign_var with given ready register
  * 
  * ARGUMENTS: expression_t const * const expr <= from here we assign var[0]

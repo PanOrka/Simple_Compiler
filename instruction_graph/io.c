@@ -45,6 +45,25 @@ void add_WRITE(expression_t *expr) {
     add_to_list(expr, i_WRITE);
 }
 
+static void write_store_set_from_const(symbol *var_1, symbol *var_2) {
+    reg_set *r_set = get_reg_set();
+
+    mpz_t eff_addr;
+    mpz_init_set_ui(eff_addr, var_1->addr[0]);
+    mpz_sub_ui(eff_addr, eff_addr, var_1->_add_info.start_idx);
+    mpz_add(eff_addr, eff_addr, var_2->consts.value);
+
+    const addr_t eff_addr_ui = mpz_get_ui(eff_addr);
+    mpz_clear(eff_addr);
+
+    stack_ptr_generate(eff_addr_ui);
+    reg_allocator reg_alloc = reg_m_get(r_set, eff_addr_ui, false);
+    if (reg_alloc.was_allocated && (reg_alloc.r->flags & REG_MODIFIED)) {
+        STORE(reg_alloc.r, &(r_set->stack_ptr));
+        reg_alloc.r->flags &= ~REG_MODIFIED;
+    }
+}
+
 void eval_WRITE(i_graph **i_current) {
     expression_t const * const expr = (*i_current)->payload;
     reg_set *r_set = get_reg_set();
@@ -55,19 +74,105 @@ void eval_WRITE(i_graph **i_current) {
             const bool left_sym_2_const = !left_sym_2_addr && (expr->var_2[1].var->flags & SYMBOL_IS_CONSTANT);
             const bool left_sym_1_const = expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
 
-            oper_store_array(expr->var_1[1].var->addr);
+            if (left_sym_2_const && left_sym_1_const) {
+                array_value *arr_val = expr->var_1[1].var->consts.arr_value;
 
-            addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM2_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
-            oper_set_stack_ptr_addr_arr(var_idx_addr,
-                                        expr->var_1[1].var->addr[0],
-                                        expr->var_1[1].var->_add_info.start_idx);
+                mpz_t idx;
+                mpz_init_set(idx, expr->var_2[1].var->consts.value);
+                mpz_sub_ui(idx, idx, expr->var_1[1].var->_add_info.start_idx);
+
+                const uint64_t idx_ui = mpz_get_ui(idx);
+                mpz_clear(idx);
+                while (arr_val) {
+                    if (idx_ui == arr_val->n) {
+                        break;
+                    }
+                    arr_val = arr_val->next;
+                }
+
+                if (arr_val) {
+                    if (arr_val->is_constant) {
+                        reg *val_reg = val_generate_from_mpz(arr_val->value);
+                        stack_ptr_generate(expr->var_1[1].var->addr[0] + idx_ui);
+                        STORE(val_reg, &(r_set->stack_ptr));
+                        arr_val->is_in_memory = true;
+                    } else {
+                        write_store_set_from_const(expr->var_1[1].var, expr->var_2[1].var);
+                    }
+                } else {
+                    stack_ptr_generate(expr->var_1[1].var->addr[0] + idx_ui);
+                }
+            } else if (left_sym_2_const) {
+                write_store_set_from_const(expr->var_1[1].var, expr->var_2[1].var);
+            } else if (left_sym_1_const && left_sym_2_addr) { // during loops impl
+            
+            } else {
+                if (left_sym_1_const) {
+                    oper_flush_array_to_mem(expr->var_1[1].var);
+                    oper_store_array(expr->var_1[1].var->addr);
+                } else {
+                    oper_store_array(expr->var_1[1].var->addr);
+                }
+
+                addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM2_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
+                oper_set_stack_ptr_addr_arr(var_idx_addr,
+                                            expr->var_1[1].var->addr[0],
+                                            expr->var_1[1].var->_add_info.start_idx);
+            }
         } else {
-            addr_t const eff_addr = expr->var_1[1].var->addr[0] + (addr_t)expr->var_2[1].num;
-            stack_ptr_generate(eff_addr);
-            reg_allocator reg_alloc = reg_m_get(r_set, eff_addr, false);
-            if (reg_alloc.was_allocated && (reg_alloc.r->flags & REG_MODIFIED)) {
-                STORE(reg_alloc.r, &(r_set->stack_ptr));
-                reg_alloc.r->flags &= ~REG_MODIFIED;
+            const bool left_sym_1_const = expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
+
+            if (left_sym_1_const) {
+                if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
+                    array_value *arr_val = expr->var_1[1].var->consts.arr_value;
+                    const uint64_t idx = expr->var_2[1].num;
+                    while (arr_val) {
+                        if (arr_val->n == idx) {
+                            break;
+                        }
+                        arr_val = arr_val->next;
+                    }
+
+                    if (arr_val) {
+                        if (arr_val->is_constant) {
+                            if (arr_val->is_in_memory) {
+                                stack_ptr_generate(expr->var_1[1].var->addr[0] + idx);
+                            } else {
+                                reg *val_reg = val_generate_from_mpz(arr_val->value);
+                                stack_ptr_generate(expr->var_1[1].var->addr[0] + idx);
+                                STORE(val_reg, &(r_set->stack_ptr));
+                                arr_val->is_in_memory = true;
+                            }
+                        } else {
+                            addr_t const eff_addr = expr->var_1[1].var->addr[0] + idx;
+                            stack_ptr_generate(eff_addr);
+                            reg_allocator reg_alloc = reg_m_get(r_set, eff_addr, false);
+                            if (reg_alloc.was_allocated && (reg_alloc.r->flags & REG_MODIFIED)) {
+                                STORE(reg_alloc.r, &(r_set->stack_ptr));
+                                reg_alloc.r->flags &= ~REG_MODIFIED;
+                            }
+                        }
+                    } else {
+                        stack_ptr_generate(expr->var_1[1].var->addr[0] + idx);
+                    }
+                } else {
+                    if (expr->var_1[1].var->symbol_in_memory) {
+                        stack_ptr_generate(expr->var_1[1].var->addr[0]);
+                    } else {
+                        reg *val_reg = val_generate_from_mpz(expr->var_1[1].var->consts.value);
+                        stack_ptr_generate(expr->var_1[1].var->addr[0]);
+                        STORE(val_reg, &(r_set->stack_ptr));
+                        expr->var_1[1].var->symbol_in_memory = true;
+                    }
+                }
+            } else {
+                addr_t const eff_addr = expr->var_1[1].var->addr[0] + (addr_t)expr->var_2[1].num;
+                stack_ptr_generate(eff_addr);
+                reg_allocator reg_alloc = reg_m_get(r_set, eff_addr, false);
+                if (reg_alloc.was_allocated && (reg_alloc.r->flags & REG_MODIFIED)) {
+                    STORE(reg_alloc.r, &(r_set->stack_ptr));
+                    reg_alloc.r->flags &= ~REG_MODIFIED;
+                }
             }
         }
     } else {
