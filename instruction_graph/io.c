@@ -14,19 +14,19 @@ void add_READ(expression_t *expr) {
 }
 
 void eval_READ(i_graph **i_current) {
-    expression_t const * const expr_curr = (*i_current)->payload;
+    expression_t const * const expr = (*i_current)->payload;
     reg_set *r_set = get_reg_set();
 
-    if ((expr_curr->var_1[0].var->flags & SYMBOL_IS_ARRAY) && !(expr_curr->mask & ASSIGN_SYM2_NUM)) {
-        oper_store_array(expr_curr->var_1[0].var->addr);
-        oper_drop_array(expr_curr->var_1[0].var->addr);
+    if ((expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & ASSIGN_SYM2_NUM)) {
+        oper_store_array(expr->var_1[0].var->addr);
+        oper_drop_array(expr->var_1[0].var->addr);
 
-        addr_t const var_idx_addr = (expr_curr->addr_mask & ASSIGN_SYM2_ADDR) ? expr_curr->var_2[0].addr : expr_curr->var_2[0].var->addr[0];
+        addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
         oper_set_stack_ptr_addr_arr(var_idx_addr,
-                                    expr_curr->var_1[0].var->addr[0],
-                                    expr_curr->var_1[0].var->_add_info.start_idx);
+                                    expr->var_1[0].var->addr[0],
+                                    expr->var_1[0].var->_add_info.start_idx);
     } else {
-        addr_t const eff_addr = expr_curr->var_1[0].var->addr[0] + (addr_t)expr_curr->var_2[0].num;
+        addr_t const eff_addr = expr->var_1[0].var->addr[0] + (addr_t)expr->var_2[0].num;
         stack_ptr_generate(eff_addr);
         reg_m_drop_addr(r_set, eff_addr);
     }
@@ -46,19 +46,23 @@ void add_WRITE(expression_t *expr) {
 }
 
 void eval_WRITE(i_graph **i_current) {
-    expression_t const * const expr_curr = (*i_current)->payload;
+    expression_t const * const expr = (*i_current)->payload;
     reg_set *r_set = get_reg_set();
 
-    if (!(expr_curr->mask & LEFT_SYM1_NUM)) {
-        if ((expr_curr->var_1[1].var->flags & SYMBOL_IS_ARRAY) && !(expr_curr->mask & LEFT_SYM2_NUM)) {
-            oper_store_array(expr_curr->var_1[1].var->addr);
+    if (!(expr->mask & LEFT_SYM1_NUM)) {
+        if ((expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & LEFT_SYM2_NUM)) {
+            const bool left_sym_2_addr = expr->addr_mask & LEFT_SYM2_ADDR;
+            const bool left_sym_2_const = !left_sym_2_addr && (expr->var_2[1].var->flags & SYMBOL_IS_CONSTANT);
+            const bool left_sym_1_const = expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
 
-            addr_t const var_idx_addr = (expr_curr->addr_mask & LEFT_SYM2_ADDR) ? expr_curr->var_2[1].addr : expr_curr->var_2[1].var->addr[0];
+            oper_store_array(expr->var_1[1].var->addr);
+
+            addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM2_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
-                                        expr_curr->var_1[1].var->addr[0],
-                                        expr_curr->var_1[1].var->_add_info.start_idx);
+                                        expr->var_1[1].var->addr[0],
+                                        expr->var_1[1].var->_add_info.start_idx);
         } else {
-            addr_t const eff_addr = expr_curr->var_1[1].var->addr[0] + (addr_t)expr_curr->var_2[1].num;
+            addr_t const eff_addr = expr->var_1[1].var->addr[0] + (addr_t)expr->var_2[1].num;
             stack_ptr_generate(eff_addr);
             reg_allocator reg_alloc = reg_m_get(r_set, eff_addr, false);
             if (reg_alloc.was_allocated && (reg_alloc.r->flags & REG_MODIFIED)) {
@@ -67,8 +71,8 @@ void eval_WRITE(i_graph **i_current) {
             }
         }
     } else {
-        addr_t const temp_write_addr = expr_curr->var_1[0].addr;
-        reg *write_reg = val_generate(expr_curr->var_1[1].num);
+        addr_t const temp_write_addr = expr->var_1[0].addr;
+        reg *write_reg = val_generate(expr->var_1[1].num);
         stack_ptr_generate(temp_write_addr);
         STORE(write_reg, &(r_set->stack_ptr));
     }
