@@ -83,12 +83,7 @@ void eval_WRITE(i_graph **i_current) {
 
                 const uint64_t idx_ui = mpz_get_ui(idx);
                 mpz_clear(idx);
-                while (arr_val) {
-                    if (idx_ui == arr_val->n) {
-                        break;
-                    }
-                    arr_val = arr_val->next;
-                }
+                arr_val = oper_arr_val_find(arr_val, idx_ui);
 
                 if (arr_val) {
                     if (arr_val->is_constant) {
@@ -124,12 +119,7 @@ void eval_WRITE(i_graph **i_current) {
                 if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
                     array_value *arr_val = expr->var_1[1].var->consts.arr_value;
                     const uint64_t idx = expr->var_2[1].num;
-                    while (arr_val) {
-                        if (arr_val->n == idx) {
-                            break;
-                        }
-                        arr_val = arr_val->next;
-                    }
+                    arr_val = oper_arr_val_find(arr_val, idx);
 
                     if (arr_val) {
                         if (arr_val->is_constant) {

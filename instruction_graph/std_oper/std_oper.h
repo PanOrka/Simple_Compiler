@@ -84,14 +84,23 @@ void oper_flush_array_to_mem(symbol *arr);
 
 /**
  * 
+ * Operation on array_value list
+ * 
+ * RETURN: NULL or pointer to found arr_val
+*/
+array_value * oper_arr_val_find(array_value *arr_val, uint64_t idx_ui);
+
+/**
+ * 
  * Set assign_var with given ready register
  * 
  * ARGUMENTS: expression_t const * const expr <= from here we assign var[0]
  *            reg *assign_val <= register with value that we set assign_var
  *            uint8_t assign_val_flags <= information about assign_val
+ * WARNING: New array non-constant elements will be mpz_init() by default
 */
 void oper_set_assign_val_0(expression_t const * const expr,
-                           reg *assign_val,
+                           val assign_val,
                            uint8_t assign_val_flags);
 
 /**
