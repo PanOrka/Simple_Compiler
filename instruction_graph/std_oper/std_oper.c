@@ -250,10 +250,8 @@ val oper_get_assign_val_1(expression_t const * const expr) {
             } else {
                 if (left_sym_1_const) {
                     oper_flush_array_to_mem(expr->var_1[1].var);
-                    oper_store_array(expr->var_1[1].var->addr);
-                } else {
-                    oper_store_array(expr->var_1[1].var->addr);
                 }
+                oper_store_array(expr->var_1[1].var->addr);
                 reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_1);
                 var.r->addr = TEMP_ADDR_1;
 
@@ -354,10 +352,8 @@ val oper_get_assign_val_2(expression_t const * const expr) {
             } else {
                 if (right_sym_1_const) {
                     oper_flush_array_to_mem(expr->var_1[2].var);
-                    oper_store_array(expr->var_1[2].var->addr);
-                } else {
-                    oper_store_array(expr->var_1[2].var->addr);
                 }
+                oper_store_array(expr->var_1[2].var->addr);
                 reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_2);
                 var.r->addr = TEMP_ADDR_2;
 

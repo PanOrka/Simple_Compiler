@@ -109,10 +109,8 @@ void eval_WRITE(i_graph **i_current) {
             } else {
                 if (left_sym_1_const) {
                     oper_flush_array_to_mem(expr->var_1[1].var);
-                    oper_store_array(expr->var_1[1].var->addr);
-                } else {
-                    oper_store_array(expr->var_1[1].var->addr);
                 }
+                oper_store_array(expr->var_1[1].var->addr);
 
                 addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM2_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
                 oper_set_stack_ptr_addr_arr(var_idx_addr,
