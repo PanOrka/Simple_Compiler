@@ -34,7 +34,7 @@ static void num_add(mpz_t dest, mpz_t src_1, mpz_t src_2) {
 static void num_sub(mpz_t dest, mpz_t src_1, mpz_t src_2) {
     mpz_sub(dest, src_1, src_2);
     if (mpz_cmp_si(dest, 0) < 0) {
-        mpz_set(dest, 0);
+        mpz_set_si(dest, 0);
     }
 }
 
