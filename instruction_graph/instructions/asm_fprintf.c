@@ -186,7 +186,7 @@ reg * MOD(reg *x, reg *y) {
     */
     JZERO_i_idx(y, 48); // If y is 0 then we end with 0
     DEC(y);
-    JZERO_i_idx(y, 46); // If y is 1 then we end with 0
+    JZERO_i_idx(y, 45); // If y is 1 then we end with 0
     INC(y);
 
     // calculating size of reg_x value
