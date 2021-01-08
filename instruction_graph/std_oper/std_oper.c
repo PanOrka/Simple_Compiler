@@ -331,6 +331,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                     reg_m_drop_addr(r_set, eff_addr);
                     expr->var_1[0].var->flags |= SYMBOL_IS_CONSTANT;
                     mpz_set(expr->var_1[0].var->consts.value, assign_val.constant);
+                    expr->var_1[0].var->symbol_in_memory = false;
                 }
             }
         } else {
