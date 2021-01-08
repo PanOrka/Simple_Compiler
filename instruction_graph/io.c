@@ -70,12 +70,12 @@ void eval_READ(i_graph **i_current) {
                 oper_arr_set_non_constant(expr->var_1[0].var);
             }
             oper_store_array(expr->var_1[0].var->addr);
-            oper_drop_array(expr->var_1[0].var->addr);
 
             addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
                                         expr->var_1[0].var->addr[0],
                                         expr->var_1[0].var->_add_info.start_idx);
+            oper_drop_array(expr->var_1[0].var->addr);
         }
     } else {
         const bool assign_sym_1_const = expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT;
