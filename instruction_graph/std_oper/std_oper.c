@@ -338,8 +338,10 @@ void oper_set_assign_val_0(expression_t const * const expr,
             if (assign_val.is_reg) {
                 oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
             } else {
-                reg *val_reg = val_generate_from_mpz(assign_val.constant);
-                oper_set_reg(val_reg, eff_addr, assign_val_flags);
+                reg_m_drop_addr(r_set, eff_addr);
+                expr->var_1[0].var->flags |= SYMBOL_IS_CONSTANT;
+                mpz_set(expr->var_1[0].var->consts.value, assign_val.constant);
+                expr->var_1[0].var->symbol_in_memory = false;
             }
         }
     }
