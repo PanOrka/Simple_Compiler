@@ -296,7 +296,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                         reg_m_drop_addr(r_set, eff_addr);
                         arr_val->is_in_memory = false;
                         arr_val->is_constant = true;
-                        mpz_set(expr->var_1[0].var->consts.value, assign_val.constant);
+                        mpz_set(arr_val->value, assign_val.constant);
                     }
                 } else {
                     if (assign_val.is_reg) {
