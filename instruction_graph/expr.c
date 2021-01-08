@@ -86,6 +86,11 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
     } else if (assign_val_1.is_reg) {
         reg *val_reg = val_generate_from_mpz(assign_val_2.constant);
         mpz_clear(assign_val_2.constant);
+        if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
+            stack_ptr_generate(assign_val_1.reg->addr);
+            STORE(assign_val_1.reg, &(r_set->stack_ptr));
+            assign_val_1.reg->flags &= ~REG_MODIFIED;
+        }
 
         reg *new_reg = func.func_reg(assign_val_1.reg, val_reg);
         if (new_reg) {
