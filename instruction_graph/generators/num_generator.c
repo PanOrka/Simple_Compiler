@@ -212,6 +212,11 @@ static uint64_t generate_from_current_inc_cost(mpz_t curr_val, mpz_t target_val)
     mpz_t diff;
     mpz_init(diff);
     mpz_sub(diff, target_val, curr_val);
+    if (mpz_cmpabs_ui(diff, (uint64_t)INT64_MAX) >= 0) {
+        mpz_clear(diff);
+
+        return UINT64_MAX;
+    }
 
     int64_t diff_val = mpz_get_si(diff);
     mpz_clear(diff);
