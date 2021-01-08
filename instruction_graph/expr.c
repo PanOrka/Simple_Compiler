@@ -98,7 +98,7 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         reg *val_reg = val_generate_from_mpz(assign_val_1.constant);
         mpz_clear(assign_val_1.constant);
 
-        reg *new_reg = func.func_reg(assign_val_2.reg, val_reg);
+        reg *new_reg = func.func_reg(val_reg, assign_val_2.reg);
         if (new_reg) {
             assign_val_2.reg = new_reg;
             reg_m_promote(r_set, assign_val_2.reg->addr);
