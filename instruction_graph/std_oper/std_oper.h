@@ -92,6 +92,20 @@ array_value * oper_arr_val_find(array_value *arr_val, uint64_t idx_ui);
 
 /**
  * 
+ * Add new array_value to given arr
+ * 
+*/
+void oper_arr_val_add(symbol *arr, array_value new_arr_val);
+
+/**
+ * 
+ * Sets every element of array to non_constant
+ * 
+*/
+void oper_arr_set_non_constant(symbol *arr);
+
+/**
+ * 
  * Set assign_var with given ready register
  * 
  * ARGUMENTS: expression_t const * const expr <= from here we assign var[0]
