@@ -97,11 +97,14 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
     } else if (assign_val_2.is_reg) {
         reg *val_reg = val_generate_from_mpz(assign_val_1.constant);
         mpz_clear(assign_val_1.constant);
+        val_reg->addr = TEMP_ADDR_1;
 
         reg *new_reg = func.func_reg(val_reg, assign_val_2.reg);
         if (new_reg) {
             assign_val_2.reg = new_reg;
             reg_m_promote(r_set, assign_val_2.reg->addr);
+        } else {
+            assign_val_2.reg = val_reg;
         }
 
         oper_set_assign_val_0(expr, assign_val_2, ASSIGN_VAL_STASH);
