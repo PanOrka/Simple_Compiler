@@ -23,6 +23,9 @@ static void eval_expr_VALUE(expression_t const * const expr) {
     reg_set *r_set = get_reg_set();
     val assign_val = oper_get_assign_val_1(expr);
     oper_set_assign_val_0(expr, assign_val, ASSIGN_VAL_NO_FLAGS);
+    if (!assign_val.is_reg) {
+        mpz_clear(assign_val.constant);
+    }
 
     reg_m_drop_addr(r_set, TEMP_ADDR_1);
 }
