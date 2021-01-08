@@ -3,8 +3,6 @@
 
 #include <stdbool.h>
 
-#include "i_graph.h"
-
 #ifndef i_POP
 #define i_POP 1
 #endif
@@ -12,6 +10,8 @@
 #ifndef i_NOPOP
 #define i_NOPOP 0
 #endif
+
+#include "i_graph.h"
 
 typedef struct i_level i_level;
 

@@ -5,6 +5,7 @@
 
 #include "../parser_func/loops.h"
 #include "../definitions.h"
+#include "i_level.h"
 
 static i_graph *start = NULL;
 static i_graph *end = NULL;
@@ -118,6 +119,11 @@ void eval_WRITE(i_graph **i_current);
 
 
 void i_graph_execute(FILE *file) {
+    if (!i_level_is_empty()) {
+        fprintf(stderr, "[I_GRAPH]: Conditional instructions stack non empty!\n");
+        exit(EXIT_FAILURE);
+    }
+
     asm_fprintf_set_file(file);
     while (start) {
         switch (start->i_type) {
@@ -173,4 +179,64 @@ void i_graph_execute(FILE *file) {
         free(to_free->payload);
         free(to_free);
     }
+}
+
+void i_graph_clear_if(bool cond, i_graph **i_current) {
+    if (i_level_is_empty()) {
+        i_graph *i_if = *i_current;
+        i_level_add(i_IF);
+
+        i_graph *ptr = i_if->next;
+
+        i_graph *i_else = NULL;
+        i_graph *i_endif = NULL;
+        while (!i_level_is_empty()) {
+            switch (ptr->i_type) {
+                case i_IF:
+                    i_level_add(i_FOR);
+                    break;
+                case i_ELSE:
+                    if (i_level_pop(i_NOPOP) == i_IF) {
+                        i_else = ptr;
+                    }
+                    break;
+                case i_ENDIF:
+                    if (i_level_pop(i_POP) == i_IF) {
+                        i_endif = ptr;
+                    }
+                    break;
+                case i_WHILE:
+                    i_level_add(i_FOR);
+                    break;
+                case i_ENDWHILE:
+                    i_level_pop(i_POP);
+                    break;
+                case i_REPEAT:
+                    i_level_add(i_FOR);
+                    break;
+                case i_UNTIL:
+                    i_level_pop(i_POP);
+                    break;
+                case i_FOR:
+                    i_level_add(i_FOR);
+                    break;
+                case i_ENDFOR:
+                    i_level_pop(i_POP);
+                    break;
+            }
+
+            ptr = ptr->next;
+        }
+
+        if (i_else) {
+
+        } else {
+            
+        }
+
+        return ;
+    }
+
+    fprintf(stderr, "[I_GRAPH]: Clear of non empty i_level stack!\n");
+    exit(EXIT_FAILURE);
 }

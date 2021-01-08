@@ -134,30 +134,30 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
 }
 
 void eval_EXPR(i_graph **i_current) {
-    expression_t const * const expr_curr = (*i_current)->payload;
+    expression_t const * const expr = (*i_current)->payload;
 
-    switch (expr_curr->type) {
+    switch (expr->type) {
         case expr_VALUE:
-            eval_expr_VALUE(expr_curr);
+            eval_expr_VALUE(expr);
             break;
         case expr_ADD:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_add, .func_reg = &ADD });
             break;
         case expr_SUB:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_sub, .func_reg = &SUB });
             break;
         case expr_MUL:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_mul, .func_reg = &MUL });
             break;
         case expr_DIV:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_div, .func_reg = &DIV });
             break;
         case expr_MOD:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_mod, .func_reg = &MOD });
             break;
         default:

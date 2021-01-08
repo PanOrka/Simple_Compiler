@@ -2,6 +2,7 @@
 #define I_GRAPH_H
 
 #include <stdio.h>
+#include <stdbool.h>
 
 typedef enum {
     i_EXPR = 0,
@@ -40,5 +41,12 @@ void i_graph_add_instruction(void *payload, instruction_type i_type);
  * 
 */
 void i_graph_execute(FILE *file);
+
+/**
+ * 
+ * Clearing useless IF-Else
+ * 
+*/
+void i_graph_clear_if(bool cond, i_graph **i_current);
 
 #endif

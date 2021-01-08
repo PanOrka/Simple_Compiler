@@ -1,6 +1,8 @@
 #include "../parser_func/expressions.h"
 #include "i_level.h"
 #include "expr_checker.h"
+#include "std_oper/std_oper.h"
+#include "conditions/cond.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -13,7 +15,23 @@ void add_IF(expression_t *expr) {
 }
 
 void eval_IF(i_graph **i_current) {
-    
+    expression_t const * const expr = (*i_current)->payload;
+    reg_set *r_set = get_reg_set();
+    val assign_val_1 = oper_get_assign_val_1(expr);
+    val assign_val_2 = oper_get_assign_val_2(expr);
+
+    if (i_level_is_empty()) {
+        if (!(assign_val_1.is_reg || assign_val_2.is_reg)) { // both constants
+            bool cond = cond_val_from_const(assign_val_1.constant, assign_val_2.constant, expr->type);
+            mpz_clear(assign_val_1.constant);
+            mpz_clear(assign_val_2.constant);
+            i_graph_clear_if(cond, i_current);
+        } else {
+
+        }
+    } else {
+
+    }
 }
 
 void add_ELSE() {
