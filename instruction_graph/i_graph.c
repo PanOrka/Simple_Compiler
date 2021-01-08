@@ -181,6 +181,33 @@ void i_graph_execute(FILE *file) {
     }
 }
 
+static void i_delete_node(i_graph *to_free) {
+    if (to_free->prev) {
+        to_free->prev->next = to_free->next;
+    }
+
+    if (to_free->next) {
+        to_free->next->prev = to_free->prev;
+    } else {
+        end = to_free->prev;
+    }
+    free(to_free->payload);
+    free(to_free);
+}
+
+/**
+ * 
+ * Frees everything except start_ptr
+ * 
+*/
+static void i_clear(i_graph *start_ptr, i_graph *end_ptr) {
+    while (end_ptr != start_ptr) {
+        i_graph *to_free = end_ptr;
+        end_ptr = end_ptr->prev;
+        i_delete_node(to_free);
+    }
+}
+
 void i_graph_clear_if(bool cond, i_graph **i_current) {
     if (i_level_is_empty()) {
         i_graph *i_if = *i_current;
@@ -191,6 +218,11 @@ void i_graph_clear_if(bool cond, i_graph **i_current) {
         i_graph *i_else = NULL;
         i_graph *i_endif = NULL;
         while (!i_level_is_empty()) {
+            if (ptr == NULL) { // not possible but let's check it
+                fprintf(stderr, "[I_GRAPH]: NULL ptr on if-clear!\n");
+                exit(EXIT_FAILURE);
+            }
+
             switch (ptr->i_type) {
                 case i_IF:
                     i_level_add(i_FOR);
@@ -228,10 +260,24 @@ void i_graph_clear_if(bool cond, i_graph **i_current) {
             ptr = ptr->next;
         }
 
-        if (i_else) {
-
+        if (cond) {
+            if (i_else) {
+                i_clear(i_else, i_endif);
+                i_delete_node(i_else);
+                *i_current = i_if;
+            } else {
+                i_delete_node(i_endif);
+                *i_current = i_if;
+            }
         } else {
-            
+            if (i_else) {
+                i_clear(i_if, i_else);
+                i_delete_node(i_endif);
+                *i_current = i_if;
+            } else {
+                i_clear(i_if, i_endif);
+                *i_current = i_if;
+            }
         }
 
         return ;

@@ -16,7 +16,6 @@ void add_IF(expression_t *expr) {
 
 void eval_IF(i_graph **i_current) {
     expression_t const * const expr = (*i_current)->payload;
-    reg_set *r_set = get_reg_set();
     val assign_val_1 = oper_get_assign_val_1(expr);
     val assign_val_2 = oper_get_assign_val_2(expr);
 

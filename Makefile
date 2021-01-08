@@ -10,7 +10,8 @@ all:
 	instruction_graph/while.c instruction_graph/repeat_until.c instruction_graph/io.c \
 	instruction_graph/for.c instruction_graph/generators/stack_generator.c \
 	instruction_graph/generators/num_generator.c instruction_graph/generators/val_generator.c \
-	instruction_graph/std_oper/std_oper.c instruction_graph/instructions/asm_fprintf.c -lgmp -o compiler
+	instruction_graph/std_oper/std_oper.c instruction_graph/instructions/asm_fprintf.c \
+	instruction_graph/conditions/cond.c -lgmp -o compiler
 
 clean:
 	rm -rf compiler_parser.c compiler_parser.h compiler_lexer.c prelexer.c
