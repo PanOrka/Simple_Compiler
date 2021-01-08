@@ -7,6 +7,8 @@
 #include "../definitions.h"
 #include "i_level.h"
 
+#include "../parser_func/getters.h"
+
 static i_graph *start = NULL;
 static i_graph *end = NULL;
 
@@ -179,6 +181,9 @@ void i_graph_execute(FILE *file) {
         free(to_free->payload);
         free(to_free);
     }
+
+    free_symbol_table();
+    free_reg_set();
 }
 
 static void i_delete_node(i_graph *to_free) {
