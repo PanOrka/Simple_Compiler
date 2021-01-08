@@ -259,23 +259,25 @@ void oper_set_assign_val_0(expression_t const * const expr,
             
             oper_store_array(expr->var_1[0].var->addr);
 
+            reg *store_reg;
+            if (assign_val.is_reg) {
+                store_reg = assign_val.reg;
+            } else {
+                store_reg = val_generate_from_mpz(assign_val.constant);
+                store_reg->addr = TEMP_ADDR_1;
+            }
+
             addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
                                         expr->var_1[0].var->addr[0],
                                         expr->var_1[0].var->_add_info.start_idx);
 
             oper_drop_array(expr->var_1[0].var->addr);
-            reg *store_reg;
-            if (assign_val.is_reg) {
-                store_reg = assign_val.reg;
-                if (assign_val_flags & ASSIGN_VAL_STASH) {
-                    reg_m_drop_addr(r_set, store_reg->addr);
-                }
-            } else {
-                store_reg = val_generate_from_mpz(assign_val.constant);
-            }
 
             STORE(store_reg, &(r_set->stack_ptr));
+            if (assign_val_flags & ASSIGN_VAL_STASH) {
+                reg_m_drop_addr(r_set, store_reg->addr);
+            }
         }
     } else {
         const bool assign_sym_1_const = expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT;
