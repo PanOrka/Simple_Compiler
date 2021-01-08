@@ -409,7 +409,8 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                         assign_val.reg = load_sym_reg_from_const(expr->var_1[1].var, expr->var_2[1].var);
                     }
                 } else {
-                    mpz_init_set_si(assign_val.constant, 0);
+                    assign_val.is_reg = true;
+                    assign_val.reg = load_sym_reg_from_const(expr->var_1[1].var, expr->var_2[1].var);
                 }
             } else if (left_sym_2_const) {
                 assign_val.reg = load_sym_reg_from_const(expr->var_1[1].var, expr->var_2[1].var);
@@ -451,7 +452,8 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                             assign_val.reg = load_sym_reg_from_num(expr->var_1[1].var, idx);
                         }
                     } else {
-                        mpz_init_set_si(assign_val.constant, 0);
+                        assign_val.is_reg = true;
+                        assign_val.reg = load_sym_reg_from_num(expr->var_1[1].var, idx);
                     }
                 } else {
                     mpz_init_set(assign_val.constant, expr->var_1[1].var->consts.value);
@@ -501,7 +503,8 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                         assign_val.reg = load_sym_reg_from_const(expr->var_1[2].var, expr->var_2[2].var);
                     }
                 } else {
-                    mpz_init_set_si(assign_val.constant, 0);
+                    assign_val.is_reg = true;
+                    assign_val.reg = load_sym_reg_from_const(expr->var_1[2].var, expr->var_2[2].var);
                 }
             } else if (right_sym_2_const) {
                 assign_val.reg = load_sym_reg_from_const(expr->var_1[2].var, expr->var_2[2].var);
@@ -543,7 +546,8 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                             assign_val.reg = load_sym_reg_from_num(expr->var_1[2].var, idx);
                         }
                     } else {
-                        mpz_init_set_si(assign_val.constant, 0);
+                        assign_val.is_reg = true;
+                        assign_val.reg = load_sym_reg_from_num(expr->var_1[2].var, idx);
                     }
                 } else {
                     mpz_init_set(assign_val.constant, expr->var_1[2].var->consts.value);
