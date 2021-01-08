@@ -202,6 +202,11 @@ static void i_delete_node(i_graph *to_free) {
 */
 static void i_clear(i_graph *start_ptr, i_graph *end_ptr) {
     while (end_ptr != start_ptr) {
+        if (end_ptr == NULL) {
+            fprintf(stderr, "[I_GRAPH]: NULL ptr on i_clear - WRONG ITERATORS!\n");
+            exit(EXIT_FAILURE);
+        }
+
         i_graph *to_free = end_ptr;
         end_ptr = end_ptr->prev;
         i_delete_node(to_free);
