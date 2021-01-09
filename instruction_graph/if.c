@@ -4,6 +4,7 @@
 #include "std_oper/std_oper.h"
 #include "conditions/cond.h"
 #include "instructions/asm_fprintf.h"
+#include "../parser_func/getters.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -17,8 +18,13 @@ void add_IF(expression_t *expr) {
 
 void eval_IF(i_graph **i_current) {
     expression_t const * const expr = (*i_current)->payload;
+    reg_set *r_set = get_reg_set();
+
     val assign_val_1 = oper_get_assign_val_1(expr);
     val assign_val_2 = oper_get_assign_val_2(expr);
+    if (assign_val_1.is_reg) {
+        reg_m_promote(r_set, assign_val_1.reg->addr);
+    }
 
     if (i_level_is_empty()) {
         if (!(assign_val_1.is_reg || assign_val_2.is_reg)) { // both constants
@@ -28,12 +34,24 @@ void eval_IF(i_graph **i_current) {
             i_graph_clear_if(cond, i_current);
         } else {
             i_graph_analyze_if(i_current);
-            JZERO(); // compare
+            reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
+            JZERO(x); // compare
             i_level_add_branch_eval(i_IF);
         }
     } else {
-
+        if (assign_val_1.is_reg && assign_val_2.is_reg) { // just in case
+            reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
+            JZERO(x); // compare
+            i_level_add_branch_eval(i_IF);
+        } else {
+            fprintf(stderr, "[EVAL_IF]: Assign_vals aren't regs in depth > 0\n");
+            exit(EXIT_FAILURE);
+        }
+        
     }
+
+    reg_m_drop_addr(r_set, TEMP_ADDR_1);
+    reg_m_drop_addr(r_set, TEMP_ADDR_2);
 }
 
 void add_ELSE() {
