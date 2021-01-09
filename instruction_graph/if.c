@@ -97,8 +97,8 @@ void add_ENDIF() {
 
 void eval_ENDIF(i_graph **i_current) {
     if (i_level_pop_branch_eval(false).type == i_ELSE) {
-        i_level i_if = i_level_pop_branch_eval(true);
         i_level i_else = i_level_pop_branch_eval(true);
+        i_level i_if = i_level_pop_branch_eval(true);
         *(i_if.reserved_jmp) = ((int64_t)i_else.i_num - (int64_t)i_if.i_num) + 1;
 
         // ENDING ELSE
