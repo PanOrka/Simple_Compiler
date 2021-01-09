@@ -47,6 +47,13 @@ void i_level_add_branch_eval(branch_type type) {
     end->reserved_jmp = VECTOR_POP(jump_vec, NO_POP);
 }
 
+i_level i_level_pop_branch_eval(bool pop) {
+    i_level ret_pop = *end;
+    i_level_pop(pop);
+
+    return ret_pop;
+}
+
 branch_type i_level_pop(bool pop) {
     if (!end) {
         fprintf(stderr, "[I_LEVEL]: List is empty!\n");

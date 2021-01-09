@@ -69,7 +69,13 @@ void add_ELSE() {
 }
 
 void eval_ELSE(i_graph **i_current) {
-    printf("else\n");
+    oper_regs_store_drop();
+    reg_set *r_set = get_reg_set();
+
+    reg_snapshot r_snap = i_level_pop_branch_eval(false).r_snap;
+    reg_m_apply_snapshot(r_set, r_snap);
+    JUMP();
+    i_level_add_branch_eval(i_ELSE);
 }
 
 void add_ENDIF() {
@@ -86,5 +92,13 @@ void add_ENDIF() {
 }
 
 void eval_ENDIF(i_graph **i_current) {
-    printf("endif\n");
+    if (i_level_pop_branch_eval(false).type == i_ELSE) {
+        i_level i_if = i_level_pop_branch_eval(true);
+        i_level i_else = i_level_pop_branch_eval(true);
+        
+    } else if (i_level_pop_branch_eval(false).type == i_IF) {
+
+    } else {
+        fprintf(stderr, "[EVAL_ENDIF]: No matching type of branch!\n");
+    }
 }
