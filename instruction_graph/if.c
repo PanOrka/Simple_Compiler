@@ -99,17 +99,13 @@ void eval_ENDIF(i_graph **i_current) {
     if (i_level_pop_branch_eval(false).type == i_ELSE) {
         i_level i_if = i_level_pop_branch_eval(true);
         i_level i_else = i_level_pop_branch_eval(true);
-        *(i_if.reserved_jmp) = i_else.i_num + 1;
+        *(i_if.reserved_jmp) = ((int64_t)i_else.i_num - (int64_t)i_if.i_num) + 1;
 
         // ENDING ELSE
         oper_regs_store_drop();
         reg_set *r_set = get_reg_set();
         stack_ptr_clear();
-        JUMP();
-
-        reg_m_apply_snapshot(r_set, i_if.r_snap);
-        
-
+        *(i_else.reserved_jmp) = ((int64_t)asm_get_i_num() - (int64_t)i_else.i_num) + 1;
     } else if (i_level_pop_branch_eval(false).type == i_IF) {
         i_level i_if = i_level_pop_branch_eval(true);
     } else {
