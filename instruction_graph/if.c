@@ -5,6 +5,7 @@
 #include "conditions/cond.h"
 #include "instructions/asm_fprintf.h"
 #include "../parser_func/getters.h"
+#include "../register_machine/reg_m.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -68,7 +69,7 @@ void add_ELSE() {
 }
 
 void eval_ELSE(i_graph **i_current) {
-    
+    printf("else\n");
 }
 
 void add_ENDIF() {
@@ -85,5 +86,5 @@ void add_ENDIF() {
 }
 
 void eval_ENDIF(i_graph **i_current) {
-    
+    printf("endif\n");
 }

@@ -12,6 +12,7 @@
 #endif
 
 #include "i_graph.h"
+#include "../register_machine/reg_m.h"
 
 #include <stdint.h>
 
@@ -23,6 +24,7 @@ struct i_level {
     i_level *prev;
     uint64_t i_num;
     int64_t *reserved_jmp;
+    reg_snapshot r_snap;
     branch_type type;
 };
 

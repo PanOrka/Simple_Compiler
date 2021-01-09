@@ -36,6 +36,13 @@ typedef struct {
 } reg_allocator;
 
 /**
+ * stack_ptr is cleared before snapshot! 
+*/
+typedef struct {
+    reg r[REG_SIZE];
+} reg_snapshot;
+
+/**
  * 
  * Create register machine
  * 
@@ -81,5 +88,19 @@ void reg_m_drop_addr(reg_set *r_set, addr_t addr);
  * 
 */
 void reg_m_promote(reg_set *r_set, addr_t addr);
+
+/**
+ * 
+ * Return snapshot of reg_m
+ * 
+*/
+reg_snapshot reg_m_snapshot(reg_set *r_set);
+
+/**
+ * 
+ * Apply snapshot
+ * 
+*/
+void reg_m_apply_snapshot(reg_set *r_set, reg_snapshot r_snap);
 
 #endif

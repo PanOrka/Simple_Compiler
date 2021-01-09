@@ -135,4 +135,11 @@ val oper_get_assign_val_1(expression_t const * const expr);
 */
 val oper_get_assign_val_2(expression_t const * const expr);
 
+/**
+ * 
+ * Store and drop registers
+ * 
+*/
+void oper_regs_store_drop();
+
 #endif

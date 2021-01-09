@@ -128,3 +128,18 @@ void reg_m_promote(reg_set *r_set, addr_t addr) {
     fprintf(stderr, "[REG_M]: Promotion of non-existent address!\n");
     exit(EXIT_FAILURE);
 }
+
+reg_snapshot reg_m_snapshot(reg_set *r_set) {
+    reg_snapshot r_snap;
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        r_snap.r[i] = *(r_set->r[i]);
+    }
+
+    return r_snap;
+}
+
+void reg_m_apply_snapshot(reg_set *r_set, reg_snapshot r_snap) {
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        *(r_set->r[i]) = r_snap.r[i];
+    }
+}

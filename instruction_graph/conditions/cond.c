@@ -40,6 +40,7 @@ reg * cond_val_from_vals(val src_1, val src_2, expr_type type) {
     reg *x = src_1.is_reg ? src_1.reg : val_generate_from_mpz(src_1.constant);
     reg *y = src_2.is_reg ? src_2.reg : val_generate_from_mpz(src_2.constant);
 
+    reg *temp;
     switch (type) {
         case cond_IS_EQUAL: // x == y
             if (y->flags & REG_MODIFIED) {
@@ -47,7 +48,7 @@ reg * cond_val_from_vals(val src_1, val src_2, expr_type type) {
                 STORE(y, &(r_set->stack_ptr));
                 y->flags &= ~REG_MODIFIED;
             }
-            reg *temp = oper_get_reg_for_variable(TEMP_ADDR_3).r;
+            temp = oper_get_reg_for_variable(TEMP_ADDR_3).r;
             oper_reg_swap(temp, x);
             SUB(temp, y);
             SUB(y, x);
@@ -57,7 +58,7 @@ reg * cond_val_from_vals(val src_1, val src_2, expr_type type) {
             JUMP_i_idx(2);
             INC(temp);
             JZERO_i_idx(temp, -1);
-            reg_m_promote(r_set, temp);
+            reg_m_promote(r_set, temp->addr);
 
             return temp;
             break;
@@ -67,13 +68,13 @@ reg * cond_val_from_vals(val src_1, val src_2, expr_type type) {
                 STORE(y, &(r_set->stack_ptr));
                 y->flags &= ~REG_MODIFIED;
             }
-            reg *temp = oper_get_reg_for_variable(TEMP_ADDR_3).r;
+            temp = oper_get_reg_for_variable(TEMP_ADDR_3).r;
             oper_reg_swap(temp, x);
             SUB(temp, y);
             SUB(y, x);
             ADD(temp, y);
             reg_m_drop_addr(r_set, y->addr);
-            reg_m_promote(r_set, temp);
+            reg_m_promote(r_set, temp->addr);
 
             return temp;
             break;

@@ -563,3 +563,15 @@ val oper_get_assign_val_2(expression_t const * const expr) {
 
     return assign_val;
 }
+
+void oper_regs_store_drop() {
+    reg_set *r_set = get_reg_set();
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        reg *clear_reg = r_set->r[i];
+        if (clear_reg->flags & REG_MODIFIED) { // First register is always stashed
+            stack_ptr_generate(clear_reg->addr);
+            STORE(clear_reg, &(r_set->stack_ptr));
+            clear_reg->flags &= ~REG_MODIFIED;
+        }
+    }
+}

@@ -30,6 +30,7 @@ void i_level_add(branch_type type) {
 }
 
 #include "instructions/asm_fprintf.h"
+#include "../parser_func/getters.h"
 
 void i_level_add_branch_eval(branch_type type) {
     if (jump_vec._mem_ptr == NULL) {
@@ -39,6 +40,7 @@ void i_level_add_branch_eval(branch_type type) {
 
     i_level_add(type);
     end->i_num = asm_get_i_num();
+    end->r_snap = reg_m_snapshot(get_reg_set());
 
     int64_t val = 0;
     VECTOR_ADD(jump_vec, val);
