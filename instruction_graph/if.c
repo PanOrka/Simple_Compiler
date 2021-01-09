@@ -6,6 +6,7 @@
 #include "instructions/asm_fprintf.h"
 #include "../parser_func/getters.h"
 #include "../register_machine/reg_m.h"
+#include "generators/stack_generator.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -38,12 +39,14 @@ void eval_IF(i_graph **i_current) {
             reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
             JZERO(x); // compare
             i_level_add_branch_eval(i_IF);
+            stack_ptr_clear();
         }
     } else {
         if (assign_val_1.is_reg && assign_val_2.is_reg) { // just in case
             reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
             JZERO(x); // compare
             i_level_add_branch_eval(i_IF);
+            stack_ptr_clear();
         } else {
             fprintf(stderr, "[EVAL_IF]: Assign_vals aren't regs in depth > 0\n");
             exit(EXIT_FAILURE);
@@ -74,6 +77,7 @@ void eval_ELSE(i_graph **i_current) {
 
     reg_snapshot r_snap = i_level_pop_branch_eval(false).r_snap;
     reg_m_apply_snapshot(r_set, r_snap);
+    stack_ptr_clear();
     JUMP();
     i_level_add_branch_eval(i_ELSE);
 }
@@ -95,9 +99,19 @@ void eval_ENDIF(i_graph **i_current) {
     if (i_level_pop_branch_eval(false).type == i_ELSE) {
         i_level i_if = i_level_pop_branch_eval(true);
         i_level i_else = i_level_pop_branch_eval(true);
-        
-    } else if (i_level_pop_branch_eval(false).type == i_IF) {
+        *(i_if.reserved_jmp) = i_else.i_num + 1;
 
+        // ENDING ELSE
+        oper_regs_store_drop();
+        reg_set *r_set = get_reg_set();
+        stack_ptr_clear();
+        JUMP();
+
+        reg_m_apply_snapshot(r_set, i_if.r_snap);
+        
+
+    } else if (i_level_pop_branch_eval(false).type == i_IF) {
+        i_level i_if = i_level_pop_branch_eval(true);
     } else {
         fprintf(stderr, "[EVAL_ENDIF]: No matching type of branch!\n");
     }

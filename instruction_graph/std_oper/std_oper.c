@@ -573,5 +573,7 @@ void oper_regs_store_drop() {
             STORE(clear_reg, &(r_set->stack_ptr));
             clear_reg->flags &= ~REG_MODIFIED;
         }
+        clear_reg->addr = ADDR_UNDEF;
+        clear_reg->flags = REG_NO_FLAGS;
     }
 }
