@@ -1,10 +1,14 @@
 #include "i_level.h"
+#include "../vector/vector.h"
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 static i_level *start = NULL;
 static i_level *end = NULL;
+
+static vector jump_vec;
 
 void i_level_add(branch_type type) {
     i_level *new_element = malloc(sizeof(i_level));
@@ -23,6 +27,22 @@ void i_level_add(branch_type type) {
         fprintf(stderr, "[I_LEVEL]: Couldn't allocate memory for I_LVL node!\n");
         exit(EXIT_FAILURE);
     }
+}
+
+#include "instructions/asm_fprintf.h"
+
+void i_level_add_branch_eval(branch_type type) {
+    if (jump_vec._mem_ptr == NULL) {
+        vector jump_vec_init = vector_create(sizeof(int64_t), alignof(int64_t), 16);
+        memcpy(&jump_vec, &jump_vec_init, sizeof(vector));
+    }
+
+    i_level_add(type);
+    end->i_num = asm_get_i_num();
+
+    int64_t val = 0;
+    VECTOR_ADD(jump_vec, val);
+    end->reserved_jmp = VECTOR_POP(jump_vec, NO_POP);
 }
 
 branch_type i_level_pop(bool pop) {

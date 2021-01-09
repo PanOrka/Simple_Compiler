@@ -3,6 +3,7 @@
 #include "expr_checker.h"
 #include "std_oper/std_oper.h"
 #include "conditions/cond.h"
+#include "instructions/asm_fprintf.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -27,6 +28,8 @@ void eval_IF(i_graph **i_current) {
             i_graph_clear_if(cond, i_current);
         } else {
             i_graph_analyze_if(i_current);
+            JZERO(); // compare
+            i_level_add_branch_eval(i_IF);
         }
     } else {
 

@@ -13,12 +13,16 @@
 
 #include "i_graph.h"
 
+#include <stdint.h>
+
 typedef struct i_level i_level;
 
 typedef instruction_type branch_type;
 
 struct i_level {
     i_level *prev;
+    uint64_t i_num;
+    int64_t *reserved_jmp;
     branch_type type;
 };
 
@@ -28,6 +32,8 @@ struct i_level {
  * 
 */
 void i_level_add(branch_type type);
+
+void i_level_add_branch_eval(branch_type type);
 
 /**
  * 
