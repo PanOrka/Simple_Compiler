@@ -26,7 +26,7 @@ void eval_IF(i_graph **i_current) {
             mpz_clear(assign_val_2.constant);
             i_graph_clear_if(cond, i_current);
         } else {
-
+            i_graph_analyze_if(i_current);
         }
     } else {
 

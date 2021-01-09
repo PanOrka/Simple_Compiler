@@ -218,57 +218,61 @@ static void i_clear(i_graph *start_ptr, i_graph *end_ptr) {
     }
 }
 
+static void i_graph_if_find(i_graph *i_if, i_graph **i_else, i_graph **i_endif) {
+    i_level_add(i_IF);
+    i_graph *ptr = i_if->next;
+
+    while (!i_level_is_empty()) {
+        if (ptr == NULL) { // not possible but let's check it
+            fprintf(stderr, "[I_GRAPH]: NULL ptr on if-find!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        switch (ptr->i_type) {
+            case i_IF:
+                i_level_add(i_FOR);
+                break;
+            case i_ELSE:
+                if (i_level_pop(i_NOPOP) == i_IF) {
+                    *i_else = ptr;
+                }
+                break;
+            case i_ENDIF:
+                if (i_level_pop(i_POP) == i_IF) {
+                    *i_endif = ptr;
+                }
+                break;
+            case i_WHILE:
+                i_level_add(i_FOR);
+                break;
+            case i_ENDWHILE:
+                i_level_pop(i_POP);
+                break;
+            case i_REPEAT:
+                i_level_add(i_FOR);
+                break;
+            case i_UNTIL:
+                i_level_pop(i_POP);
+                break;
+            case i_FOR:
+                i_level_add(i_FOR);
+                break;
+            case i_ENDFOR:
+                i_level_pop(i_POP);
+                break;
+        }
+
+        ptr = ptr->next;
+    }
+}
+
 void i_graph_clear_if(bool cond, i_graph **i_current) {
     if (i_level_is_empty()) {
         i_graph *i_if = *i_current;
-        i_level_add(i_IF);
-
-        i_graph *ptr = i_if->next;
-
         i_graph *i_else = NULL;
         i_graph *i_endif = NULL;
-        while (!i_level_is_empty()) {
-            if (ptr == NULL) { // not possible but let's check it
-                fprintf(stderr, "[I_GRAPH]: NULL ptr on if-clear!\n");
-                exit(EXIT_FAILURE);
-            }
 
-            switch (ptr->i_type) {
-                case i_IF:
-                    i_level_add(i_FOR);
-                    break;
-                case i_ELSE:
-                    if (i_level_pop(i_NOPOP) == i_IF) {
-                        i_else = ptr;
-                    }
-                    break;
-                case i_ENDIF:
-                    if (i_level_pop(i_POP) == i_IF) {
-                        i_endif = ptr;
-                    }
-                    break;
-                case i_WHILE:
-                    i_level_add(i_FOR);
-                    break;
-                case i_ENDWHILE:
-                    i_level_pop(i_POP);
-                    break;
-                case i_REPEAT:
-                    i_level_add(i_FOR);
-                    break;
-                case i_UNTIL:
-                    i_level_pop(i_POP);
-                    break;
-                case i_FOR:
-                    i_level_add(i_FOR);
-                    break;
-                case i_ENDFOR:
-                    i_level_pop(i_POP);
-                    break;
-            }
-
-            ptr = ptr->next;
-        }
+        i_graph_if_find(i_if, &i_else, &i_endif);
 
         if (cond) {
             if (i_else) {
@@ -294,5 +298,62 @@ void i_graph_clear_if(bool cond, i_graph **i_current) {
     }
 
     fprintf(stderr, "[I_GRAPH]: Clear of non empty i_level stack!\n");
+    exit(EXIT_FAILURE);
+}
+
+static void i_graph_mark(i_graph *start_ptr, i_graph *end_ptr) {
+    while (start_ptr != end_ptr) {
+        if (start_ptr->i_type == i_EXPR || start_ptr->i_type == i_READ) {
+            expression_t *expr = start_ptr->payload;
+            expr->var_1[0].var->flags |= SYMBOL_MARK_STORE;
+        }
+
+        start_ptr = start_ptr->next;
+    }
+}
+
+#include "std_oper/std_oper.h"
+#include "generators/val_generator.h"
+#include "generators/stack_generator.h"
+
+static void i_graph_store_marked() {
+    symbol_table *s_table = get_symbol_table();
+    reg_set *r_set = get_reg_set();
+
+    for (size_t i=0; i<s_table->v.used_size; ++i) {
+        symbol *sym = symbol_table_find_by_idx(s_table, i);
+        if (sym->flags & SYMBOL_MARK_STORE) {
+            sym->flags &= ~SYMBOL_MARK_STORE;
+            const bool sym_const = sym->flags & SYMBOL_IS_CONSTANT;
+
+            if (sym_const && sym->flags & SYMBOL_IS_ARRAY) {
+                oper_flush_array_to_mem(sym);
+                oper_arr_set_non_constant(sym);
+            } else if (sym_const) {
+                sym->flags &= ~SYMBOL_IS_CONSTANT;
+                reg *val_reg = val_generate_from_mpz(sym->consts.value);
+                mpz_set_si(sym->consts.value, 0);
+                stack_ptr_generate(sym->addr[0]);
+                STORE(val_reg, &(r_set->stack_ptr));
+                sym->symbol_in_memory = true;
+            }
+        }
+    }
+}
+
+void i_graph_analyze_if(i_graph **i_current) {
+    if (i_level_is_empty()) {
+        i_graph *i_if = *i_current;
+        i_graph *i_else = NULL;
+        i_graph *i_endif = NULL;
+
+        i_graph_if_find(i_if, &i_else, &i_endif);
+        i_graph_mark(i_if, i_endif);
+        i_graph_store_marked();
+
+        return ;
+    }
+
+    fprintf(stderr, "[I_GRAPH]: Analyze of non empty i_level stack!\n");
     exit(EXIT_FAILURE);
 }

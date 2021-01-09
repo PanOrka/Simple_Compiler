@@ -96,4 +96,12 @@ void * vector_pop(vector *vec, bool do_pop);
 */
 vector_element vector_find(vector *vec, void *element_to_find, comp_eq comparator_eq);
 
+/**
+ * 
+ * Get element of given idx
+ * 
+ * RETURN: Pointer to element of given idx
+*/
+void * vector_get(vector *vec, size_t idx);
+
 #endif

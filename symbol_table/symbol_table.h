@@ -34,6 +34,10 @@
 #define SYMBOL_IS_CONSTANT 0b00010000
 #endif
 
+#ifndef SYMBOL_MARK_STORE
+#define SYMBOL_MARK_STORE 0b00100000
+#endif
+
 typedef struct symbol symbol;
 
 typedef union {
@@ -120,5 +124,13 @@ symbol symbol_table_pop(symbol_table *s_table);
  * RETURN: Size of symbol
 */
 int64_t symbol_ptr_size(symbol *sym);
+
+/**
+ * 
+ * Get symbol of given idx
+ * 
+ * RETURN: Pointer to symbol of given idx
+*/
+symbol * symbol_table_find_by_idx(symbol_table *s_table, size_t idx);
 
 #endif

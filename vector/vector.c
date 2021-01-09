@@ -54,11 +54,19 @@ void * vector_pop(vector *vec, bool do_pop) {
 }
 
 vector_element vector_find(vector *vec, void *element_to_find, comp_eq comparator_eq) {
-    for (int32_t i=0; i<vec->used_size; ++i) {
+    for (size_t i=0; i<vec->used_size; ++i) {
         if (comparator_eq(vec->_mem_ptr + i * vec->_element_size, element_to_find)) {
             return (vector_element){vec->_mem_ptr + i * vec->_element_size, i};
         }
     }
 
     return (vector_element){NULL, 0};
+}
+
+void * vector_get(vector *vec, size_t idx) {
+    if (idx < vec->used_size) {
+        return vec->_mem_ptr + idx * vec->_element_size;
+    }
+
+    fprintf(stderr, "[VECTOR]: IDX out of bounds!\n");
 }

@@ -49,4 +49,11 @@ void i_graph_execute(FILE *file);
 */
 void i_graph_clear_if(bool cond, i_graph **i_current);
 
+/**
+ * 
+ * Analyze if and store constant values, make them non-constant
+ * 
+*/
+void i_graph_analyze_if(i_graph **i_current);
+
 #endif

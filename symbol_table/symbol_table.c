@@ -114,3 +114,7 @@ symbol symbol_table_pop(symbol_table *s_table) {
 int64_t symbol_ptr_size(symbol *sym) {
     return sym->addr[1] - sym->addr[0];
 }
+
+symbol * symbol_table_find_by_idx(symbol_table *s_table, size_t idx) {
+    return vector_get(&(s_table->v), idx);
+}
