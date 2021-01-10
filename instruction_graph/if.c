@@ -37,14 +37,22 @@ void eval_IF(i_graph **i_current) {
         } else {
             i_graph_analyze_if(i_current);
             reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
-            JZERO(x); // compare
+            if (expr->type != cond_IS_EQUAL) {
+                JZERO(x); // compare
+            } else {
+                JUMP();
+            }
             i_level_add_branch_eval(i_IF);
             stack_ptr_clear();
         }
     } else {
         if (assign_val_1.is_reg && assign_val_2.is_reg) { // just in case
             reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
-            JZERO(x); // compare
+            if (expr->type != cond_IS_EQUAL) {
+                JZERO(x); // compare
+            } else {
+                JUMP();
+            }
             i_level_add_branch_eval(i_IF);
             stack_ptr_clear();
         } else {
@@ -56,6 +64,7 @@ void eval_IF(i_graph **i_current) {
 
     reg_m_drop_addr(r_set, TEMP_ADDR_1);
     reg_m_drop_addr(r_set, TEMP_ADDR_2);
+    reg_m_drop_addr(r_set, TEMP_ADDR_3);
 }
 
 void add_ELSE() {

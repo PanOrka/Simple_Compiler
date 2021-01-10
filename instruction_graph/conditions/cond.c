@@ -55,9 +55,7 @@ reg * cond_val_from_vals(val src_1, val src_2, expr_type type) {
             ADD(temp, y);
             reg_m_drop_addr(r_set, y->addr);
 
-            JUMP_i_idx(2);
-            INC(temp);
-            JZERO_i_idx(temp, -1);
+            JZERO_i_idx(temp, 2);
             reg_m_promote(r_set, temp->addr);
 
             return temp;
