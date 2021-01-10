@@ -6,5 +6,7 @@ compiler_parser.h
 out.txt
 prelexer.c
 prelexer_temp_out
+asm_out
+postlexer.c
 test.txt
 .vscode

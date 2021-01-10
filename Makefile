@@ -2,7 +2,8 @@ all:
 	bison -o compiler_parser.c -d compiler_parser.y && \
 	flex -o compiler_lexer.c compiler_lexer.l && \
 	flex -P zz -o prelexer.c prelexer.l && \
-	gcc -lfl compiler.c compiler_parser.c compiler_lexer.c prelexer.c \
+	flex -P pp -o postlexer.c postlexer.l && \
+	gcc -lfl compiler.c compiler_parser.c compiler_lexer.c prelexer.c postlexer.c \
 	vector/vector.c symbol_table/symbol_table.c register_machine/reg_m.c \
 	parser_func/declarations.c parser_func/expressions.c parser_func/getters.c \
 	instruction_graph/i_graph.c instruction_graph/expr.c parser_func/loops.c \

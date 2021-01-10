@@ -10,6 +10,10 @@ static i_level *end = NULL;
 
 static vector jump_vec;
 
+void get_jump_vec(vector *j_vec) {
+    memcpy(j_vec, &jump_vec, sizeof(vector));
+}
+
 void i_level_add(branch_type type) {
     i_level *new_element = malloc(sizeof(i_level));
     if (new_element) {
