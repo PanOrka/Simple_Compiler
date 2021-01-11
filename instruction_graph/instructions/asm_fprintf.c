@@ -66,7 +66,11 @@ reg * MUL(reg *x, reg *y) {
 
     // additionally:
     // We can optimize by changing order of multiplication
-    if (y->flags & REG_MODIFIED) {
+    if (x == y) {
+        y = oper_get_reg_for_variable(TEMP_ADDR_2).r;
+        y->addr = TEMP_ADDR_2;
+        oper_reg_swap(y, x);
+    } else if (y->flags & REG_MODIFIED) {
         // JZERO_i_idx(y, ) <= totally not needed store if value under y is 0
         // JZERO_i_idx(x, ) <= totally not needed store if value under x is 0
         // ^ for reg_x it can even be outside this
@@ -103,6 +107,16 @@ reg * DIV(reg *x, reg *y) {
     reg *rem = x;
     x = oper_get_reg_for_variable(TEMP_ADDR_4).r;
     x->addr = TEMP_ADDR_4;
+
+    if (rem == y) {
+        addr_t y_address = y->addr;
+        rem->addr = TEMP_ADDR_1;
+        y = oper_get_reg_for_variable(y_address).r;
+        y->addr = y_address;
+        oper_reg_swap(y, rem);
+    } else {
+        rem->addr = TEMP_ADDR_1; // to make sure it won't be stored + It's available for this register
+    }
 
     reg *quotient = oper_get_reg_for_variable(TEMP_ADDR_5).r;
     quotient->addr = TEMP_ADDR_5;
@@ -190,7 +204,15 @@ reg * MOD(reg *x, reg *y) {
     size->addr = TEMP_ADDR_3;
 
     reg *rem = x;
-    rem->addr = TEMP_ADDR_1; // to make sure it won't be stored + It's available for this register
+    if (rem == y) {
+        addr_t y_address = y->addr;
+        rem->addr = TEMP_ADDR_1;
+        y = oper_get_reg_for_variable(y_address).r;
+        y->addr = y_address;
+        oper_reg_swap(y, rem);
+    } else {
+        rem->addr = TEMP_ADDR_1; // to make sure it won't be stored + It's available for this register
+    }
     x = oper_get_reg_for_variable(TEMP_ADDR_4).r;
     x->addr = TEMP_ADDR_4;
 
@@ -208,7 +230,7 @@ reg * MOD(reg *x, reg *y) {
 
     // calculating size of reg_x value
     // and inversing x
-    JZERO_i_idx(rem, 46); // end of proc x = 0 so END
+    JZERO_i_idx(rem, 45); // end of proc x = 0 so END
     RESET(x);
     RESET(size);
     JODD_i_idx(rem, 4);

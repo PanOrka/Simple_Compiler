@@ -49,6 +49,7 @@ reg * cond_val_from_vals(val src_1, val src_2, expr_type type) {
                 y->flags &= ~REG_MODIFIED;
             }
             temp = oper_get_reg_for_variable(TEMP_ADDR_3).r;
+            temp->addr = TEMP_ADDR_3;
             oper_reg_swap(temp, x);
             SUB(temp, y);
             SUB(y, x);
@@ -67,6 +68,7 @@ reg * cond_val_from_vals(val src_1, val src_2, expr_type type) {
                 y->flags &= ~REG_MODIFIED;
             }
             temp = oper_get_reg_for_variable(TEMP_ADDR_3).r;
+            temp->addr = TEMP_ADDR_3;
             oper_reg_swap(temp, x);
             SUB(temp, y);
             SUB(y, x);
