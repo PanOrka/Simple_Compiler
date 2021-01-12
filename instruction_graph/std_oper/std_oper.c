@@ -447,7 +447,8 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                 assign_val.reg = var.r;
             }
         } else {
-            const bool left_sym_1_const = expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
+            const bool left_sym_1_addr = expr->addr_mask & LEFT_SYM1_ADDR;
+            const bool left_sym_1_const = !left_sym_1_addr && expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
 
             if (left_sym_1_const) {
                 assign_val.is_reg = false;
@@ -470,6 +471,14 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                 } else {
                     mpz_init_set(assign_val.constant, expr->var_1[1].var->consts.value);
                 }
+            } else if (left_sym_1_addr) {
+                reg_allocator var = oper_get_reg_for_variable(expr->var_1[1].addr);
+
+                if (!var.was_allocated) {
+                    oper_load_variable_to_reg(var.r, expr->var_1[1].addr);
+                }
+
+                assign_val.reg = var.r;
             } else {
                 assign_val.reg = load_sym_reg_from_num(expr->var_1[1].var, expr->var_2[1].num);
             }
@@ -541,7 +550,8 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                 assign_val.reg = var.r;
             }
         } else {
-            const bool right_sym_1_const = expr->var_1[2].var->flags & SYMBOL_IS_CONSTANT;
+            const bool right_sym_1_addr = expr->addr_mask & RIGHT_SYM1_ADDR;
+            const bool right_sym_1_const = !right_sym_1_addr && expr->var_1[2].var->flags & SYMBOL_IS_CONSTANT;
 
             if (right_sym_1_const) {
                 assign_val.is_reg = false;
@@ -564,6 +574,14 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                 } else {
                     mpz_init_set(assign_val.constant, expr->var_1[2].var->consts.value);
                 }
+            } else if (right_sym_1_addr) {
+                reg_allocator var = oper_get_reg_for_variable(expr->var_1[2].addr);
+
+                if (!var.was_allocated) {
+                    oper_load_variable_to_reg(var.r, expr->var_1[2].addr);
+                }
+
+                assign_val.reg = var.r;
             } else {
                 assign_val.reg = load_sym_reg_from_num(expr->var_1[2].var, expr->var_2[2].num);
             }
