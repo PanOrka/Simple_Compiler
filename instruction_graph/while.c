@@ -22,6 +22,10 @@ void eval_WHILE(i_graph **i_current) {
     expression_t const * const expr = (*i_current)->payload;
     reg_set *r_set = get_reg_set();
 
+    if (i_level_is_empty_eval()) {
+        i_graph_analyze_while(i_current);
+    }
+
     val assign_val_1 = oper_get_assign_val_1(expr);
     val assign_val_2 = oper_get_assign_val_2(expr);
     if (assign_val_1.is_reg) {
@@ -35,9 +39,6 @@ void eval_WHILE(i_graph **i_current) {
         mpz_clear(assign_val_2.constant);
         i_graph_clear_while(cond, i_current);
     } else {
-        if (i_level_is_empty_eval()) {
-            i_graph_analyze_while(i_current);
-        }
         reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
         oper_regs_store_drop();
         if (expr->type != cond_IS_EQUAL) {
