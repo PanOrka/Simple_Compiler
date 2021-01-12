@@ -186,8 +186,9 @@ void oper_set_assign_val_0(expression_t const * const expr,
                            uint8_t assign_val_flags)
 {
     const bool i_level_empty = i_level_is_empty();
+    bool generate_cost_too_big = false;
     reg_set *r_set = get_reg_set();
-    if (!assign_val.is_reg && generate_from_reset_cost(assign_val.constant) >= 20) {
+    if (!assign_val.is_reg && (generate_cost_too_big = (generate_from_reset_cost(assign_val.constant) >= 40))) {
         assign_val.reg = val_generate_from_mpz(assign_val.constant);
         assign_val.is_reg = true;
     }
@@ -271,6 +272,9 @@ void oper_set_assign_val_0(expression_t const * const expr,
             reg *store_reg;
             if (assign_val.is_reg) {
                 store_reg = assign_val.reg;
+                if (generate_cost_too_big) {
+                    store_reg->addr = TEMP_ADDR_1;
+                }
             } else {
                 store_reg = val_generate_from_mpz(assign_val.constant);
                 store_reg->addr = TEMP_ADDR_1;
