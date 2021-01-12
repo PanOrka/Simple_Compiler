@@ -56,4 +56,18 @@ void i_graph_clear_if(bool cond, i_graph **i_current);
 */
 void i_graph_analyze_if(i_graph **i_current);
 
+/**
+ * 
+ * Clearing useless While
+ * 
+*/
+void i_graph_clear_while(bool cond, i_graph **i_current);
+
+/**
+ * 
+ * Analyze while and store constant values, make them non-constant
+ * 
+*/
+void i_graph_analyze_while(i_graph **i_current);
+
 #endif

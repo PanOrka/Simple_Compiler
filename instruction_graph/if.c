@@ -46,7 +46,7 @@ void eval_IF(i_graph **i_current) {
         reg_m_drop_addr(r_set, TEMP_ADDR_1);
         reg_m_drop_addr(r_set, TEMP_ADDR_2);
         reg_m_drop_addr(r_set, TEMP_ADDR_3);
-        i_level_add_branch_eval(i_IF);
+        i_level_add_branch_eval(i_IF, NULL);
     }
 }
 
@@ -70,7 +70,7 @@ void eval_ELSE(i_graph **i_current) {
     reg_snapshot r_snap = i_level_pop_branch_eval(false).r_snap;
     reg_m_apply_snapshot(r_set, r_snap);
     JUMP();
-    i_level_add_branch_eval(i_ELSE);
+    i_level_add_branch_eval(i_ELSE, NULL);
 }
 
 void add_ENDIF() {
@@ -113,7 +113,7 @@ void eval_ENDIF(i_graph **i_current) {
         mpz_clear(i_if.r_snap.val_gen_value);
 
         JUMP();
-        i_level_add_branch_eval(i_ENDIF);
+        i_level_add_branch_eval(i_ENDIF, NULL);
         i_level i_endif = i_level_pop_branch_eval(true);
         mpz_clear(i_endif.r_snap.stack_ptr_value);
         mpz_clear(i_endif.r_snap.val_gen_value);

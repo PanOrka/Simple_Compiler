@@ -13,6 +13,7 @@
 
 #include "i_graph.h"
 #include "../register_machine/reg_m.h"
+#include "../parser_func/expressions.h"
 
 #include <stdint.h>
 
@@ -25,6 +26,7 @@ struct i_level {
     uint64_t i_num;
     int64_t *reserved_jmp;
     reg_snapshot r_snap;
+    expression_t const *expr;
     branch_type type;
 };
 
@@ -35,7 +37,7 @@ struct i_level {
 */
 void i_level_add(branch_type type);
 
-void i_level_add_branch_eval(branch_type type);
+void i_level_add_branch_eval(branch_type type, expression_t const *expr);
 
 i_level i_level_pop_branch_eval(bool pop);
 

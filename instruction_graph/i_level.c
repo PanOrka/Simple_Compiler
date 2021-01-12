@@ -82,7 +82,7 @@ static void i_level_add_eval(branch_type type) {
     }
 }
 
-void i_level_add_branch_eval(branch_type type) {
+void i_level_add_branch_eval(branch_type type, expression_t const *expr) {
     if (jump_vec._mem_ptr == NULL) {
         vector jump_vec_init = vector_create(sizeof(int64_t), alignof(int64_t), 16);
         memcpy(&jump_vec, &jump_vec_init, sizeof(vector));
@@ -91,6 +91,7 @@ void i_level_add_branch_eval(branch_type type) {
     i_level_add_eval(type);
     end_eval->i_num = asm_get_i_num();
     end_eval->r_snap = reg_m_snapshot(get_reg_set());
+    end_eval->expr = expr;
 
     int64_t val = 0;
     VECTOR_ADD(jump_vec, val);
