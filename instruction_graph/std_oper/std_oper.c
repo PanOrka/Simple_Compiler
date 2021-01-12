@@ -178,15 +178,24 @@ static void oper_set_reg(reg *assign_val, addr_t eff_addr, uint8_t assign_val_fl
     }
 }
 
+#include "../i_level.h"
+uint64_t generate_from_reset_cost(mpz_t target_val);
+
 void oper_set_assign_val_0(expression_t const * const expr,
                            val assign_val,
                            uint8_t assign_val_flags)
 {
+    const bool i_level_empty = i_level_is_empty();
     reg_set *r_set = get_reg_set();
+    if (!assign_val.is_reg && generate_from_reset_cost(assign_val.constant) >= 20) {
+        assign_val.reg = val_generate_from_mpz(assign_val.constant);
+        assign_val.is_reg = true;
+    }
+
     if ((expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & ASSIGN_SYM2_NUM)) {
         const bool assign_sym_2_addr = expr->addr_mask & ASSIGN_SYM2_ADDR;
         const bool assign_sym_2_const = !assign_sym_2_addr && (expr->var_2[0].var->flags & SYMBOL_IS_CONSTANT);
-        const bool assign_sym_1_const = expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT;
+        const bool assign_sym_1_const = (expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT) && i_level_empty;
 
         if (assign_sym_2_const && assign_sym_1_const) {
             array_value *arr_val = expr->var_1[0].var->consts.arr_value;
@@ -280,7 +289,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
             }
         }
     } else {
-        const bool assign_sym_1_const = expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT;
+        const bool assign_sym_1_const = (expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT) && i_level_empty;
         const uint64_t idx = expr->var_2[0].num;
         addr_t const eff_addr = expr->var_1[0].var->addr[0] + idx;
 
@@ -337,6 +346,9 @@ void oper_set_assign_val_0(expression_t const * const expr,
         } else {
             if (assign_val.is_reg) {
                 oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
+            } else if (!i_level_empty) {
+                reg *val_reg = val_generate_from_mpz(assign_val.constant);
+                oper_set_reg(val_reg, eff_addr, assign_val_flags);
             } else {
                 reg_m_drop_addr(r_set, eff_addr);
                 expr->var_1[0].var->flags |= SYMBOL_IS_CONSTANT;

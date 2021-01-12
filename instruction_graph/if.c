@@ -42,6 +42,9 @@ void eval_IF(i_graph **i_current) {
             } else {
                 JUMP();
             }
+            reg_m_drop_addr(r_set, TEMP_ADDR_1);
+            reg_m_drop_addr(r_set, TEMP_ADDR_2);
+            reg_m_drop_addr(r_set, TEMP_ADDR_3);
             i_level_add_branch_eval(i_IF);
             stack_ptr_clear();
         }
@@ -53,6 +56,9 @@ void eval_IF(i_graph **i_current) {
             } else {
                 JUMP();
             }
+            reg_m_drop_addr(r_set, TEMP_ADDR_1);
+            reg_m_drop_addr(r_set, TEMP_ADDR_2);
+            reg_m_drop_addr(r_set, TEMP_ADDR_3);
             i_level_add_branch_eval(i_IF);
             stack_ptr_clear();
         } else {
@@ -61,10 +67,6 @@ void eval_IF(i_graph **i_current) {
         }
         
     }
-
-    reg_m_drop_addr(r_set, TEMP_ADDR_1);
-    reg_m_drop_addr(r_set, TEMP_ADDR_2);
-    reg_m_drop_addr(r_set, TEMP_ADDR_3);
 }
 
 void add_ELSE() {

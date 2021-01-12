@@ -5,7 +5,7 @@
 #define ABS(x) (x >= 0 ? x : -x)
 #endif
 
-static uint64_t generate_from_reset_cost(mpz_t target_val) {
+uint64_t generate_from_reset_cost(mpz_t target_val) {
     uint64_t cost = 0;
 
     bool inc_once = false;
