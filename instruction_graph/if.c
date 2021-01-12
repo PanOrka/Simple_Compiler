@@ -41,6 +41,7 @@ void eval_IF(i_graph **i_current) {
         if (expr->type != cond_IS_EQUAL) {
             JZERO(x); // compare
         } else {
+            JZERO_i_idx(x, 2);
             JUMP();
         }
         reg_m_drop_addr(r_set, TEMP_ADDR_1);
