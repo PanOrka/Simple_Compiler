@@ -26,7 +26,7 @@ struct i_level {
     uint64_t i_num;
     int64_t *reserved_jmp;
     reg_snapshot r_snap;
-    expression_t const *expr;
+    void *payload;
     branch_type type;
 };
 
@@ -37,7 +37,7 @@ struct i_level {
 */
 void i_level_add(branch_type type);
 
-void i_level_add_branch_eval(branch_type type, expression_t const *expr);
+void i_level_add_branch_eval(branch_type type, void *payload);
 
 i_level i_level_pop_branch_eval(bool pop);
 
