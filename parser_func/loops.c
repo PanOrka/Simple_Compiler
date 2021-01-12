@@ -14,10 +14,10 @@ void loop_get(char *iter, for_loop_t *loop) {
     if (hide) {
         hide->flags &= ~SYMBOL_NO_HIDDEN;
     }
-    loop->iterator.var = symbol_table_add(s_table, iter, (add_info){ .hide = hide }, 1, SYMBOL_IS_ITER | SYMBOL_INITIALIZED | SYMBOL_NO_HIDDEN);
+    loop->iterator = symbol_table_add(s_table, iter, (add_info){ .hide = hide }, 1, SYMBOL_IS_ITER | SYMBOL_INITIALIZED | SYMBOL_NO_HIDDEN)->addr[0];
 
     expression_get(&(loop->range_vars));
     loop->range_vars.type = loop_FOR; // for debug
 
-    loop->range.var = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
+    loop->range = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS)->addr[0];
 }

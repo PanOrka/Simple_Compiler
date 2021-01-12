@@ -96,7 +96,6 @@ void eval_ENDWHILE(i_graph **i_current) {
     }
 
     oper_reg_swap(dest, x);
-    reg_m_drop_addr(r_set, x->addr);
     dest->addr = TEMP_ADDR_1;
 
     int64_t jump_loc = (int64_t)i_while.i_num - (int64_t)(asm_get_i_num() + 1);

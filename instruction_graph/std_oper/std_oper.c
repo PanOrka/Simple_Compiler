@@ -261,8 +261,6 @@ void oper_set_assign_val_0(expression_t const * const expr,
                 reg *val_reg = val_generate_from_mpz(assign_val.constant);
                 oper_set_reg(val_reg, eff_addr_ui, assign_val_flags);
             }
-        } else if (assign_sym_1_const && assign_sym_2_addr) { // during loops impl
-        
         } else {
             if (assign_sym_1_const) {
                 oper_flush_array_to_mem(expr->var_1[0].var);
@@ -432,8 +430,6 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                 }
             } else if (left_sym_2_const) {
                 assign_val.reg = load_sym_reg_from_const(expr->var_1[1].var, expr->var_2[1].var);
-            } else if (left_sym_1_const && left_sym_2_addr) { // during loops impl
-            
             } else {
                 if (left_sym_1_const) {
                     oper_flush_array_to_mem(expr->var_1[1].var);
@@ -535,8 +531,6 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                 }
             } else if (right_sym_2_const) {
                 assign_val.reg = load_sym_reg_from_const(expr->var_1[2].var, expr->var_2[2].var);
-            } else if (right_sym_1_const && right_sym_2_addr) { // during loops impl
-            
             } else {
                 if (right_sym_1_const) {
                     oper_flush_array_to_mem(expr->var_1[2].var);
