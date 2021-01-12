@@ -119,7 +119,7 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
     } else {
         func.func_num(assign_val_1.constant, assign_val_1.constant, assign_val_2.constant);
         mpz_clear(assign_val_2.constant);
-        oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
+        oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_NO_FLAGS);
         mpz_clear(assign_val_1.constant);
     }
 
