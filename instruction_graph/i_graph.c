@@ -342,7 +342,7 @@ static void i_graph_store_marked() {
 }
 
 void i_graph_analyze_if(i_graph **i_current) {
-    if (i_level_is_empty()) {
+    if (i_level_is_empty_eval()) {
         i_graph *i_if = *i_current;
         i_graph *i_else = NULL;
         i_graph *i_endif = NULL;

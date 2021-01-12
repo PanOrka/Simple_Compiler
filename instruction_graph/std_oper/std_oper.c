@@ -452,7 +452,7 @@ val oper_get_assign_val_1(expression_t const * const expr) {
             }
         } else {
             const bool left_sym_1_addr = expr->addr_mask & LEFT_SYM1_ADDR;
-            const bool left_sym_1_const = !left_sym_1_addr && expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
+            const bool left_sym_1_const = !left_sym_1_addr && (expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT);
 
             if (left_sym_1_const) {
                 assign_val.is_reg = false;
