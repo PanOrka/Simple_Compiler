@@ -77,8 +77,10 @@ void oper_set_stack_ptr_addr_arr(addr_t var_idx_addr, addr_t arr_addr, uint64_t 
 }
 
 void oper_reg_swap(reg *r1, reg *r2) {
-    RESET(r1);
-    ADD(r1, r2);
+    if (r1 != r2) {
+        RESET(r1);
+        ADD(r1, r2);
+    }
 }
 
 void oper_store_array(const addr_t addr[2]) {

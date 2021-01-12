@@ -48,7 +48,7 @@ void eval_WHILE(i_graph **i_current) {
 
         stack_ptr_clear();
         x->addr = TEMP_ADDR_1;
-        i_level_add_branch_eval(i_WHILE, expr);
+        i_level_add_branch_eval(i_WHILE, false, (void *)expr);
     }
 }
 
@@ -67,7 +67,7 @@ void add_ENDWHILE() {
 
 void eval_ENDWHILE(i_graph **i_current) {
     i_level i_while = i_level_pop_branch_eval(true);
-    expression_t const * const expr = i_while.expr;
+    expression_t const * const expr = i_while.payload;
     reg_set *r_set = get_reg_set();
 
     val assign_val_1 = oper_get_assign_val_1(expr);
@@ -75,4 +75,34 @@ void eval_ENDWHILE(i_graph **i_current) {
     if (assign_val_1.is_reg) {
         reg_m_promote(r_set, assign_val_1.reg->addr);
     }
+
+    reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
+    oper_regs_store_drop();
+
+    const reg_snapshot r_snap = i_while.r_snap;
+
+    reg *dest = NULL;
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        if (r_snap.r[i].addr == TEMP_ADDR_1) {
+            dest = reg_m_get_by_id(r_set, r_snap.r[i].id);
+        }
+    }
+
+    if (!dest) {
+        fprintf(stderr, "[WHILE]: Endwhile got NULL-ptr on register search!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    oper_reg_swap(dest, x);
+    reg_m_drop_addr(r_set, x->addr);
+    dest->addr = TEMP_ADDR_1;
+
+    int64_t jump_loc = (int64_t)i_while.i_num - (int64_t)(asm_get_i_num() + 1);
+    if (expr->type == cond_IS_EQUAL) {
+        jump_loc -= 1;
+    }
+    JUMP_i_idx(jump_loc);
+
+    *(i_while.reserved_jmp) = ((int64_t)asm_get_i_num() - (int64_t)i_while.i_num) + 1;
+    stack_ptr_clear();
 }

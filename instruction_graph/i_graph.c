@@ -428,7 +428,7 @@ void i_graph_clear_while(bool cond, i_graph **i_current) {
     exit(EXIT_FAILURE);
 }
 
-void i_graph_analyze_if(i_graph **i_current) {
+void i_graph_analyze_while(i_graph **i_current) {
     if (i_level_is_empty_eval()) {
         i_graph *i_while = *i_current;
         i_graph *i_endwhile = NULL;

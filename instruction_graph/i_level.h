@@ -37,7 +37,7 @@ struct i_level {
 */
 void i_level_add(branch_type type);
 
-void i_level_add_branch_eval(branch_type type, void *payload);
+void i_level_add_branch_eval(branch_type type, bool have_mpz, void *payload);
 
 i_level i_level_pop_branch_eval(bool pop);
 

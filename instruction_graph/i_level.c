@@ -82,7 +82,7 @@ static void i_level_add_eval(branch_type type) {
     }
 }
 
-void i_level_add_branch_eval(branch_type type, void *payload) {
+void i_level_add_branch_eval(branch_type type, bool have_mpz, void *payload) {
     if (jump_vec._mem_ptr == NULL) {
         vector jump_vec_init = vector_create(sizeof(int64_t), alignof(int64_t), 16);
         memcpy(&jump_vec, &jump_vec_init, sizeof(vector));
@@ -90,7 +90,7 @@ void i_level_add_branch_eval(branch_type type, void *payload) {
 
     i_level_add_eval(type);
     end_eval->i_num = asm_get_i_num();
-    end_eval->r_snap = reg_m_snapshot(get_reg_set());
+    end_eval->r_snap = reg_m_snapshot(get_reg_set(), have_mpz);
     end_eval->payload = payload;
 
     int64_t val = 0;

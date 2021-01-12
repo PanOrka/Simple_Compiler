@@ -45,6 +45,7 @@ typedef struct {
     mpz_t val_gen_value;
     bool stack_ptr_init;
     bool val_gen_init;
+    bool have_mpz;
 } reg_snapshot;
 
 /**
@@ -100,7 +101,7 @@ void reg_m_promote(reg_set *r_set, addr_t addr);
  * 
  * WARNING: USES MPZ_INIT to initialize bignums
 */
-reg_snapshot reg_m_snapshot(reg_set *r_set);
+reg_snapshot reg_m_snapshot(reg_set *r_set, bool have_mpz);
 
 /**
  * 
@@ -108,5 +109,13 @@ reg_snapshot reg_m_snapshot(reg_set *r_set);
  * 
 */
 void reg_m_apply_snapshot(reg_set *r_set, reg_snapshot r_snap);
+
+/**
+ * 
+ * Get pointer to register with given id
+ * 
+ * RETURN: Pointer to register or NULL on failure
+*/
+reg * reg_m_get_by_id(reg_set *r_set, char id);
 
 #endif
