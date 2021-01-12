@@ -67,10 +67,12 @@ void eval_FOR(i_graph **i_current) {
         if (loop_info->type == loop_TO) {
             iter = assign_val_1.reg;
             range = assign_val_2.reg;
+            INC(range);
             SUB(range, iter);
         } else {
             iter = oper_get_reg_for_variable(loop_info->iterator).r;
             oper_reg_swap(iter, assign_val_1.reg);
+            INC(assign_val_1.reg);
             SUB(assign_val_1.reg, assign_val_2.reg);
             range = assign_val_1.reg;
         }
@@ -81,11 +83,13 @@ void eval_FOR(i_graph **i_current) {
         if (loop_info->type == loop_TO) {
             iter = val_generate_from_mpz(assign_val_1.constant);
             iter->addr = loop_info->iterator;
+            mpz_add_ui(assign_val_2.constant, assign_val_2.constant, 1);
             num_sub(ran, assign_val_2.constant, assign_val_1.constant);
             range = val_generate_from_mpz(ran);
         } else {
             iter = val_generate_from_mpz(assign_val_1.constant);
             iter->addr = loop_info->iterator;
+            mpz_add_ui(assign_val_1.constant, assign_val_1.constant, 1);
             num_sub(ran, assign_val_1.constant, assign_val_2.constant);
             range = val_generate_from_mpz(ran);
         }
@@ -98,7 +102,6 @@ void eval_FOR(i_graph **i_current) {
     iter->flags = REG_MODIFIED;
     range->addr = loop_info->range;
     range->flags = REG_MODIFIED;
-    INC(range);
 
     oper_regs_store_drop();
 
