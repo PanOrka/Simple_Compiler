@@ -54,3 +54,7 @@ void val_gen_set_mpz(mpz_t src) {
         exit(EXIT_FAILURE);
     }
 }
+
+bool val_gen_mpz_initialized() {
+    return mpz_initialized;
+}

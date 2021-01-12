@@ -54,3 +54,7 @@ void stack_ptr_set_mpz(mpz_t src) {
         exit(EXIT_FAILURE);
     }
 }
+
+bool stack_ptr_mpz_initialized() {
+    return mpz_initialized;
+}

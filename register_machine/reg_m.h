@@ -43,6 +43,8 @@ typedef struct {
     reg r[REG_SIZE];
     mpz_t stack_ptr_value;
     mpz_t val_gen_value;
+    bool stack_ptr_init;
+    bool val_gen_init;
 } reg_snapshot;
 
 /**

@@ -131,8 +131,11 @@ void reg_m_promote(reg_set *r_set, addr_t addr) {
 
 void stack_ptr_set_mpz_to_current_value(mpz_t dest);
 void stack_ptr_set_mpz(mpz_t src);
+bool stack_ptr_mpz_initialized();
+
 void val_gen_set_mpz_to_current_value(mpz_t dest);
 void val_gen_set_mpz(mpz_t src);
+bool val_gen_mpz_initialized();
 
 reg_snapshot reg_m_snapshot(reg_set *r_set) {
     reg_snapshot r_snap;
@@ -140,10 +143,14 @@ reg_snapshot reg_m_snapshot(reg_set *r_set) {
         r_snap.r[i] = *(r_set->r[i]);
     }
     mpz_init(r_snap.stack_ptr_value);
-    stack_ptr_set_mpz_to_current_value(r_snap.stack_ptr_value);
+    if (r_snap.stack_ptr_init = stack_ptr_mpz_initialized()) {
+        stack_ptr_set_mpz_to_current_value(r_snap.stack_ptr_value);
+    }
 
     mpz_init(r_snap.val_gen_value);
-    val_gen_set_mpz_to_current_value(r_snap.val_gen_value);
+    if (r_snap.val_gen_init = val_gen_mpz_initialized()) {
+        val_gen_set_mpz_to_current_value(r_snap.val_gen_value);
+    }
 
     return r_snap;
 }
@@ -153,6 +160,11 @@ void reg_m_apply_snapshot(reg_set *r_set, reg_snapshot r_snap) {
         *(r_set->r[i]) = r_snap.r[i];
     }
 
-    stack_ptr_set_mpz(r_snap.stack_ptr_value);
-    val_gen_set_mpz(r_snap.val_gen_value);
+    if (r_snap.stack_ptr_init) {
+        stack_ptr_set_mpz(r_snap.stack_ptr_value);
+    }
+
+    if (r_snap.val_gen_init) {
+        val_gen_set_mpz(r_snap.val_gen_value);
+    }
 }
