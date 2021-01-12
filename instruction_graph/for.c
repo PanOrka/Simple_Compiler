@@ -29,7 +29,7 @@ void eval_FOR(i_graph **i_current) {
     }
 
     if (i_level_is_empty_eval()) {
-        i_graph_analyze_while(i_current);
+        i_graph_analyze_for(i_current);
     }
 
     reg *iter = NULL;

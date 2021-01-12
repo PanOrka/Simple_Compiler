@@ -443,3 +443,65 @@ void i_graph_analyze_while(i_graph **i_current) {
     fprintf(stderr, "[I_GRAPH]: Analyze of non empty i_level stack!\n");
     exit(EXIT_FAILURE);
 }
+
+static void i_graph_for_find(i_graph *i_for, i_graph **i_endfor) {
+    i_level_add(i_FOR);
+    i_graph *ptr = i_for->next;
+
+    while (!i_level_is_empty()) {
+        if (ptr == NULL) { // not possible but let's check it
+            fprintf(stderr, "[I_GRAPH]: NULL ptr on while-find!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        switch (ptr->i_type) {
+            case i_IF:
+                i_level_add(i_IF);
+                break;
+            case i_ELSE:
+                i_level_pop(i_NOPOP);
+                break;
+            case i_ENDIF:
+                i_level_pop(i_POP);
+                break;
+            case i_WHILE:
+                i_level_add(i_IF);
+                break;
+            case i_ENDWHILE:
+                i_level_pop(i_POP);
+                break;
+            case i_REPEAT:
+                i_level_add(i_IF);
+                break;
+            case i_UNTIL:
+                i_level_pop(i_POP);
+                break;
+            case i_FOR:
+                i_level_add(i_IF);
+                break;
+            case i_ENDFOR:
+                if (i_level_pop(i_POP) == i_FOR) {
+                    *i_endfor = ptr;
+                }
+                break;
+        }
+
+        ptr = ptr->next;
+    }
+}
+
+void i_graph_analyze_for(i_graph **i_current) {
+    if (i_level_is_empty_eval()) {
+        i_graph *i_for = *i_current;
+        i_graph *i_endfor = NULL;
+
+        i_graph_for_find(i_for, &i_endfor);
+        i_graph_mark(i_for, i_endfor);
+        i_graph_store_marked();
+
+        return ;
+    }
+
+    fprintf(stderr, "[I_GRAPH]: Analyze of non empty i_level stack!\n");
+    exit(EXIT_FAILURE);
+}
