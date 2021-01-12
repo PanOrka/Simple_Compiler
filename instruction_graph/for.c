@@ -113,6 +113,12 @@ void eval_ENDFOR(i_graph **i_current) {
         oper_load_variable_to_reg(iter_alloc.r, loop_info->iterator);
     }
     reg *iter = iter_alloc.r;
+    if (loop_info->type == loop_TO) {
+        INC(iter);
+    } else {
+        DEC(iter);
+    }
+    iter->flags = REG_MODIFIED;
 
     reg_allocator range_alloc = oper_get_reg_for_variable(loop_info->range);
     if (!range_alloc.was_allocated) {
