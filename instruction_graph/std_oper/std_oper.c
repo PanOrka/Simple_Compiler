@@ -34,20 +34,20 @@ void oper_load_variable_to_reg(reg *r, addr_t addr) {
 }
 
 static void add_sub_val_gen(reg *stack_ptr, addr_t arr_addr, reg *var_idx, uint64_t start_idx) {
+    reg *s_idx = val_generate(start_idx);
     stack_ptr_generate(arr_addr);
     ADD(stack_ptr, var_idx);
-    stack_ptr_clear();
-    reg *s_idx = val_generate(start_idx);
     SUB(stack_ptr, s_idx);
+    stack_ptr_clear();
 }
 
 static void dec_val_gen(reg *stack_ptr, addr_t arr_addr, reg *var_idx, num_t eff_addr) {
     stack_ptr_generate(arr_addr);
     ADD(stack_ptr, var_idx);
-    stack_ptr_clear();
     for (int i=eff_addr; i < 0; ++i) {
         DEC(stack_ptr);
     }
+    stack_ptr_clear();
 }
 
 void oper_set_stack_ptr_addr_arr(addr_t var_idx_addr, addr_t arr_addr, uint64_t start_idx) {
