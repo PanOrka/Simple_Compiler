@@ -28,44 +28,26 @@ void eval_IF(i_graph **i_current) {
         reg_m_promote(r_set, assign_val_1.reg->addr);
     }
 
-    if (i_level_is_empty()) {
-        if (!(assign_val_1.is_reg || assign_val_2.is_reg)) { // both constants
-            bool cond = cond_val_from_const(assign_val_1.constant, assign_val_2.constant, expr->type);
-            mpz_clear(assign_val_1.constant);
-            mpz_clear(assign_val_2.constant);
-            i_graph_clear_if(cond, i_current);
-        } else {
-            i_graph_analyze_if(i_current);
-            reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
-            if (expr->type != cond_IS_EQUAL) {
-                JZERO(x); // compare
-            } else {
-                JUMP();
-            }
-            reg_m_drop_addr(r_set, TEMP_ADDR_1);
-            reg_m_drop_addr(r_set, TEMP_ADDR_2);
-            reg_m_drop_addr(r_set, TEMP_ADDR_3);
-            i_level_add_branch_eval(i_IF);
-            stack_ptr_clear();
-        }
+    if (!(assign_val_1.is_reg || assign_val_2.is_reg)) { // both constants
+        bool cond = cond_val_from_const(assign_val_1.constant, assign_val_2.constant, expr->type);
+        mpz_clear(assign_val_1.constant);
+        mpz_clear(assign_val_2.constant);
+        i_graph_clear_if(cond, i_current);
     } else {
-        if (assign_val_1.is_reg && assign_val_2.is_reg) { // just in case
-            reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
-            if (expr->type != cond_IS_EQUAL) {
-                JZERO(x); // compare
-            } else {
-                JUMP();
-            }
-            reg_m_drop_addr(r_set, TEMP_ADDR_1);
-            reg_m_drop_addr(r_set, TEMP_ADDR_2);
-            reg_m_drop_addr(r_set, TEMP_ADDR_3);
-            i_level_add_branch_eval(i_IF);
-            stack_ptr_clear();
-        } else {
-            fprintf(stderr, "[EVAL_IF]: Assign_vals aren't regs in depth > 0\n");
-            exit(EXIT_FAILURE);
+        if (i_level_is_empty_eval()) {
+            i_graph_analyze_if(i_current);
         }
-        
+        reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
+        if (expr->type != cond_IS_EQUAL) {
+            JZERO(x); // compare
+        } else {
+            JUMP();
+        }
+        reg_m_drop_addr(r_set, TEMP_ADDR_1);
+        reg_m_drop_addr(r_set, TEMP_ADDR_2);
+        reg_m_drop_addr(r_set, TEMP_ADDR_3);
+        i_level_add_branch_eval(i_IF);
+        stack_ptr_clear();
     }
 }
 

@@ -55,5 +55,6 @@ branch_type i_level_pop(bool pop);
  * RETURN: Bool <- is list empty
 */
 bool i_level_is_empty();
+bool i_level_is_empty_eval();
 
 #endif

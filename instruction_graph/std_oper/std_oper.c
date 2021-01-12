@@ -185,7 +185,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                            val assign_val,
                            uint8_t assign_val_flags)
 {
-    const bool i_level_empty = i_level_is_empty();
+    const bool i_level_empty = i_level_is_empty_eval();
     bool generate_cost_too_big = false;
     reg_set *r_set = get_reg_set();
     if (!assign_val.is_reg && (generate_cost_too_big = (generate_from_reset_cost(assign_val.constant) >= 40))) {
