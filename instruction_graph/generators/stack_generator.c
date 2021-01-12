@@ -36,3 +36,21 @@ bool stack_ptr_initialized() {
 bool stack_ptr_is_null() {
     return mpz_cmp_si(stack_value, 0) == 0;
 }
+
+void stack_ptr_set_mpz_to_current_value(mpz_t dest) {
+    if (mpz_initialized) {
+        mpz_set(dest, stack_value);
+    } else {
+        fprintf(stderr, "[STACK_PTR]: Stack pointer is not initialized!\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void stack_ptr_set_mpz(mpz_t src) {
+    if (mpz_initialized) {
+        mpz_set(stack_value, src);
+    } else {
+        fprintf(stderr, "[STACK_PTR]: Stack pointer is not initialized!\n");
+        exit(EXIT_FAILURE);
+    }
+}

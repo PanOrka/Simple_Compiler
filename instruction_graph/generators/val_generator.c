@@ -36,3 +36,21 @@ reg * val_generate_from_mpz(mpz_t target_value) {
 
     return r_alloc.r;
 }
+
+void val_gen_set_mpz_to_current_value(mpz_t dest) {
+    if (mpz_initialized) {
+        mpz_set(dest, current_val);
+    } else {
+        fprintf(stderr, "[VAL_GEN]: Value generator is not initialized!\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void val_gen_set_mpz(mpz_t src) {
+    if (mpz_initialized) {
+        mpz_set(current_val, src);
+    } else {
+        fprintf(stderr, "[STACK_PTR]: Stack pointer is not initialized!\n");
+        exit(EXIT_FAILURE);
+    }
+}

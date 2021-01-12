@@ -47,7 +47,6 @@ void eval_IF(i_graph **i_current) {
         reg_m_drop_addr(r_set, TEMP_ADDR_2);
         reg_m_drop_addr(r_set, TEMP_ADDR_3);
         i_level_add_branch_eval(i_IF);
-        stack_ptr_clear();
     }
 }
 
@@ -70,7 +69,6 @@ void eval_ELSE(i_graph **i_current) {
 
     reg_snapshot r_snap = i_level_pop_branch_eval(false).r_snap;
     reg_m_apply_snapshot(r_set, r_snap);
-    stack_ptr_clear();
     JUMP();
     i_level_add_branch_eval(i_ELSE);
 }
@@ -91,7 +89,13 @@ void add_ENDIF() {
 void eval_ENDIF(i_graph **i_current) {
     if (i_level_pop_branch_eval(false).type == i_ELSE) {
         i_level i_else = i_level_pop_branch_eval(true);
+        mpz_clear(i_else.r_snap.stack_ptr_value);
+        mpz_clear(i_else.r_snap.val_gen_value);
+
         i_level i_if = i_level_pop_branch_eval(true);
+        mpz_clear(i_if.r_snap.stack_ptr_value);
+        mpz_clear(i_if.r_snap.val_gen_value);
+
         *(i_if.reserved_jmp) = ((int64_t)i_else.i_num - (int64_t)i_if.i_num) + 1;
 
         // ENDING ELSE
@@ -105,11 +109,15 @@ void eval_ENDIF(i_graph **i_current) {
 
         reg_set *r_set = get_reg_set();
         reg_m_apply_snapshot(r_set, i_if.r_snap);
-        stack_ptr_clear();
+        mpz_clear(i_if.r_snap.stack_ptr_value);
+        mpz_clear(i_if.r_snap.val_gen_value);
 
         JUMP();
         i_level_add_branch_eval(i_ENDIF);
         i_level i_endif = i_level_pop_branch_eval(true);
+        mpz_clear(i_endif.r_snap.stack_ptr_value);
+        mpz_clear(i_endif.r_snap.val_gen_value);
+
         *(i_if.reserved_jmp) = ((int64_t)i_endif.i_num - (int64_t)i_if.i_num) + 1;
         oper_regs_store_drop();
         *(i_endif.reserved_jmp) = ((int64_t)asm_get_i_num() - (int64_t)i_endif.i_num) + 1;
