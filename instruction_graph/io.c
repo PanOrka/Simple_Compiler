@@ -187,8 +187,6 @@ void eval_WRITE(i_graph **i_current) {
                 }
             } else if (left_sym_2_const) {
                 write_store_set_from_const(expr->var_1[1].var, expr->var_2[1].var);
-            } else if (left_sym_1_const && left_sym_2_addr) { // during loops impl
-            
             } else {
                 if (left_sym_1_const) {
                     oper_flush_array_to_mem(expr->var_1[1].var);

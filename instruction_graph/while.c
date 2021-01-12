@@ -51,6 +51,7 @@ void eval_WHILE(i_graph **i_current) {
         stack_ptr_clear();
         x->addr = TEMP_ADDR_1;
         i_level_add_branch_eval(i_WHILE, false, (void *)expr);
+        reg_m_drop_addr(r_set, TEMP_ADDR_1);
     }
 }
 
@@ -96,7 +97,6 @@ void eval_ENDWHILE(i_graph **i_current) {
     }
 
     oper_reg_swap(dest, x);
-    dest->addr = TEMP_ADDR_1;
 
     int64_t jump_loc = (int64_t)i_while.i_num - (int64_t)(asm_get_i_num() + 1);
     if (expr->type == cond_IS_EQUAL) {
