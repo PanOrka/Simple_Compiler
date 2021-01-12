@@ -148,7 +148,15 @@ void eval_WRITE(i_graph **i_current) {
     expression_t const * const expr = (*i_current)->payload;
     reg_set *r_set = get_reg_set();
 
-    if (!(expr->mask & LEFT_SYM1_NUM)) {
+    const bool left_sym_1_addr = expr->addr_mask & LEFT_SYM1_ADDR;
+    if (left_sym_1_addr) {
+        stack_ptr_generate(expr->var_1[1].addr);
+        reg_allocator reg_alloc = reg_m_get(r_set, expr->var_1[1].addr, false);
+        if (reg_alloc.was_allocated && (reg_alloc.r->flags & REG_MODIFIED)) {
+            STORE(reg_alloc.r, &(r_set->stack_ptr));
+            reg_alloc.r->flags &= ~REG_MODIFIED;
+        }
+    } else if (!(expr->mask & LEFT_SYM1_NUM)) {
         if ((expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & LEFT_SYM2_NUM)) {
             const bool left_sym_2_addr = expr->addr_mask & LEFT_SYM2_ADDR;
             const bool left_sym_2_const = !left_sym_2_addr && (expr->var_2[1].var->flags & SYMBOL_IS_CONSTANT);
