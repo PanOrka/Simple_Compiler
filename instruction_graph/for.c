@@ -18,6 +18,13 @@ void add_FOR(for_loop_t *loop) {
     add_to_list(loop, i_FOR);
 }
 
+static void num_sub(mpz_t dest, mpz_t src_1, mpz_t src_2) {
+    mpz_sub(dest, src_1, src_2);
+    if (mpz_cmp_si(dest, 0) < 0) {
+        mpz_set_si(dest, 0);
+    }
+}
+
 void eval_FOR(i_graph **i_current) {
     for_loop_t const * const loop_info = (*i_current)->payload;
     reg_set *r_set = get_reg_set();
@@ -34,33 +41,58 @@ void eval_FOR(i_graph **i_current) {
 
     reg *iter = NULL;
     reg *range = NULL;
-    if (assign_val_1.is_reg) {
-        iter = assign_val_1.reg;
+    if (assign_val_1.is_reg || assign_val_2.is_reg) {
+        if (!assign_val_1.is_reg) {
+            assign_val_1.reg = val_generate_from_mpz(assign_val_1.constant);
+            mpz_clear(assign_val_1.constant);
+        }
+
+        if (!assign_val_2.is_reg) {
+            assign_val_2.reg = val_generate_from_mpz(assign_val_2.constant);
+            mpz_clear(assign_val_2.constant);
+        }
+
+        if (loop_info->type == loop_TO) {
+            iter = assign_val_1.reg;
+            range = assign_val_2.reg;
+            SUB(range, iter);
+        } else {
+            iter = oper_get_reg_for_variable(loop_info->iterator).r;
+            oper_reg_swap(iter, assign_val_1.reg);
+            SUB(assign_val_1.reg, assign_val_2.reg);
+            range = assign_val_1.reg;
+        }
     } else {
-        iter = val_generate_from_mpz(assign_val_1.constant);
-        iter->addr = loop_info->iterator;
+        mpz_t ran;
+        mpz_init(ran);
+
+        if (loop_info->type == loop_TO) {
+            iter = val_generate_from_mpz(assign_val_1.constant);
+            iter->addr = loop_info->iterator;
+            num_sub(ran, assign_val_2.constant, assign_val_1.constant);
+            range = val_generate_from_mpz(ran);
+        } else {
+            iter = val_generate_from_mpz(assign_val_1.constant);
+            iter->addr = loop_info->iterator;
+            num_sub(ran, assign_val_1.constant, assign_val_2.constant);
+            range = val_generate_from_mpz(ran);
+        }
+        mpz_clear(ran);
+        mpz_clear(assign_val_1.constant);
+        mpz_clear(assign_val_2.constant);
     }
+    oper_regs_store_drop();
+
     iter->addr = loop_info->iterator;
     iter->flags = REG_MODIFIED;
-
-    if (assign_val_2.is_reg) {
-        range = assign_val_2.reg;
-    } else {
-        range = val_generate_from_mpz(assign_val_2.constant);
-    }
     range->addr = loop_info->range;
     range->flags = REG_MODIFIED;
 
-    reg *x = cond_val_from_vals(
-        (val){ .is_reg = true, .reg = iter },
-        (val){ .is_reg = true, .reg = range },
-        (loop_info->type == loop_TO ? cond_LESS_EQ : cond_GREATER_EQ)
-    );
-    oper_regs_store_drop();
-
-    JZERO(x); // compare
+    JZERO(range); // compare
     stack_ptr_clear();
-    x->addr = TEMP_ADDR_1;
+    reg_m_promote(r_set, range->addr);
+    reg_m_promote(r_set, iter->addr);
+
     i_level_add_branch_eval(i_FOR, false, (void *)loop_info);
 }
 
@@ -113,12 +145,6 @@ void eval_ENDFOR(i_graph **i_current) {
         oper_load_variable_to_reg(iter_alloc.r, loop_info->iterator);
     }
     reg *iter = iter_alloc.r;
-    if (loop_info->type == loop_TO) {
-        INC(iter);
-    } else {
-        DEC(iter);
-    }
-    iter->flags = REG_MODIFIED;
 
     reg_allocator range_alloc = oper_get_reg_for_variable(loop_info->range);
     if (!range_alloc.was_allocated) {
@@ -126,29 +152,36 @@ void eval_ENDFOR(i_graph **i_current) {
     }
     reg *range = range_alloc.r;
 
-    reg *x = cond_val_from_vals(
-        (val){ .is_reg = true, .reg = iter },
-        (val){ .is_reg = true, .reg = range },
-        (loop_info->type == loop_TO ? cond_LESS_EQ : cond_GREATER_EQ)
-    );
+    if (loop_info->type == loop_TO) {
+        INC(iter);
+    } else {
+        DEC(iter);
+    }
+    DEC(range);
+
     oper_regs_store_drop();
 
     const reg_snapshot r_snap = i_for.r_snap;
 
-    reg *dest = NULL;
+    reg *dest_iter = NULL;
+    reg *dest_range = NULL;
     for (int32_t i=0; i<REG_SIZE; ++i) {
-        if (r_snap.r[i].addr == TEMP_ADDR_1) {
-            dest = reg_m_get_by_id(r_set, r_snap.r[i].id);
+        if (r_snap.r[i].addr == loop_info->iterator) {
+            dest_iter = reg_m_get_by_id(r_set, r_snap.r[i].id);
+        } else if (r_snap.r[i].addr == loop_info->range) {
+            dest_range = reg_m_get_by_id(r_set, r_snap.r[i].id);
         }
     }
 
-    if (!dest) {
+    if (!dest_iter || !dest_range) {
         fprintf(stderr, "[WHILE]: Endfor got NULL-ptr on register search!\n");
         exit(EXIT_FAILURE);
     }
 
-    oper_reg_swap(dest, x);
-    dest->addr = TEMP_ADDR_1;
+    oper_reg_swap(dest_iter, iter);
+    dest_iter->addr = loop_info->iterator;
+    oper_reg_swap(dest_range, iter);
+    dest_range->addr = loop_info->range;
 
     const int64_t jump_loc = (int64_t)i_for.i_num - (int64_t)(asm_get_i_num() + 1);
     JUMP_i_idx(jump_loc);

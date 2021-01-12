@@ -37,8 +37,21 @@ bool cond_val_from_const(mpz_t src_1, mpz_t src_2, expr_type type) {
 reg * cond_val_from_vals(val src_1, val src_2, expr_type type) {
     reg_set *r_set = get_reg_set();
 
-    reg *x = src_1.is_reg ? src_1.reg : val_generate_from_mpz(src_1.constant);
-    reg *y = src_2.is_reg ? src_2.reg : val_generate_from_mpz(src_2.constant);
+    reg *x = NULL;
+    if (src_1.is_reg) {
+        x = src_1.reg;
+    } else {
+        x = val_generate_from_mpz(src_1.constant);
+        mpz_clear(src_1.constant);
+    }
+
+    reg *y = NULL;
+    if (src_2.is_reg) {
+        y = src_2.reg;
+    } else {
+        y = val_generate_from_mpz(src_2.constant);
+        mpz_clear(src_2.constant);
+    }
 
     reg *temp;
     switch (type) {
