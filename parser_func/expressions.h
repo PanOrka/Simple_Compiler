@@ -71,7 +71,7 @@ typedef enum {
 typedef union {
     addr_t addr;
     int64_t num;
-    symbol *var;
+    idx_t sym_idx;
 } value_t;
 
 typedef struct {

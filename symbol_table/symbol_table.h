@@ -42,7 +42,7 @@ typedef struct symbol symbol;
 
 typedef union {
     uint64_t start_idx;
-    symbol *hide;
+    idx_t hide_idx;
 } add_info;
 
 typedef struct array_value array_value;
@@ -87,9 +87,9 @@ symbol_table symbol_table_create();
  * Flags are just simple intersection - find first intersection > 0
  * 
  * ARGUMENTS: Pointer to symbol_table, identifier of symbol to search for, bool use_flags, flags
- * RETURN: Pointer to found symbol
+ * RETURN: Index of found symbol
 */
-symbol * symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_flags, uint8_t flags);
+idx_t symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_flags, uint8_t flags);
 
 /**
  * 
@@ -97,17 +97,17 @@ symbol * symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_
  * Flags are just simple intersection - find first intersection > 0
  * 
  * ARGUMENTS: Pointer to symbol_table, address of symbol to search for, bool use_flags, flags
- * RETURN: Pointer to found symbol
+ * RETURN: Index of found symbol
 */
-symbol * symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_flags, uint8_t flags);
+idx_t symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_flags, uint8_t flags);
 
 /**
  * 
  * Add new symbol to symbol_table
  * 
- * RETURN: Pointer to added symbol
+ * RETURN: Index of added symbol
 */
-symbol * symbol_table_add(symbol_table *s_table, const char *identifier, add_info _add_info, size_t size, uint8_t flags);
+idx_t symbol_table_add(symbol_table *s_table, const char *identifier, add_info _add_info, size_t size, uint8_t flags);
 
 /**
  * 

@@ -78,7 +78,7 @@ symbol * symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_fla
     return element_found;
 }
 
-symbol * symbol_table_add(symbol_table *s_table, const char *identifier, add_info _add_info, size_t size, uint8_t flags) {
+idx_t symbol_table_add(symbol_table *s_table, const char *identifier, add_info _add_info, size_t size, uint8_t flags) {
     if (size <= 0) {
         fprintf(stderr, "[symbol_table]: ADD symbol got size <= 0, size = %lu!\n", size);
         exit(EXIT_FAILURE);
