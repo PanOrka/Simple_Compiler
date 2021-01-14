@@ -20,11 +20,23 @@ void expression_set_var_arr_var(char *symbol_1, char *symbol_2) {
         fprintf(stderr, "[EXPRESSIONS]: Symbol used but not declared, id: %s!\n", symbol_1);
         exit(EXIT_FAILURE);
     }
+
+    symbol *sym_var_1 = symbol_table_find_by_idx(s_table, var_1.idx);
+    if (!(sym_var_1->flags & SYMBOL_IS_ARRAY)) {
+        fprintf(stderr, "[EXPRESSIONS]: Symbol used as array but is not array, id: %s!\n", sym_var_1->identifier);
+        exit(EXIT_FAILURE);
+    }
     current.var_1[current.spin].sym_idx = var_1.idx;
 
     const vector_element var_2 = symbol_table_find_id(s_table, symbol_2, true, SYMBOL_NO_HIDDEN);
     if (!var_2.element_ptr) {
         fprintf(stderr, "[EXPRESSIONS]: Symbol used but not declared, id: %s!\n", symbol_2);
+        exit(EXIT_FAILURE);
+    }
+
+    symbol *sym_var_2 = symbol_table_find_by_idx(s_table, var_2.idx);
+    if (sym_var_2->flags & SYMBOL_IS_ARRAY) {
+        fprintf(stderr, "[EXPRESSIONS]: Symbol used as variable but is array, id: %s!\n", sym_var_2->identifier);
         exit(EXIT_FAILURE);
     }
     current.var_2[current.spin].sym_idx = var_2.idx;
@@ -35,9 +47,17 @@ void expression_set_var_arr_var(char *symbol_1, char *symbol_2) {
 }
 
 void expression_set_var_arr_num(char *symbol_1, int64_t symbol_2) {
-    const vector_element var_1 = symbol_table_find_id(get_symbol_table(), symbol_1, true, SYMBOL_NO_HIDDEN);
+    symbol_table *s_table = get_symbol_table();
+
+    const vector_element var_1 = symbol_table_find_id(s_table, symbol_1, true, SYMBOL_NO_HIDDEN);
     if (!var_1.element_ptr) {
         fprintf(stderr, "[EXPRESSIONS]: Symbol used but not declared, id: %s!\n", symbol_1);
+        exit(EXIT_FAILURE);
+    }
+
+    symbol *sym_var_1 = symbol_table_find_by_idx(s_table, var_1.idx);
+    if (!(sym_var_1->flags & SYMBOL_IS_ARRAY)) {
+        fprintf(stderr, "[EXPRESSIONS]: Symbol used as array but is not array, id: %s!\n", sym_var_1->identifier);
         exit(EXIT_FAILURE);
     }
     current.var_1[current.spin].sym_idx = var_1.idx;
@@ -69,9 +89,17 @@ void expression_set_var(char *symbol_1) {
         exit(EXIT_FAILURE);
     }
 
-    const vector_element var_1 = symbol_table_find_id(get_symbol_table(), symbol_1, true, SYMBOL_NO_HIDDEN);
+    symbol_table *s_table = get_symbol_table();
+
+    const vector_element var_1 = symbol_table_find_id(s_table, symbol_1, true, SYMBOL_NO_HIDDEN);
     if (!var_1.element_ptr) {
         fprintf(stderr, "[EXPRESSIONS]: Symbol used but not declared, id: %s!\n", symbol_1);
+        exit(EXIT_FAILURE);
+    }
+
+    symbol *sym_var_1 = symbol_table_find_by_idx(s_table, var_1.idx);
+    if (sym_var_1->flags & SYMBOL_IS_ARRAY) {
+        fprintf(stderr, "[EXPRESSIONS]: Symbol used as variable but is array, id: %s!\n", sym_var_1->identifier);
         exit(EXIT_FAILURE);
     }
     current.var_1[current.spin].sym_idx = var_1.idx;
