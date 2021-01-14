@@ -6,14 +6,9 @@
 
 static FILE *asm_out = NULL;
 
-static uint64_t i_num = 0;
+static int64_t i_num = 0;
 
-uint64_t asm_get_i_num() {
-    if (i_num == 0) {
-        fprintf(stderr, "[ASM_FPRINTF]: i_num = 0\n");
-        exit(EXIT_FAILURE);
-    }
-
+int64_t asm_get_i_num() {
     return i_num - 1;
 }
 

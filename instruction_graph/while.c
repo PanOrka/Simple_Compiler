@@ -48,10 +48,10 @@ void eval_WHILE(i_graph **i_current) {
             JUMP();
         }
 
-        stack_ptr_clear();
         x->addr = TEMP_ADDR_1;
         i_level_add_branch_eval(i_WHILE, false, (void *)expr);
         reg_m_drop_addr(r_set, TEMP_ADDR_1);
+        stack_ptr_clear();
     }
 }
 

@@ -77,4 +77,11 @@ void i_graph_analyze_while(i_graph **i_current);
 */
 void i_graph_analyze_for(i_graph **i_current);
 
+/**
+ * 
+ * Analyze repeat_until and store constant values, make them non-constant
+ * 
+*/
+void i_graph_analyze_repeat_until(i_graph **i_current);
+
 #endif

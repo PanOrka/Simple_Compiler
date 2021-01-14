@@ -12,7 +12,7 @@
 */
 void asm_fprintf_set_file(FILE *file);
 
-uint64_t asm_get_i_num();
+int64_t asm_get_i_num();
 
 void GET(reg *x);
 void PUT(reg *x);
