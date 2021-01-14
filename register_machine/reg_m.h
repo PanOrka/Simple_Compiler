@@ -44,7 +44,8 @@ typedef struct {
     mpz_t stack_ptr_value;
     mpz_t val_gen_value;
     bool stack_ptr_init;
-    bool val_gen_init;
+    bool stack_ptr_init_mpz;
+    bool val_gen_init_mpz;
     bool have_mpz;
 } reg_snapshot;
 

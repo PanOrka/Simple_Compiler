@@ -58,3 +58,7 @@ void stack_ptr_set_mpz(mpz_t src) {
 bool stack_ptr_mpz_initialized() {
     return mpz_initialized;
 }
+
+void stack_ptr_set_init_flag(bool flag) {
+    stack_initialized = flag;
+}
