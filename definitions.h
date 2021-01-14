@@ -2,10 +2,11 @@
 #define DEFINITIONS_H
 
 #include <stdint.h>
+#include <stdlib.h>
 
 typedef uint64_t addr_t;
 typedef __int128_t num_t;
-typedef int32_t idx_t;
+typedef size_t idx_t;
 
 /**
  * 

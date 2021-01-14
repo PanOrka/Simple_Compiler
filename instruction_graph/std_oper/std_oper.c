@@ -44,7 +44,7 @@ static void add_sub_val_gen(reg *stack_ptr, addr_t arr_addr, reg *var_idx, uint6
 static void dec_val_gen(reg *stack_ptr, addr_t arr_addr, reg *var_idx, num_t eff_addr) {
     stack_ptr_generate(arr_addr);
     ADD(stack_ptr, var_idx);
-    for (int i=eff_addr; i < 0; ++i) {
+    for (num_t i=eff_addr; i<0; ++i) {
         DEC(stack_ptr);
     }
     stack_ptr_clear();

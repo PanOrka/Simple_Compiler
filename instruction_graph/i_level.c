@@ -93,9 +93,11 @@ void i_level_add_branch_eval(branch_type type, bool have_mpz, void *payload) {
     end_eval->r_snap = reg_m_snapshot(get_reg_set(), have_mpz);
     end_eval->payload = payload;
 
-    int64_t val = 0;
-    VECTOR_ADD(jump_vec, val);
-    end_eval->reserved_jmp_idx = jump_vec.used_size - 1;
+    if (type != i_REPEAT) {
+        int64_t val = 0;
+        VECTOR_ADD(jump_vec, val);
+        end_eval->reserved_jmp_idx = jump_vec.used_size - 1;
+    }
 }
 
 static void i_level_pop_eval(bool pop) {

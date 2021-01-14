@@ -98,13 +98,13 @@ void eval_ENDWHILE(i_graph **i_current) {
 
     oper_reg_swap(dest, x);
 
-    int64_t jump_loc = (int64_t)i_while.i_num - (int64_t)(asm_get_i_num() + 1);
+    int64_t jump_loc = i_while.i_num - (asm_get_i_num() + 1);
     if (expr->type == cond_IS_EQUAL) {
         jump_loc -= 1;
     }
     JUMP_i_idx(jump_loc);
 
     i_level_set_reserved_jump(i_while.reserved_jmp_idx,
-                              ((int64_t)asm_get_i_num() - (int64_t)i_while.i_num) + 1);
+                              (asm_get_i_num() - i_while.i_num) + 1);
     stack_ptr_clear();
 }

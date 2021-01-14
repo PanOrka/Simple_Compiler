@@ -196,10 +196,10 @@ void eval_ENDFOR(i_graph **i_current) {
 
     oper_reg_swap(dest_range, range);
 
-    const int64_t jump_loc = (int64_t)i_for.i_num - (int64_t)(asm_get_i_num() + 1);
+    const int64_t jump_loc = i_for.i_num - (asm_get_i_num() + 1);
     JUMP_i_idx(jump_loc);
 
     i_level_set_reserved_jump(i_for.reserved_jmp_idx,
-                              ((int64_t)asm_get_i_num() - (int64_t)i_for.i_num) + 1);
+                              (asm_get_i_num() - i_for.i_num) + 1);
     stack_ptr_clear();
 }

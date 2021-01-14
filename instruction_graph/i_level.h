@@ -27,7 +27,7 @@ typedef instruction_type branch_type;
 
 struct i_level {
     i_level *prev;
-    uint64_t i_num;
+    int64_t i_num;
     idx_t reserved_jmp_idx;
     reg_snapshot r_snap;
     void *payload;
