@@ -125,8 +125,8 @@ void add_WRITE(expression_t *expr) {
     eval_check_1(expr);
     if (expr->mask & LEFT_SYM1_NUM) {
         symbol_table *s_table = get_symbol_table();
-        symbol *sym = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
-        expr->var_1[0].addr = sym->addr[0];
+        const idx_t sym_idx = symbol_table_add(s_table, NULL, (add_info){ .start_idx = 0 }, 1, SYMBOL_NO_FLAGS);
+        expr->var_1[0].addr = symbol_table_find_by_idx(s_table, sym_idx)->addr[0];
         symbol_table_pop(s_table);
     }
     add_to_list(expr, i_WRITE);
