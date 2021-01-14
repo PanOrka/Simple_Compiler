@@ -32,17 +32,17 @@ int symbol_comparator_eq_id_flags(void *a, void *b) {
     return strcmp(_a->identifier, _b->identifier) == 0 && (_a->flags & _b->flags);
 }
 
-symbol * symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_flags, uint8_t flags) {
+vector_element symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_flags, uint8_t flags) {
     symbol to_comp = {
         .identifier = identifier,
         .flags = flags
     };
 
-    symbol *element_found;
+    vector_element element_found;
     if (use_flags) {
-        element_found = (symbol *)(VECTOR_FIND(s_table->v, to_comp, symbol_comparator_eq_id_flags).element_ptr);
+        element_found = VECTOR_FIND(s_table->v, to_comp, symbol_comparator_eq_id_flags);
     } else {
-        element_found = (symbol *)(VECTOR_FIND(s_table->v, to_comp, symbol_comparator_eq_id).element_ptr);
+        element_found = VECTOR_FIND(s_table->v, to_comp, symbol_comparator_eq_id);
     }
 
     return element_found;
@@ -62,17 +62,17 @@ int symbol_comparator_eq_addr_flags(void *a, void *b) {
     return _a->addr[0] <= _b->addr[0] && _b->addr[1] < _a->addr[1] && (_a->flags & _b->flags);
 }
 
-symbol * symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_flags, uint8_t flags) {
+vector_element symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_flags, uint8_t flags) {
     symbol to_comp = {
         .addr = {addr, addr},
         .flags = flags
     };
 
-    symbol *element_found;
+    vector_element element_found;
     if (use_flags) {
-        element_found = (symbol *)(VECTOR_FIND(s_table->v, to_comp, symbol_comparator_eq_addr_flags).element_ptr);
+        element_found = VECTOR_FIND(s_table->v, to_comp, symbol_comparator_eq_addr_flags);
     } else {
-        element_found = (symbol *)(VECTOR_FIND(s_table->v, to_comp, symbol_comparator_eq_addr).element_ptr);
+        element_found = VECTOR_FIND(s_table->v, to_comp, symbol_comparator_eq_addr);
     }
 
     return element_found;
@@ -104,7 +104,7 @@ idx_t symbol_table_add(symbol_table *s_table, const char *identifier, add_info _
 
     VECTOR_ADD(s_table->v, new_symbol);
 
-    return VECTOR_POP(s_table->v, NO_POP);
+    return s_table->v.used_size - 1;
 }
 
 symbol symbol_table_pop(symbol_table *s_table) {
@@ -115,6 +115,6 @@ int64_t symbol_ptr_size(symbol *sym) {
     return sym->addr[1] - sym->addr[0];
 }
 
-symbol * symbol_table_find_by_idx(symbol_table *s_table, size_t idx) {
+symbol * symbol_table_find_by_idx(symbol_table *s_table, idx_t idx) {
     return vector_get(&(s_table->v), idx);
 }
