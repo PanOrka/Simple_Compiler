@@ -6,9 +6,9 @@
 
 void declare_var(char *id) {
     symbol_table *s_table = get_symbol_table();
-    symbol *s_find = symbol_table_find_id(s_table, id, false, SYMBOL_NO_FLAGS); 
+    vector_element s_find = symbol_table_find_id(s_table, id, false, SYMBOL_NO_FLAGS);
 
-    if (s_find != NULL) {
+    if (s_find.element_ptr != NULL) {
         fprintf(stderr, "[DECLARE]:Multiple declarations of one variable: %s!\n", id);
         exit(EXIT_FAILURE);
     }
@@ -24,9 +24,9 @@ void declare_array(char *id, int64_t start_idx, int64_t end_idx) {
         exit(EXIT_FAILURE);
     }
     symbol_table *s_table = get_symbol_table();
-    symbol *s_find = symbol_table_find_id(s_table, id, false, SYMBOL_NO_FLAGS);
+    vector_element s_find = symbol_table_find_id(s_table, id, false, SYMBOL_NO_FLAGS);
 
-    if (s_find != NULL) {
+    if (s_find.element_ptr != NULL) {
         fprintf(stderr, "[DECLARE]: Multiple declarations of one variable: %s!\n", id);
         exit(EXIT_FAILURE);
     }
