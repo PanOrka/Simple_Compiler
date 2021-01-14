@@ -69,4 +69,5 @@ void * vector_get(vector *vec, size_t idx) {
     }
 
     fprintf(stderr, "[VECTOR]: IDX out of bounds!\n");
+    exit(EXIT_FAILURE);
 }
