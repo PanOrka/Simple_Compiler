@@ -11,6 +11,10 @@
 #define i_NOPOP 0
 #endif
 
+#ifndef JUMP_VEC_INIT_SIZE
+#define JUMP_VEC_INIT_SIZE 16
+#endif
+
 #include "i_graph.h"
 #include "../register_machine/reg_m.h"
 #include "../parser_func/expressions.h"

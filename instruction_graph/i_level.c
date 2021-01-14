@@ -84,7 +84,7 @@ static void i_level_add_eval(branch_type type) {
 
 void i_level_add_branch_eval(branch_type type, bool have_mpz, void *payload) {
     if (jump_vec._mem_ptr == NULL) {
-        vector jump_vec_init = vector_create(sizeof(int64_t), alignof(int64_t), 16);
+        vector jump_vec_init = vector_create(sizeof(int64_t), alignof(int64_t), JUMP_VEC_INIT_SIZE);
         memcpy(&jump_vec, &jump_vec_init, sizeof(vector));
     }
 
