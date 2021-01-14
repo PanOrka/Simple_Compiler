@@ -1,4 +1,5 @@
 #include "prelexer.h"
+#include "postlexer.h"
 
 #include <stdlib.h>
 
@@ -31,19 +32,34 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
 
+        char const * const asm_out = "asm_out";
+        FILE *parse_out = fopen(asm_out, "w+");
+        if (parse_out == NULL) {
+            fprintf(stderr, "Couldn't create temporary files for compiler: %s!\n", asm_out);
+            exit(EXIT_FAILURE);
+        }
+
         FILE *compiler_out = fopen(argv[2], "w+");
         if (compiler_out == NULL) {
             fprintf(stderr, "Couldn't create OUTPUT FILE of compiler: %s!\n", argv[2]);
             exit(EXIT_FAILURE);
         }
 
+        // prelexer
         prelex(in, prelex_out);
         fclose(in);
-        rewind(prelex_out);
 
-        parse(prelex_out, compiler_out);
+        // parser
+        rewind(prelex_out);
+        parse(prelex_out, parse_out);
         fclose(prelex_out);
         remove(temp_out); // comment for debug
+
+        // postlexer
+        rewind(parse_out);
+        postlex(parse_out, compiler_out);
+        fclose(parse_out);
+        remove(asm_out);
         fclose(compiler_out);
     } else {
         fprintf(stderr, "WRONG AMOUNT OF INPUT ARGUMENTS!\n");

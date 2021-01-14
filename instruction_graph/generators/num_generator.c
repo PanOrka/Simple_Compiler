@@ -5,80 +5,82 @@
 #define ABS(x) (x >= 0 ? x : -x)
 #endif
 
-/**
- * 
- * NUM_T MSB
- * 
-*/
-const num_t num_t_msb = ((num_t)1) << 127;
-
-static uint64_t generate_from_reset_cost(num_t target_val) {
+uint64_t generate_from_reset_cost(mpz_t target_val) {
     uint64_t cost = 0;
 
     bool inc_once = false;
-    for (int32_t i=0; i<8*sizeof(target_val); ++i) {
+    size_t size = mpz_sizeinbase(target_val, 2);
+    for (size_t i=size; i>0; --i) {
         if (inc_once) {
             ++cost;
         }
 
-        if (target_val & num_t_msb) {
+        if (mpz_tstbit(target_val, i-1)) {
             ++cost;
             inc_once = true;
         }
-        target_val <<= 1;
     }
 
     return cost + 1;
 }
 
-static void generate_from_reset(reg *r, num_t target_val) {
-    bool inc_once = false;
+static void generate_from_reset(reg *r, mpz_t target_val) {
+    mpz_t test;
+    mpz_init(test);
 
-    num_t val = target_val;
-    num_t test = 0;
-    for (int32_t i=0; i<8*sizeof(val); ++i) {
+    bool inc_once = false;
+    size_t size = mpz_sizeinbase(target_val, 2);
+    for (size_t i=size; i>0; --i) {
         if (inc_once) {
             SHL(r);
-            test *= 2;
+            mpz_mul_si(test, test, 2);
         }
 
-        if (val & num_t_msb) {
+        if (mpz_tstbit(target_val, i-1)) {
             INC(r);
             inc_once = true;
-            ++test;
+            mpz_add_ui(test, test, 1);
         }
-        val <<= 1;
     }
 
-    if (test != target_val) {
+    if (mpz_cmp(test, target_val) != 0) {
         fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! (RESET_GEN)\n");
         exit(EXIT_FAILURE);
     }
+
+    mpz_clear(test);
 }
 
-static uint64_t generate_from_current_div_cost(num_t curr_val, num_t target_val) {
+static uint64_t generate_from_current_div_cost(mpz_t curr_val, mpz_t target_val) {
     uint64_t cost = 0;
 
-    num_t diff = target_val - curr_val;
-    /*
-    // if diff >= 0 it can't be greater than MAX_uint64_t
-    */
-    while (curr_val < diff) {
-        curr_val *= 2;
-        diff = target_val - curr_val;
+    mpz_t diff;
+    mpz_init(diff);
+    mpz_sub(diff, target_val, curr_val);
+
+    mpz_t alternative;
+    mpz_init(alternative);
+
+    while (mpz_cmp(curr_val, diff) < 0) {
+        mpz_mul_si(curr_val, curr_val, 2);
+        mpz_sub(diff, target_val, curr_val);
         ++cost;
     }
 
-    while (diff > 2 || diff < -2) {
-        const num_t alternative = diff - curr_val;
-        if (ABS(alternative) < ABS(diff)) {
-            curr_val *= 2;
-            diff = alternative;
+    while (mpz_cmpabs_ui(diff, 2) > 0) {
+        mpz_sub(alternative, diff, curr_val);
+        if (mpz_cmpabs(alternative, diff) < 0) {
+            mpz_mul_si(curr_val, curr_val, 2);
+            mpz_set(diff, alternative);
             ++cost;
         } else {
-            int32_t reminder = (curr_val % 2) + (diff % 2);
-            diff /= 2;
-            curr_val /= 2;
+            mpz_tdiv_r_ui(alternative, diff, 2);
+            int32_t reminder = mpz_get_si(alternative);
+            mpz_tdiv_r_ui(alternative, curr_val, 2);
+            reminder += mpz_get_si(alternative);
+
+            mpz_tdiv_q_ui(diff, diff, 2);
+            mpz_tdiv_q_ui(curr_val, curr_val, 2);
 
             cost += 2;
             if (reminder != 0) {
@@ -87,61 +89,77 @@ static uint64_t generate_from_current_div_cost(num_t curr_val, num_t target_val)
         }
     }
 
-    return cost + (uint64_t)ABS(diff);
+    int64_t diff_val = mpz_get_si(diff);
+
+    mpz_clear(diff);
+    mpz_clear(alternative);
+
+    return cost + (uint64_t)ABS(diff_val);
 }
 
 #include "../../vector/vector.h"
 
-static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val) {
-    num_t diff = target_val - curr_val;
+static void generate_from_current_div(reg *r, mpz_t curr_val, mpz_t target_val) {
+    mpz_t diff;
+    mpz_init(diff);
+    mpz_sub(diff, target_val, curr_val);
+
+    mpz_t alternative;
+    mpz_init(alternative);
     /*
     // if diff >= 0 it can't be greater than MAX_uint64_t
     */
-    while (curr_val < diff) {
-        curr_val *= 2;
-        diff = target_val - curr_val;
+    while (mpz_cmp(curr_val, diff) < 0) {
+        mpz_mul_si(curr_val, curr_val, 2);
+        mpz_sub(diff, target_val, curr_val);
         SHL(r);
     }
 
     vector v = vector_create(sizeof(int32_t), alignof(int32_t), 64);
 
-    while (diff > 2 || diff < -2) {
-        const num_t alternative = diff - curr_val;
-        if (ABS(alternative) < ABS(diff)) {
-            curr_val *= 2;
-            diff = alternative;
+    while (mpz_cmpabs_ui(diff, 2) > 0) {
+        mpz_sub(alternative, diff, curr_val);
+        if (mpz_cmpabs(alternative, diff) < 0) {
+            mpz_mul_si(curr_val, curr_val, 2);
+            mpz_set(diff, alternative);
             SHL(r);
         } else {
-            int32_t reminder = (curr_val % 2) + (diff % 2);
-            diff /= 2;
-            curr_val /= 2;
+            mpz_tdiv_r_ui(alternative, diff, 2);
+            int32_t reminder = mpz_get_si(alternative);
+            mpz_tdiv_r_ui(alternative, curr_val, 2);
+            reminder += mpz_get_si(alternative);
+
+            mpz_tdiv_q_ui(diff, diff, 2);
+            mpz_tdiv_q_ui(curr_val, curr_val, 2);
             SHR(r);
             VECTOR_ADD(v, reminder);
         }
     }
 
-    num_t test = curr_val;
-    switch (diff) {
+    mpz_t test;
+    mpz_init_set(test, curr_val);
+
+    uint32_t temp_diff = mpz_get_si(diff);
+    switch (temp_diff) {
         case 2:
             INC(r);
             INC(r);
-            test += 2;
+            mpz_add_ui(test, test, 2);
             break;
         case 1:
             INC(r);
-            ++test;
+            mpz_add_ui(test, test, 1);
             break;
         case 0:
-            test += 0;
             break;
         case -1:
             DEC(r);
-            --test;
+            mpz_sub_ui(test, test, 1);
             break;
         case -2:
             DEC(r);
             DEC(r);
-            test -= 2;
+            mpz_sub_ui(test, test, 2);
             break;
         default:
             fprintf(stderr, "[NUMBER_GENERATOR]: Got wrong reminder on diff!\n");
@@ -154,23 +172,24 @@ static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val) 
             case 2:
                 INC(r);
                 SHL(r);
-                test = 2*(++test);
+                mpz_add_ui(test, test, 1);
+                mpz_mul_si(test, test, 2);
                 break;
             case 1:
                 SHL(r);
                 INC(r);
-                test *= 2;
-                ++test;
+                mpz_mul_si(test, test, 2);
+                mpz_add_ui(test, test, 1);
                 break;
             case 0:
                 SHL(r);
-                test *= 2;
+                mpz_mul_si(test, test, 2);
                 break;
             case -1:
                 SHL(r);
                 DEC(r);
-                test *= 2;
-                --test;
+                mpz_mul_si(test, test, 2);
+                mpz_sub_ui(test, test, 1);
                 break;
             default:
                 fprintf(stderr, "[NUMBER_GENERATOR]: Got wrong reminder: %d!\n", reminders);
@@ -179,53 +198,82 @@ static void generate_from_current_div(reg *r, num_t curr_val, num_t target_val) 
     }
     free(v._mem_ptr);
 
-    if (test != target_val) {
+    if (mpz_cmp(test, target_val) != 0) {
         fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! (DIV_GEN)\n");
         exit(EXIT_FAILURE);
     }
+
+    mpz_clear(diff);
+    mpz_clear(alternative);
+    mpz_clear(test);
 }
 
-static uint64_t generate_from_current_inc_cost(num_t curr_val, num_t target_val) {
-    num_t diff = target_val - curr_val;
-    return ABS(diff);
+static uint64_t generate_from_current_inc_cost(mpz_t curr_val, mpz_t target_val) {
+    mpz_t diff;
+    mpz_init(diff);
+    mpz_sub(diff, target_val, curr_val);
+    if (mpz_cmpabs_ui(diff, (uint64_t)INT64_MAX) >= 0) {
+        mpz_clear(diff);
+
+        return UINT64_MAX;
+    }
+
+    int64_t diff_val = mpz_get_si(diff);
+    mpz_clear(diff);
+
+    return ABS(diff_val);
 }
 
-static void generate_from_current_inc(reg *r, num_t curr_val, num_t target_val) {
-    num_t diff = target_val - curr_val;
-    num_t test = curr_val;
+static void generate_from_current_inc(reg *r, mpz_t curr_val, mpz_t target_val) {
+    mpz_t diff;
+    mpz_init(diff);
+    mpz_sub(diff, target_val, curr_val);
 
-    while (diff > 0) {
+    mpz_t test;
+    mpz_init_set(test, curr_val);
+
+    while (mpz_cmp_si(diff, 0) > 0) {
         INC(r);
-        --diff;
-        ++test;
+        mpz_sub_ui(diff, diff, 1);
+        mpz_add_ui(test, test, 1);
     }
 
-    while (diff < 0) {
+    while (mpz_cmp_si(diff, 0) < 0) {
         DEC(r);
-        ++diff;
-        --test;
+        mpz_add_ui(diff, diff, 1);
+        mpz_sub_ui(test, test, 1);
     }
 
-    if (test != target_val) {
+    if (mpz_cmp(test, target_val) != 0) {
         fprintf(stderr, "[NUMBER_GENERATOR]: Generated number is wrong! (INC_GEN)\n");
         exit(EXIT_FAILURE);
     }
+
+    mpz_clear(diff);
+    mpz_clear(test);
 }
 
-void generate_value(reg *r, num_t curr_val, num_t target_val, bool reset) {
-    if (curr_val != 0 && !reset) {
+void generate_value(reg *r, mpz_t curr_val, mpz_t target_val, bool reset) {
+    if (mpz_cmp_si(curr_val, 0) != 0 && !reset) {
         uint64_t reset_cost = generate_from_reset_cost(target_val);
-        uint64_t div_cost = generate_from_current_div_cost(curr_val, target_val);
+
+        mpz_t temp_curr_val;
+        mpz_init_set(temp_curr_val, curr_val);
+        uint64_t div_cost = generate_from_current_div_cost(temp_curr_val, target_val);
+
         uint64_t inc_cost = generate_from_current_inc_cost(curr_val, target_val);
 
         if (reset_cost <= div_cost && reset_cost < inc_cost) {
             RESET(r);
             generate_from_reset(r, target_val);
         } else if (div_cost < inc_cost) {
-            generate_from_current_div(r, curr_val, target_val);
+            mpz_set(temp_curr_val, curr_val);
+            generate_from_current_div(r, temp_curr_val, target_val);
         } else {
             generate_from_current_inc(r, curr_val, target_val);
         }
+
+        mpz_clear(temp_curr_val);
     } else {
         if (reset) {
             RESET(r);

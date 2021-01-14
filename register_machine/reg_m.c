@@ -128,3 +128,62 @@ void reg_m_promote(reg_set *r_set, addr_t addr) {
     fprintf(stderr, "[REG_M]: Promotion of non-existent address!\n");
     exit(EXIT_FAILURE);
 }
+
+void stack_ptr_set_mpz_to_current_value(mpz_t dest);
+void stack_ptr_set_mpz(mpz_t src);
+bool stack_ptr_mpz_initialized();
+
+void val_gen_set_mpz_to_current_value(mpz_t dest);
+void val_gen_set_mpz(mpz_t src);
+bool val_gen_mpz_initialized();
+
+reg_snapshot reg_m_snapshot(reg_set *r_set, bool have_mpz) {
+    reg_snapshot r_snap;
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        r_snap.r[i] = *(r_set->r[i]);
+    }
+
+    r_snap.have_mpz = have_mpz;
+    if (have_mpz) {
+        mpz_init(r_snap.stack_ptr_value);
+        if (r_snap.stack_ptr_init = stack_ptr_mpz_initialized()) {
+            stack_ptr_set_mpz_to_current_value(r_snap.stack_ptr_value);
+        }
+
+        mpz_init(r_snap.val_gen_value);
+        if (r_snap.val_gen_init = val_gen_mpz_initialized()) {
+            val_gen_set_mpz_to_current_value(r_snap.val_gen_value);
+        }
+    }
+
+    return r_snap;
+}
+
+void reg_m_apply_snapshot(reg_set *r_set, reg_snapshot r_snap) {
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        *(r_set->r[i]) = r_snap.r[i];
+    }
+
+    if (r_snap.have_mpz) {
+        if (r_snap.stack_ptr_init) {
+            stack_ptr_set_mpz(r_snap.stack_ptr_value);
+        }
+
+        if (r_snap.val_gen_init) {
+            val_gen_set_mpz(r_snap.val_gen_value);
+        }
+
+        mpz_clear(r_snap.stack_ptr_value);
+        mpz_clear(r_snap.val_gen_value);
+    }
+}
+
+reg * reg_m_get_by_id(reg_set *r_set, char id) {
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        if (r_set->r[i]->id == id) {
+            return r_set->r[i];
+        }
+    }
+
+    return NULL;
+}

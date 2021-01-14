@@ -2,20 +2,59 @@
 #include "stack_generator.h"
 #include "num_generator.h"
 
-static num_t current_val = 0;
+static mpz_t current_val;
+static bool mpz_initialized = false;
 
-reg * val_generate(num_t target_value) {
+reg * val_generate(uint64_t target_value) {
+    mpz_t temp_target_value;
+    mpz_init_set_ui(temp_target_value, target_value);
+
+    reg * ret_reg = val_generate_from_mpz(temp_target_value);
+    mpz_clear(temp_target_value);
+
+    return ret_reg;
+}
+
+reg * val_generate_from_mpz(mpz_t target_value) {
+    if (!mpz_initialized) {
+        mpz_init(current_val);
+        mpz_initialized = true;
+    }
+
     reg_set *r_set = get_reg_set();
     reg_allocator r_alloc = oper_get_reg_for_variable(VAL_GEN_ADDR);
 
     bool reset = false;
     if (!r_alloc.was_allocated) {
-        current_val = 0;
+        mpz_set_si(current_val, 0);
         reset = true;
     }
+
     generate_value(r_alloc.r, current_val, target_value, reset);
-    current_val = target_value;
+    mpz_set(current_val, target_value);
     r_alloc.r->addr = VAL_GEN_ADDR;
 
     return r_alloc.r;
+}
+
+void val_gen_set_mpz_to_current_value(mpz_t dest) {
+    if (mpz_initialized) {
+        mpz_set(dest, current_val);
+    } else {
+        fprintf(stderr, "[VAL_GEN]: Value generator is not initialized!\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+void val_gen_set_mpz(mpz_t src) {
+    if (mpz_initialized) {
+        mpz_set(current_val, src);
+    } else {
+        fprintf(stderr, "[STACK_PTR]: Stack pointer is not initialized!\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+bool val_gen_mpz_initialized() {
+    return mpz_initialized;
 }

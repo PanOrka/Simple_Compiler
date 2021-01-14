@@ -67,6 +67,43 @@ void oper_drop_array(const addr_t addr[2]);
 #define ASSIGN_VAL_STASH 0b00000010
 #endif
 
+typedef struct {
+    union {
+        reg *reg;
+        mpz_t constant;
+    };
+    bool is_reg;
+} val;
+
+/**
+ * 
+ * Flush all non before stored elements of constant array to memory
+ * 
+*/
+void oper_flush_array_to_mem(symbol *arr);
+
+/**
+ * 
+ * Operation on array_value list
+ * 
+ * RETURN: NULL or pointer to found arr_val
+*/
+array_value * oper_arr_val_find(array_value *arr_val, uint64_t idx_ui);
+
+/**
+ * 
+ * Add new array_value to given arr
+ * 
+*/
+void oper_arr_val_add(symbol *arr, array_value new_arr_val);
+
+/**
+ * 
+ * Sets every element of array to non_constant
+ * 
+*/
+void oper_arr_set_non_constant(symbol *arr);
+
 /**
  * 
  * Set assign_var with given ready register
@@ -74,9 +111,10 @@ void oper_drop_array(const addr_t addr[2]);
  * ARGUMENTS: expression_t const * const expr <= from here we assign var[0]
  *            reg *assign_val <= register with value that we set assign_var
  *            uint8_t assign_val_flags <= information about assign_val
+ * WARNING: New array non-constant elements will be mpz_init() by default
 */
 void oper_set_assign_val_0(expression_t const * const expr,
-                           reg *assign_val,
+                           val assign_val,
                            uint8_t assign_val_flags);
 
 /**
@@ -84,15 +122,24 @@ void oper_set_assign_val_0(expression_t const * const expr,
  * Get assign_val_1 of expression to register
  * 
  * RETURN: Pointer to register with variable
+ * WARNING: mpz_t constant in val will be initialized, please free this!!!!
 */
-reg * oper_get_assign_val_1(expression_t const * const expr);
+val oper_get_assign_val_1(expression_t const * const expr);
 
 /**
  * 
  * Get assign_val_2 of expression to register
  * 
  * RETURN: Pointer to register with variable
+ * WARNING: mpz_t constant in val will be initialized, please free this!!!!
 */
-reg * oper_get_assign_val_2(expression_t const * const expr);
+val oper_get_assign_val_2(expression_t const * const expr);
+
+/**
+ * 
+ * Store and drop registers
+ * 
+*/
+void oper_regs_store_drop();
 
 #endif

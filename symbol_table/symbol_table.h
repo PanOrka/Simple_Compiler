@@ -4,6 +4,8 @@
 #include "../definitions.h"
 #include "../vector/vector.h"
 
+#include <gmp.h>
+
 #ifndef SYMBOL_TABLE_INIT_SIZE
 #define SYMBOL_TABLE_INIT_SIZE 32
 #endif
@@ -28,18 +30,47 @@
 #define SYMBOL_IS_ITER 0b00001000
 #endif
 
+#ifndef SYMBOL_IS_CONSTANT
+#define SYMBOL_IS_CONSTANT 0b00010000
+#endif
+
+#ifndef SYMBOL_MARK_STORE
+#define SYMBOL_MARK_STORE 0b00100000
+#endif
+
+#ifndef SYMBOL_HAS_HIDE
+#define SYMBOL_HAS_HIDE 0b01000000
+#endif
+
 typedef struct symbol symbol;
 
 typedef union {
     uint64_t start_idx;
-    symbol *hide;
+    idx_t hide_idx;
 } add_info;
+
+typedef struct array_value array_value;
+
+struct array_value {
+    array_value *next;
+    mpz_t value;
+    uint64_t n;
+    bool is_in_memory;
+    bool is_constant;
+};
+
+typedef union {
+    mpz_t value;
+    array_value *arr_value;
+} const_info;
 
 struct symbol {
     const char *identifier;
     const addr_t addr[2]; // address is [FROM, TO), cuz TO - FROM = size
     const add_info _add_info; // TODO: union with address of PRZYKRYTA zmienna if it's iterator, to change it on POP() start_idx is uint64_t so w/e about memory
+    const_info consts;
     uint8_t flags;
+    bool symbol_in_memory; // Just for consts WRITE
 };
 
 typedef struct {
@@ -60,9 +91,9 @@ symbol_table symbol_table_create();
  * Flags are just simple intersection - find first intersection > 0
  * 
  * ARGUMENTS: Pointer to symbol_table, identifier of symbol to search for, bool use_flags, flags
- * RETURN: Pointer to found symbol
+ * RETURN: Vector element of found symbol
 */
-symbol * symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_flags, uint8_t flags);
+vector_element symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_flags, uint8_t flags);
 
 /**
  * 
@@ -70,17 +101,17 @@ symbol * symbol_table_find_id(symbol_table *s_table, char *identifier, bool use_
  * Flags are just simple intersection - find first intersection > 0
  * 
  * ARGUMENTS: Pointer to symbol_table, address of symbol to search for, bool use_flags, flags
- * RETURN: Pointer to found symbol
+ * RETURN: Vector element of found symbol
 */
-symbol * symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_flags, uint8_t flags);
+vector_element symbol_table_find_addr(symbol_table *s_table, addr_t addr, bool use_flags, uint8_t flags);
 
 /**
  * 
  * Add new symbol to symbol_table
  * 
- * RETURN: Pointer to added symbol
+ * RETURN: Index of added symbol
 */
-symbol * symbol_table_add(symbol_table *s_table, const char *identifier, add_info _add_info, size_t size, uint8_t flags);
+idx_t symbol_table_add(symbol_table *s_table, const char *identifier, add_info _add_info, size_t size, uint8_t flags);
 
 /**
  * 
@@ -97,5 +128,13 @@ symbol symbol_table_pop(symbol_table *s_table);
  * RETURN: Size of symbol
 */
 int64_t symbol_ptr_size(symbol *sym);
+
+/**
+ * 
+ * Get symbol of given idx
+ * 
+ * RETURN: Pointer to symbol of given idx
+*/
+symbol * symbol_table_find_by_idx(symbol_table *s_table, idx_t idx);
 
 #endif

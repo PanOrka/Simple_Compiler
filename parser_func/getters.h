@@ -12,6 +12,8 @@
 */
 symbol_table * get_symbol_table();
 
+void free_symbol_table();
+
 /**
  * 
  * Get current reg_set
@@ -19,5 +21,7 @@ symbol_table * get_symbol_table();
  * RETURN: pointer to reg_set used in compiling time
 */
 reg_set * get_reg_set();
+
+void free_reg_set();
 
 #endif

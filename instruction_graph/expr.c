@@ -21,108 +21,146 @@ void add_EXPR(expression_t *expr) {
 
 static void eval_expr_VALUE(expression_t const * const expr) {
     reg_set *r_set = get_reg_set();
-    reg *assign_val = oper_get_assign_val_1(expr);
-    uint8_t const assign_val_flags = (expr->mask & LEFT_SYM1_NUM) ? ASSIGN_VAL_IS_NUM : ASSIGN_VAL_NO_FLAGS;
-    oper_set_assign_val_0(expr, assign_val, assign_val_flags);
+    val assign_val = oper_get_assign_val_1(expr);
+    oper_set_assign_val_0(expr, assign_val, ASSIGN_VAL_NO_FLAGS);
+    if (!assign_val.is_reg) {
+        mpz_clear(assign_val.constant);
+    }
 
     reg_m_drop_addr(r_set, TEMP_ADDR_1);
 }
 
-static num_t num_add(num_t x, num_t y) {
-    return x + y;
+static void num_add(mpz_t dest, mpz_t src_1, mpz_t src_2) {
+    mpz_add(dest, src_1, src_2);
 }
 
-static num_t num_sub(num_t x, num_t y) {
-    return (x - y >= 0) ? x - y : 0;
+static void num_sub(mpz_t dest, mpz_t src_1, mpz_t src_2) {
+    mpz_sub(dest, src_1, src_2);
+    if (mpz_cmp_si(dest, 0) < 0) {
+        mpz_set_si(dest, 0);
+    }
 }
 
-static num_t num_mul(num_t x, num_t y) {
-    return x * y;
+static void num_mul(mpz_t dest, mpz_t src_1, mpz_t src_2) {
+    mpz_mul(dest, src_1, src_2);
 }
 
-static num_t num_div(num_t x, num_t y) {
-    return (y != 0) ? x / y : 0;
+static void num_div(mpz_t dest, mpz_t src_1, mpz_t src_2) {
+    if (mpz_cmp_ui(src_2, 0) == 0) {
+        mpz_set_si(dest, 0);
+    } else {
+        mpz_tdiv_q(dest, src_1, src_2);
+    }
 }
 
-static num_t num_mod(num_t x, num_t y) {
-    return (y != 0) ? x % y : 0;
+static void num_mod(mpz_t dest, mpz_t src_1, mpz_t src_2) {
+    if (mpz_cmp_ui(src_2, 0) == 0) {
+        mpz_set_si(dest, 0);
+    } else {
+        mpz_tdiv_r(dest, src_1, src_2);
+    }
 }
 
 typedef struct {
-    num_t (*func_num) (num_t x, num_t y);
+    void (*func_num) (mpz_t dest, mpz_t src_1, mpz_t src_2);
     reg * (*func_reg) (reg *x, reg *y);
 } arithmetic_func;
 
 static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_func func) {
     reg_set *r_set = get_reg_set();
-    
-    if ((expr->mask & LEFT_SYM1_NUM) && (expr->mask & RIGHT_SYM1_NUM)) {
-        num_t val = func.func_num(expr->var_1[1].num, expr->var_1[2].num);
-        reg *assign_val = val_generate(val);
-        oper_set_assign_val_0(expr, assign_val, ASSIGN_VAL_IS_NUM);
-    } else {
-        // FOR NOW it's glued up with TODO in std_oper get_assign functions
-        // Could be optimized:
-        // - save or stash VAL_GEN_ADDR register depending on situation with other variables
-        // - definetly let TEMP_ADDR_1 or TEMP_ADDR_2 to be sum
-        // - reuse code - use it for abelowe operacje
-        // - consider var_1 := var_1 (oper) var_2 for optimization
-        reg *assign_val_1 = oper_get_assign_val_1(expr);
-        if (assign_val_1->addr == VAL_GEN_ADDR) {
-            assign_val_1->addr = TEMP_ADDR_1;
-        } else if (assign_val_1->flags & REG_MODIFIED) { // First register is always stashed
-            stack_ptr_generate(assign_val_1->addr);
-            STORE(assign_val_1, &(r_set->stack_ptr));
-            assign_val_1->flags &= ~REG_MODIFIED;
+    val assign_val_1 = oper_get_assign_val_1(expr);
+    val assign_val_2 = oper_get_assign_val_2(expr);
+
+    if (assign_val_1.is_reg && assign_val_2.is_reg) {
+        reg_m_promote(r_set, assign_val_1.reg->addr);
+        if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
+            stack_ptr_generate(assign_val_1.reg->addr);
+            STORE(assign_val_1.reg, &(r_set->stack_ptr));
+            assign_val_1.reg->flags &= ~REG_MODIFIED;
         }
 
-        reg *assign_val_2 = oper_get_assign_val_2(expr);
-        reg_m_promote(r_set, assign_val_1->addr);
-        if (assign_val_1->addr == VAL_GEN_ADDR) {
-            assign_val_1->addr = TEMP_ADDR_2;
-        }
-
-        reg * new_reg = func.func_reg(assign_val_1, assign_val_2);
+        reg *new_reg = func.func_reg(assign_val_1.reg, assign_val_2.reg);
         if (new_reg) {
-            assign_val_1 = new_reg;
-            reg_m_promote(r_set, assign_val_1->addr);
+            assign_val_1.reg = new_reg;
+            reg_m_promote(r_set, assign_val_1.reg->addr);
         }
 
         oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
+    } else if (assign_val_1.is_reg) {
+        reg *val_reg = val_generate_from_mpz(assign_val_2.constant);
+        mpz_clear(assign_val_2.constant);
+        if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
+            stack_ptr_generate(assign_val_1.reg->addr);
+            STORE(assign_val_1.reg, &(r_set->stack_ptr));
+            assign_val_1.reg->flags &= ~REG_MODIFIED;
+        }
 
-        reg_m_drop_addr(r_set, TEMP_ADDR_1);
-        reg_m_drop_addr(r_set, TEMP_ADDR_2);
-        reg_m_drop_addr(r_set, TEMP_ADDR_3);
-        reg_m_drop_addr(r_set, TEMP_ADDR_4);
-        reg_m_drop_addr(r_set, TEMP_ADDR_5);
+        reg *new_reg = func.func_reg(assign_val_1.reg, val_reg);
+        if (new_reg) {
+            assign_val_1.reg = new_reg;
+            reg_m_promote(r_set, assign_val_1.reg->addr);
+        }
+
+        oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
+    } else if (assign_val_2.is_reg) {
+        reg *val_reg = val_generate_from_mpz(assign_val_1.constant);
+        mpz_clear(assign_val_1.constant);
+        val_reg->addr = TEMP_ADDR_1;
+
+        reg *new_reg = func.func_reg(val_reg, assign_val_2.reg);
+        if (new_reg) {
+            assign_val_2.reg = new_reg;
+            reg_m_promote(r_set, assign_val_2.reg->addr);
+        } else {
+            assign_val_2.reg = val_reg;
+        }
+
+        oper_set_assign_val_0(expr, assign_val_2, ASSIGN_VAL_STASH);
+    } else {
+        func.func_num(assign_val_1.constant, assign_val_1.constant, assign_val_2.constant);
+        mpz_clear(assign_val_2.constant);
+        oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_NO_FLAGS);
+        mpz_clear(assign_val_1.constant);
     }
+
+    // FOR NOW it's glued up with TODO in std_oper get_assign functions
+    // Could be optimized:
+    // - save or stash VAL_GEN_ADDR register depending on situation with other variables
+    // - definetly let TEMP_ADDR_1 or TEMP_ADDR_2 to be sum
+    // - reuse code - use it for abelowe operacje
+    // - consider var_1 := var_1 (oper) var_2 for optimization
+    reg_m_drop_addr(r_set, TEMP_ADDR_1);
+    reg_m_drop_addr(r_set, TEMP_ADDR_2);
+    reg_m_drop_addr(r_set, TEMP_ADDR_3);
+    reg_m_drop_addr(r_set, TEMP_ADDR_4);
+    reg_m_drop_addr(r_set, TEMP_ADDR_5);
 }
 
 void eval_EXPR(i_graph **i_current) {
-    expression_t const * const expr_curr = (*i_current)->payload;
+    expression_t const * const expr = (*i_current)->payload;
 
-    switch (expr_curr->type) {
+    switch (expr->type) {
         case expr_VALUE:
-            eval_expr_VALUE(expr_curr);
+            eval_expr_VALUE(expr);
             break;
         case expr_ADD:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_add, .func_reg = &ADD });
             break;
         case expr_SUB:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_sub, .func_reg = &SUB });
             break;
         case expr_MUL:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_mul, .func_reg = &MUL });
             break;
         case expr_DIV:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_div, .func_reg = &DIV });
             break;
         case expr_MOD:
-            eval_expr_ARITHMETIC(expr_curr,
+            eval_expr_ARITHMETIC(expr,
                 (arithmetic_func){ .func_num = &num_mod, .func_reg = &MOD });
             break;
         default:

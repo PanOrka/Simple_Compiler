@@ -10,14 +10,9 @@ typedef enum {
     loop_DOWNTO
 } loop_type;
 
-typedef union {
-    addr_t addr;
-    symbol *var;
-} var_t;
-
 typedef struct {
-    var_t iterator;
-    var_t range; // FROM, TO
+    addr_t iterator;
+    addr_t range; // TO
     expression_t range_vars;
     loop_type type;
 } for_loop_t;
