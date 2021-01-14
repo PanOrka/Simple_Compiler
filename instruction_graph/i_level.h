@@ -24,7 +24,7 @@ typedef instruction_type branch_type;
 struct i_level {
     i_level *prev;
     uint64_t i_num;
-    int64_t *reserved_jmp;
+    idx_t reserved_jmp_idx;
     reg_snapshot r_snap;
     void *payload;
     branch_type type;
@@ -58,5 +58,12 @@ branch_type i_level_pop(bool pop);
 */
 bool i_level_is_empty();
 bool i_level_is_empty_eval();
+
+/**
+ * 
+ * Set given vec_idx to value in jump_vec
+ * 
+*/
+void i_level_set_reserved_jump(idx_t vec_idx, int64_t value);
 
 #endif

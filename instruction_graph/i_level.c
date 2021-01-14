@@ -95,7 +95,7 @@ void i_level_add_branch_eval(branch_type type, bool have_mpz, void *payload) {
 
     int64_t val = 0;
     VECTOR_ADD(jump_vec, val);
-    end_eval->reserved_jmp = VECTOR_POP(jump_vec, NO_POP);
+    end_eval->reserved_jmp_idx = jump_vec.used_size - 1;
 }
 
 static void i_level_pop_eval(bool pop) {
@@ -125,4 +125,9 @@ i_level i_level_pop_branch_eval(bool pop) {
 
 bool i_level_is_empty_eval() {
     return end_eval == NULL;
+}
+
+void i_level_set_reserved_jump(idx_t vec_idx, int64_t value) {
+    int64_t * const jmp_ptr = vector_get(&jump_vec, vec_idx);
+    *jmp_ptr = value;
 }

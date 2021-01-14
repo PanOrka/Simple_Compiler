@@ -92,12 +92,15 @@ void eval_ENDIF(i_graph **i_current) {
         i_level i_else = i_level_pop_branch_eval(true);
         i_level i_if = i_level_pop_branch_eval(true);
 
-        *(i_if.reserved_jmp) = ((int64_t)i_else.i_num - (int64_t)i_if.i_num) + 1;
+        i_level_set_reserved_jump(i_if.reserved_jmp_idx,
+                                  ((int64_t)i_else.i_num - (int64_t)i_if.i_num) + 1);
 
         // ENDING ELSE
         oper_regs_store_drop();
         reg_set *r_set = get_reg_set();
-        *(i_else.reserved_jmp) = ((int64_t)asm_get_i_num() - (int64_t)i_else.i_num) + 1;
+        i_level_set_reserved_jump(i_else.reserved_jmp_idx,
+                                  ((int64_t)asm_get_i_num() - (int64_t)i_else.i_num) + 1);
+
         stack_ptr_clear();
     } else if (i_level_pop_branch_eval(false).type == i_IF) {
         i_level i_if = i_level_pop_branch_eval(true);
@@ -110,9 +113,12 @@ void eval_ENDIF(i_graph **i_current) {
         i_level_add_branch_eval(i_ENDIF, false, NULL);
         i_level i_endif = i_level_pop_branch_eval(true);
 
-        *(i_if.reserved_jmp) = ((int64_t)i_endif.i_num - (int64_t)i_if.i_num) + 1;
+        i_level_set_reserved_jump(i_if.reserved_jmp_idx,
+                                  ((int64_t)i_endif.i_num - (int64_t)i_if.i_num) + 1);
         oper_regs_store_drop();
-        *(i_endif.reserved_jmp) = ((int64_t)asm_get_i_num() - (int64_t)i_endif.i_num) + 1;
+        i_level_set_reserved_jump(i_endif.reserved_jmp_idx,
+                                  ((int64_t)asm_get_i_num() - (int64_t)i_endif.i_num) + 1);
+
         stack_ptr_clear();
     } else {
         fprintf(stderr, "[EVAL_ENDIF]: No matching type of branch!\n");
