@@ -190,28 +190,35 @@ void oper_set_assign_val_0(expression_t const * const expr,
     const bool i_level_empty = i_level_is_empty_eval();
     bool generate_cost_too_big = false;
     reg_set *r_set = get_reg_set();
+    symbol_table *s_table = get_symbol_table();
     if (!assign_val.is_reg && (generate_cost_too_big = (generate_from_reset_cost(assign_val.constant) >= 40))) {
         assign_val.reg = val_generate_from_mpz(assign_val.constant);
         assign_val.is_reg = true;
     }
 
-    if ((expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & ASSIGN_SYM2_NUM)) {
+    symbol *var_1 = symbol_table_find_by_idx(s_table, expr->var_1[0].sym_idx);
+    if ((var_1->flags & SYMBOL_IS_ARRAY) && !(expr->mask & ASSIGN_SYM2_NUM)) {
         const bool assign_sym_2_addr = expr->addr_mask & ASSIGN_SYM2_ADDR;
-        const bool assign_sym_2_const = !assign_sym_2_addr && (expr->var_2[0].var->flags & SYMBOL_IS_CONSTANT);
-        const bool assign_sym_1_const = (expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT) && i_level_empty;
+
+        symbol *var_2 = NULL;
+        if (!assign_sym_2_addr) {
+            var_2 = symbol_table_find_by_idx(s_table, expr->var_2[0].sym_idx);
+        }
+        const bool assign_sym_2_const = !assign_sym_2_addr && (var_2->flags & SYMBOL_IS_CONSTANT);
+        const bool assign_sym_1_const = (var_1->flags & SYMBOL_IS_CONSTANT) && i_level_empty;
 
         if (assign_sym_2_const && assign_sym_1_const) {
-            array_value *arr_val = expr->var_1[0].var->consts.arr_value;
+            array_value *arr_val = var_1->consts.arr_value;
 
             mpz_t idx;
-            mpz_init_set(idx, expr->var_2[0].var->consts.value);
-            mpz_sub_ui(idx, idx, expr->var_1[0].var->_add_info.start_idx);
+            mpz_init_set(idx, var_2->consts.value);
+            mpz_sub_ui(idx, idx, var_1->_add_info.start_idx);
 
             const uint64_t idx_ui = mpz_get_ui(idx);
             mpz_clear(idx);
             arr_val = oper_arr_val_find(arr_val, idx_ui);
 
-            addr_t const eff_addr = expr->var_1[0].var->addr[0] + idx_ui;
+            addr_t const eff_addr = var_1->addr[0] + idx_ui;
 
             if (arr_val) {
                 if (assign_val.is_reg) {
@@ -234,7 +241,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                         .n = idx_ui
                     };
                     mpz_init(new_arr_val.value);
-                    oper_arr_val_add(expr->var_1[0].var, new_arr_val);
+                    oper_arr_val_add(var_1, new_arr_val);
                     oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
                 } else {
                     reg_m_drop_addr(r_set, eff_addr);
@@ -244,14 +251,14 @@ void oper_set_assign_val_0(expression_t const * const expr,
                         .n = idx_ui
                     };
                     mpz_init_set(new_arr_val.value, assign_val.constant);
-                    oper_arr_val_add(expr->var_1[0].var, new_arr_val);
+                    oper_arr_val_add(var_1, new_arr_val);
                 }
             }
         } else if (assign_sym_2_const) {
             mpz_t eff_addr;
-            mpz_init_set_ui(eff_addr, expr->var_1[0].var->addr[0]);
-            mpz_sub_ui(eff_addr, eff_addr, expr->var_1[0].var->_add_info.start_idx);
-            mpz_add(eff_addr, eff_addr, expr->var_2[0].var->consts.value);
+            mpz_init_set_ui(eff_addr, var_1->addr[0]);
+            mpz_sub_ui(eff_addr, eff_addr, var_1->_add_info.start_idx);
+            mpz_add(eff_addr, eff_addr, var_2->consts.value);
 
             const addr_t eff_addr_ui = mpz_get_ui(eff_addr);
             mpz_clear(eff_addr);
@@ -263,11 +270,11 @@ void oper_set_assign_val_0(expression_t const * const expr,
             }
         } else {
             if (assign_sym_1_const) {
-                oper_flush_array_to_mem(expr->var_1[0].var);
-                oper_arr_set_non_constant(expr->var_1[0].var);
+                oper_flush_array_to_mem(var_1);
+                oper_arr_set_non_constant(var_1);
             }
             
-            oper_store_array(expr->var_1[0].var->addr);
+            oper_store_array(var_1->addr);
 
             reg *store_reg;
             if (assign_val.is_reg) {
@@ -280,12 +287,12 @@ void oper_set_assign_val_0(expression_t const * const expr,
                 store_reg->addr = TEMP_ADDR_1;
             }
 
-            addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : expr->var_2[0].var->addr[0];
+            addr_t const var_idx_addr = (expr->addr_mask & ASSIGN_SYM2_ADDR) ? expr->var_2[0].addr : var_2->addr[0];
             oper_set_stack_ptr_addr_arr(var_idx_addr,
-                                        expr->var_1[0].var->addr[0],
-                                        expr->var_1[0].var->_add_info.start_idx);
+                                        var_1->addr[0],
+                                        var_1->_add_info.start_idx);
 
-            oper_drop_array(expr->var_1[0].var->addr);
+            oper_drop_array(var_1->addr);
 
             STORE(store_reg, &(r_set->stack_ptr));
             if (assign_val_flags & ASSIGN_VAL_STASH) {
@@ -293,13 +300,13 @@ void oper_set_assign_val_0(expression_t const * const expr,
             }
         }
     } else {
-        const bool assign_sym_1_const = (expr->var_1[0].var->flags & SYMBOL_IS_CONSTANT) && i_level_empty;
+        const bool assign_sym_1_const = (var_1->flags & SYMBOL_IS_CONSTANT) && i_level_empty;
         const uint64_t idx = expr->var_2[0].num;
-        addr_t const eff_addr = expr->var_1[0].var->addr[0] + idx;
+        addr_t const eff_addr = var_1->addr[0] + idx;
 
         if (assign_sym_1_const) {
-            if (expr->var_1[0].var->flags & SYMBOL_IS_ARRAY) {
-                array_value *arr_val = expr->var_1[0].var->consts.arr_value;
+            if (var_1->flags & SYMBOL_IS_ARRAY) {
+                array_value *arr_val = var_1->consts.arr_value;
                 arr_val = oper_arr_val_find(arr_val, idx);
 
                 if (arr_val) {
@@ -322,7 +329,7 @@ void oper_set_assign_val_0(expression_t const * const expr,
                             .n = idx
                         };
                         mpz_init(new_arr_val.value);
-                        oper_arr_val_add(expr->var_1[0].var, new_arr_val);
+                        oper_arr_val_add(var_1, new_arr_val);
                         oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
                     } else {
                         reg_m_drop_addr(r_set, eff_addr);
@@ -332,19 +339,19 @@ void oper_set_assign_val_0(expression_t const * const expr,
                             .n = idx
                         };
                         mpz_init_set(new_arr_val.value, assign_val.constant);
-                        oper_arr_val_add(expr->var_1[0].var, new_arr_val);
+                        oper_arr_val_add(var_1, new_arr_val);
                     }
                 }
             } else {
                 if (assign_val.is_reg) {
-                    expr->var_1[0].var->flags &= ~SYMBOL_IS_CONSTANT;
-                    mpz_set_si(expr->var_1[0].var->consts.value, 0);
+                    var_1->flags &= ~SYMBOL_IS_CONSTANT;
+                    mpz_set_si(var_1->consts.value, 0);
                     oper_set_reg(assign_val.reg, eff_addr, assign_val_flags);
                 } else {
                     reg_m_drop_addr(r_set, eff_addr);
-                    expr->var_1[0].var->flags |= SYMBOL_IS_CONSTANT;
-                    mpz_set(expr->var_1[0].var->consts.value, assign_val.constant);
-                    expr->var_1[0].var->symbol_in_memory = false;
+                    var_1->flags |= SYMBOL_IS_CONSTANT;
+                    mpz_set(var_1->consts.value, assign_val.constant);
+                    var_1->symbol_in_memory = false;
                 }
             }
         } else {
@@ -355,9 +362,9 @@ void oper_set_assign_val_0(expression_t const * const expr,
                 oper_set_reg(val_reg, eff_addr, assign_val_flags);
             } else {
                 reg_m_drop_addr(r_set, eff_addr);
-                expr->var_1[0].var->flags |= SYMBOL_IS_CONSTANT;
-                mpz_set(expr->var_1[0].var->consts.value, assign_val.constant);
-                expr->var_1[0].var->symbol_in_memory = false;
+                var_1->flags |= SYMBOL_IS_CONSTANT;
+                mpz_set(var_1->consts.value, assign_val.constant);
+                var_1->symbol_in_memory = false;
             }
         }
     }
@@ -394,6 +401,7 @@ static reg * load_sym_reg_from_num(symbol *var_1, addr_t num) {
 
 val oper_get_assign_val_1(expression_t const * const expr) {
     reg_set *r_set = get_reg_set();
+    symbol_table *s_table = get_symbol_table();
     val assign_val = {
         .reg = NULL,
         .is_reg = true
@@ -408,18 +416,24 @@ val oper_get_assign_val_1(expression_t const * const expr) {
 
         assign_val.reg = var.r;
     } else if (!(expr->mask & LEFT_SYM1_NUM)) {
-        if ((expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & LEFT_SYM2_NUM)) {
+        symbol *var_1 = symbol_table_find_by_idx(s_table, expr->var_1[1].sym_idx);
+        if ((var_1->flags & SYMBOL_IS_ARRAY) && !(expr->mask & LEFT_SYM2_NUM)) {
             const bool left_sym_2_addr = expr->addr_mask & LEFT_SYM2_ADDR;
-            const bool left_sym_2_const = !left_sym_2_addr && (expr->var_2[1].var->flags & SYMBOL_IS_CONSTANT);
-            const bool left_sym_1_const = expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
+
+            symbol *var_2 = NULL;
+            if (!left_sym_2_addr) {
+                var_2 = symbol_table_find_by_idx(s_table, expr->var_2[1].sym_idx);
+            }
+            const bool left_sym_2_const = !left_sym_2_addr && (var_2->flags & SYMBOL_IS_CONSTANT);
+            const bool left_sym_1_const = var_1->flags & SYMBOL_IS_CONSTANT;
 
             if (left_sym_2_const && left_sym_1_const) {
                 assign_val.is_reg = false;
-                array_value *arr_val = expr->var_1[1].var->consts.arr_value;
+                array_value *arr_val = var_1->consts.arr_value;
 
                 mpz_t idx;
-                mpz_init_set(idx, expr->var_2[1].var->consts.value);
-                mpz_sub_ui(idx, idx, expr->var_1[1].var->_add_info.start_idx);
+                mpz_init_set(idx, var_2->consts.value);
+                mpz_sub_ui(idx, idx, var_1->_add_info.start_idx);
 
                 const uint64_t idx_ui = mpz_get_ui(idx);
                 mpz_clear(idx);
@@ -430,26 +444,26 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                         mpz_init_set(assign_val.constant, arr_val->value);
                     } else {
                         assign_val.is_reg = true;
-                        assign_val.reg = load_sym_reg_from_const(expr->var_1[1].var, expr->var_2[1].var);
+                        assign_val.reg = load_sym_reg_from_const(var_1, var_2);
                     }
                 } else {
                     assign_val.is_reg = true;
-                    assign_val.reg = load_sym_reg_from_const(expr->var_1[1].var, expr->var_2[1].var);
+                    assign_val.reg = load_sym_reg_from_const(var_1, var_2);
                 }
             } else if (left_sym_2_const) {
-                assign_val.reg = load_sym_reg_from_const(expr->var_1[1].var, expr->var_2[1].var);
+                assign_val.reg = load_sym_reg_from_const(var_1, var_2);
             } else {
                 if (left_sym_1_const) {
-                    oper_flush_array_to_mem(expr->var_1[1].var);
+                    oper_flush_array_to_mem(var_1);
                 }
-                oper_store_array(expr->var_1[1].var->addr);
+                oper_store_array(var_1->addr);
                 reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_1);
                 var.r->addr = TEMP_ADDR_1;
 
-                addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM2_ADDR) ? expr->var_2[1].addr : expr->var_2[1].var->addr[0];
+                addr_t const var_idx_addr = (expr->addr_mask & LEFT_SYM2_ADDR) ? expr->var_2[1].addr : var_2->addr[0];
                 oper_set_stack_ptr_addr_arr(var_idx_addr,
-                                            expr->var_1[1].var->addr[0],
-                                            expr->var_1[1].var->_add_info.start_idx);
+                                            var_1->addr[0],
+                                            var_1->_add_info.start_idx);
 
                 reg_m_promote(r_set, TEMP_ADDR_1);
                 LOAD(var.r, &(r_set->stack_ptr));
@@ -457,12 +471,12 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                 assign_val.reg = var.r;
             }
         } else {
-            const bool left_sym_1_const = expr->var_1[1].var->flags & SYMBOL_IS_CONSTANT;
+            const bool left_sym_1_const = var_1->flags & SYMBOL_IS_CONSTANT;
 
             if (left_sym_1_const) {
                 assign_val.is_reg = false;
-                if (expr->var_1[1].var->flags & SYMBOL_IS_ARRAY) {
-                    array_value *arr_val = expr->var_1[1].var->consts.arr_value;
+                if (var_1->flags & SYMBOL_IS_ARRAY) {
+                    array_value *arr_val = var_1->consts.arr_value;
                     const uint64_t idx = expr->var_2[1].num;
                     arr_val = oper_arr_val_find(arr_val, idx);
 
@@ -471,17 +485,17 @@ val oper_get_assign_val_1(expression_t const * const expr) {
                             mpz_init_set(assign_val.constant, arr_val->value);
                         } else {
                             assign_val.is_reg = true;
-                            assign_val.reg = load_sym_reg_from_num(expr->var_1[1].var, idx);
+                            assign_val.reg = load_sym_reg_from_num(var_1, idx);
                         }
                     } else {
                         assign_val.is_reg = true;
-                        assign_val.reg = load_sym_reg_from_num(expr->var_1[1].var, idx);
+                        assign_val.reg = load_sym_reg_from_num(var_1, idx);
                     }
                 } else {
-                    mpz_init_set(assign_val.constant, expr->var_1[1].var->consts.value);
+                    mpz_init_set(assign_val.constant, var_1->consts.value);
                 }
             } else {
-                assign_val.reg = load_sym_reg_from_num(expr->var_1[1].var, expr->var_2[1].num);
+                assign_val.reg = load_sym_reg_from_num(var_1, expr->var_2[1].num);
             }
         }
     } else {
@@ -494,6 +508,7 @@ val oper_get_assign_val_1(expression_t const * const expr) {
 
 val oper_get_assign_val_2(expression_t const * const expr) {
     reg_set *r_set = get_reg_set();
+    symbol_table *s_table = get_symbol_table();
     val assign_val = {
         .reg = NULL,
         .is_reg = true
@@ -508,18 +523,24 @@ val oper_get_assign_val_2(expression_t const * const expr) {
 
         assign_val.reg = var.r;
     } else if (!(expr->mask & RIGHT_SYM1_NUM)) {
-        if ((expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) && !(expr->mask & RIGHT_SYM2_NUM)) {
+        symbol *var_1 = symbol_table_find_by_idx(s_table, expr->var_1[2].sym_idx);
+        if ((var_1->flags & SYMBOL_IS_ARRAY) && !(expr->mask & RIGHT_SYM2_NUM)) {
             const bool right_sym_2_addr = expr->addr_mask & RIGHT_SYM2_ADDR;
-            const bool right_sym_2_const = !right_sym_2_addr && (expr->var_2[2].var->flags & SYMBOL_IS_CONSTANT);
-            const bool right_sym_1_const = expr->var_1[2].var->flags & SYMBOL_IS_CONSTANT;
+
+            symbol *var_2 = NULL;
+            if (!right_sym_2_addr) {
+                var_2 = symbol_table_find_by_idx(s_table, expr->var_2[2].sym_idx);
+            }
+            const bool right_sym_2_const = !right_sym_2_addr && (var_2->flags & SYMBOL_IS_CONSTANT);
+            const bool right_sym_1_const = var_1->flags & SYMBOL_IS_CONSTANT;
 
             if (right_sym_2_const && right_sym_1_const) {
                 assign_val.is_reg = false;
-                array_value *arr_val = expr->var_1[2].var->consts.arr_value;
+                array_value *arr_val = var_1->consts.arr_value;
 
                 mpz_t idx;
-                mpz_init_set(idx, expr->var_2[2].var->consts.value);
-                mpz_sub_ui(idx, idx, expr->var_1[2].var->_add_info.start_idx);
+                mpz_init_set(idx, var_2->consts.value);
+                mpz_sub_ui(idx, idx, var_1->_add_info.start_idx);
 
                 const uint64_t idx_ui = mpz_get_ui(idx);
                 mpz_clear(idx);
@@ -530,26 +551,26 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                         mpz_init_set(assign_val.constant, arr_val->value);
                     } else {
                         assign_val.is_reg = true;
-                        assign_val.reg = load_sym_reg_from_const(expr->var_1[2].var, expr->var_2[2].var);
+                        assign_val.reg = load_sym_reg_from_const(var_1, var_2);
                     }
                 } else {
                     assign_val.is_reg = true;
-                    assign_val.reg = load_sym_reg_from_const(expr->var_1[2].var, expr->var_2[2].var);
+                    assign_val.reg = load_sym_reg_from_const(var_1, var_2);
                 }
             } else if (right_sym_2_const) {
-                assign_val.reg = load_sym_reg_from_const(expr->var_1[2].var, expr->var_2[2].var);
+                assign_val.reg = load_sym_reg_from_const(var_1, var_2);
             } else {
                 if (right_sym_1_const) {
-                    oper_flush_array_to_mem(expr->var_1[2].var);
+                    oper_flush_array_to_mem(var_1);
                 }
-                oper_store_array(expr->var_1[2].var->addr);
+                oper_store_array(var_1->addr);
                 reg_allocator var = oper_get_reg_for_variable(TEMP_ADDR_2);
                 var.r->addr = TEMP_ADDR_2;
 
-                addr_t const var_idx_addr = (expr->addr_mask & RIGHT_SYM2_ADDR) ? expr->var_2[2].addr : expr->var_2[2].var->addr[0];
+                addr_t const var_idx_addr = (expr->addr_mask & RIGHT_SYM2_ADDR) ? expr->var_2[2].addr : var_2->addr[0];
                 oper_set_stack_ptr_addr_arr(var_idx_addr,
-                                            expr->var_1[2].var->addr[0],
-                                            expr->var_1[2].var->_add_info.start_idx);
+                                            var_1->addr[0],
+                                            var_1->_add_info.start_idx);
 
                 reg_m_promote(r_set, TEMP_ADDR_2);
                 LOAD(var.r, &(r_set->stack_ptr));
@@ -557,12 +578,12 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                 assign_val.reg = var.r;
             }
         } else {
-            const bool right_sym_1_const = expr->var_1[2].var->flags & SYMBOL_IS_CONSTANT;
+            const bool right_sym_1_const = var_1->flags & SYMBOL_IS_CONSTANT;
 
             if (right_sym_1_const) {
                 assign_val.is_reg = false;
-                if (expr->var_1[2].var->flags & SYMBOL_IS_ARRAY) {
-                    array_value *arr_val = expr->var_1[2].var->consts.arr_value;
+                if (var_1->flags & SYMBOL_IS_ARRAY) {
+                    array_value *arr_val = var_1->consts.arr_value;
                     const uint64_t idx = expr->var_2[2].num;
                     arr_val = oper_arr_val_find(arr_val, idx);
 
@@ -571,17 +592,17 @@ val oper_get_assign_val_2(expression_t const * const expr) {
                             mpz_init_set(assign_val.constant, arr_val->value);
                         } else {
                             assign_val.is_reg = true;
-                            assign_val.reg = load_sym_reg_from_num(expr->var_1[2].var, idx);
+                            assign_val.reg = load_sym_reg_from_num(var_1, idx);
                         }
                     } else {
                         assign_val.is_reg = true;
-                        assign_val.reg = load_sym_reg_from_num(expr->var_1[2].var, idx);
+                        assign_val.reg = load_sym_reg_from_num(var_1, idx);
                     }
                 } else {
-                    mpz_init_set(assign_val.constant, expr->var_1[2].var->consts.value);
+                    mpz_init_set(assign_val.constant, var_1->consts.value);
                 }
             } else {
-                assign_val.reg = load_sym_reg_from_num(expr->var_1[2].var, expr->var_2[2].num);
+                assign_val.reg = load_sym_reg_from_num(var_1, expr->var_2[2].num);
             }
         }
     } else {
