@@ -126,8 +126,9 @@ void add_ENDFOR() {
                 ++ctr;
 
                 if (popped.flags & SYMBOL_IS_ITER) {
-                    if (popped._add_info.hide) {
-                        popped._add_info.hide->flags |= SYMBOL_NO_HIDDEN;
+                    if (popped.flags & SYMBOL_HAS_HIDE) {
+                        symbol *hide = symbol_table_find_by_idx(s_table, popped._add_info.hide_idx);
+                        hide->flags |= SYMBOL_NO_HIDDEN;
                     }
 
                     if (ctr != 2) {

@@ -38,6 +38,10 @@
 #define SYMBOL_MARK_STORE 0b00100000
 #endif
 
+#ifndef SYMBOL_HAS_HIDE
+#define SYMBOL_HAS_HIDE 0b01000000
+#endif
+
 typedef struct symbol symbol;
 
 typedef union {
