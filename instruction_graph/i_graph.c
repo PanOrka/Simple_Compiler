@@ -302,10 +302,13 @@ void i_graph_clear_if(bool cond, i_graph **i_current) {
 }
 
 static void i_graph_mark(i_graph *start_ptr, i_graph *end_ptr) {
+    symbol_table *s_table = get_symbol_table();
+
     while (start_ptr != end_ptr) {
         if (start_ptr->i_type == i_EXPR || start_ptr->i_type == i_READ) {
             expression_t *expr = start_ptr->payload;
-            expr->var_1[0].var->flags |= SYMBOL_MARK_STORE;
+            symbol *var_1 = symbol_table_find_by_idx(s_table, expr->var_1[0].sym_idx);
+            var_1->flags |= SYMBOL_MARK_STORE;
         }
 
         start_ptr = start_ptr->next;
