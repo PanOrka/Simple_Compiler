@@ -69,8 +69,6 @@ void eval_READ(i_graph **i_current) {
 
             reg_m_drop_addr(r_set, eff_addr_ui);
             stack_ptr_generate(eff_addr_ui);
-        } else if (assign_sym_1_const && assign_sym_2_addr) { // during loops impl
-
         } else {
             if (assign_sym_1_const) {
                 oper_flush_array_to_mem(var_1);
