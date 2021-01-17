@@ -5,6 +5,7 @@
 #include "generators/val_generator.h"
 #include "std_oper/std_oper.h"
 #include "instructions/asm_fprintf.h"
+#include "i_level.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -154,6 +155,8 @@ void eval_WRITE(i_graph **i_current) {
     reg_set *r_set = get_reg_set();
     symbol_table *s_table = get_symbol_table();
 
+    const bool i_level_empty = i_level_is_empty_eval();
+
     const bool left_sym_1_addr = expr->addr_mask & LEFT_SYM1_ADDR;
     if (left_sym_1_addr) {
         stack_ptr_generate(expr->var_1[1].addr);
@@ -191,7 +194,7 @@ void eval_WRITE(i_graph **i_current) {
                         reg *val_reg = val_generate_from_mpz(arr_val->value);
                         stack_ptr_generate(var_1->addr[0] + idx_ui);
                         STORE(val_reg, &(r_set->stack_ptr));
-                        arr_val->is_in_memory = true;
+                        arr_val->is_in_memory = i_level_empty;
                     } else {
                         write_store_set_from_const(var_1, var_2);
                     }
@@ -228,7 +231,7 @@ void eval_WRITE(i_graph **i_current) {
                                 reg *val_reg = val_generate_from_mpz(arr_val->value);
                                 stack_ptr_generate(var_1->addr[0] + idx);
                                 STORE(val_reg, &(r_set->stack_ptr));
-                                arr_val->is_in_memory = true;
+                                arr_val->is_in_memory = i_level_empty;
                             }
                         } else {
                             addr_t const eff_addr = var_1->addr[0] + idx;
@@ -249,7 +252,7 @@ void eval_WRITE(i_graph **i_current) {
                         reg *val_reg = val_generate_from_mpz(var_1->consts.value);
                         stack_ptr_generate(var_1->addr[0]);
                         STORE(val_reg, &(r_set->stack_ptr));
-                        var_1->symbol_in_memory = true;
+                        var_1->symbol_in_memory = i_level_empty;
                     }
                 }
             } else {
