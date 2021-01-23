@@ -4,7 +4,7 @@
 #include "generators/stack_generator.h"
 #include "generators/val_generator.h"
 #include "std_oper/std_oper.h"
-#include "instructions/asm_fprintf.h"
+#include "arithmetic/arithmetic.h"
 
 extern void add_to_list(void *payload, instruction_type i_type);
 
@@ -63,64 +63,70 @@ static void num_mod(mpz_t dest, mpz_t src_1, mpz_t src_2) {
 
 typedef struct {
     void (*func_num) (mpz_t dest, mpz_t src_1, mpz_t src_2);
-    reg * (*func_reg) (reg *x, reg *y);
+    reg * (*func_reg) (val x, val y);
 } arithmetic_func;
 
 static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_func func) {
-    reg_set *r_set = get_reg_set();
     val assign_val_1 = oper_get_assign_val_1(expr);
     val assign_val_2 = oper_get_assign_val_2(expr);
 
-    if (assign_val_1.is_reg && assign_val_2.is_reg) {
-        reg_m_promote(r_set, assign_val_1.reg->addr);
-        if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
-            stack_ptr_generate(assign_val_1.reg->addr);
-            STORE(assign_val_1.reg, &(r_set->stack_ptr));
-            assign_val_1.reg->flags &= ~REG_MODIFIED;
-        }
+    // if (assign_val_1.is_reg && assign_val_2.is_reg) {
+    //     reg_m_promote(r_set, assign_val_1.reg->addr);
+    //     if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
+    //         stack_ptr_generate(assign_val_1.reg->addr);
+    //         STORE(assign_val_1.reg, &(r_set->stack_ptr));
+    //         assign_val_1.reg->flags &= ~REG_MODIFIED;
+    //     }
 
-        reg *new_reg = func.func_reg(assign_val_1.reg, assign_val_2.reg);
-        if (new_reg) {
-            assign_val_1.reg = new_reg;
-            reg_m_promote(r_set, assign_val_1.reg->addr);
-        }
+    //     reg *new_reg = func.func_reg(assign_val_1.reg, assign_val_2.reg);
+    //     if (new_reg) {
+    //         assign_val_1.reg = new_reg;
+    //         reg_m_promote(r_set, assign_val_1.reg->addr);
+    //     }
 
-        oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
-    } else if (assign_val_1.is_reg) {
-        reg *val_reg = val_generate_from_mpz(assign_val_2.constant);
-        mpz_clear(assign_val_2.constant);
-        if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
-            stack_ptr_generate(assign_val_1.reg->addr);
-            STORE(assign_val_1.reg, &(r_set->stack_ptr));
-            assign_val_1.reg->flags &= ~REG_MODIFIED;
-        }
+    //     oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
+    // } else if (assign_val_1.is_reg) {
+    //     reg *val_reg = val_generate_from_mpz(assign_val_2.constant);
+    //     mpz_clear(assign_val_2.constant);
+    //     if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
+    //         stack_ptr_generate(assign_val_1.reg->addr);
+    //         STORE(assign_val_1.reg, &(r_set->stack_ptr));
+    //         assign_val_1.reg->flags &= ~REG_MODIFIED;
+    //     }
 
-        reg *new_reg = func.func_reg(assign_val_1.reg, val_reg);
-        if (new_reg) {
-            assign_val_1.reg = new_reg;
-            reg_m_promote(r_set, assign_val_1.reg->addr);
-        }
+    //     reg *new_reg = func.func_reg(assign_val_1.reg, val_reg);
+    //     if (new_reg) {
+    //         assign_val_1.reg = new_reg;
+    //         reg_m_promote(r_set, assign_val_1.reg->addr);
+    //     }
 
-        oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
-    } else if (assign_val_2.is_reg) {
-        reg *val_reg = val_generate_from_mpz(assign_val_1.constant);
-        mpz_clear(assign_val_1.constant);
-        val_reg->addr = TEMP_ADDR_1;
+    //     oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
+    // } else if (assign_val_2.is_reg) {
+    //     reg *val_reg = val_generate_from_mpz(assign_val_1.constant);
+    //     mpz_clear(assign_val_1.constant);
+    //     val_reg->addr = TEMP_ADDR_1;
 
-        reg *new_reg = func.func_reg(val_reg, assign_val_2.reg);
-        if (new_reg) {
-            assign_val_2.reg = new_reg;
-            reg_m_promote(r_set, assign_val_2.reg->addr);
-        } else {
-            assign_val_2.reg = val_reg;
-        }
+    //     reg *new_reg = func.func_reg(val_reg, assign_val_2.reg);
+    //     if (new_reg) {
+    //         assign_val_2.reg = new_reg;
+    //         reg_m_promote(r_set, assign_val_2.reg->addr);
+    //     } else {
+    //         assign_val_2.reg = val_reg;
+    //     }
 
-        oper_set_assign_val_0(expr, assign_val_2, ASSIGN_VAL_STASH);
-    } else {
+    //     oper_set_assign_val_0(expr, assign_val_2, ASSIGN_VAL_STASH);
+    // } else {
+        
+    // }
+
+    if (!(assign_val_1.is_reg || assign_val_2.is_reg)) { // both constants
         func.func_num(assign_val_1.constant, assign_val_1.constant, assign_val_2.constant);
         mpz_clear(assign_val_2.constant);
         oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_NO_FLAGS);
         mpz_clear(assign_val_1.constant);
+    } else {
+        reg *new_reg = func.func_reg(assign_val_1, assign_val_2);
+        oper_set_assign_val_0(expr, (val){ .is_reg = true, .reg = new_reg }, ASSIGN_VAL_STASH);
     }
 
     // FOR NOW it's glued up with TODO in std_oper get_assign functions
@@ -145,23 +151,23 @@ void eval_EXPR(i_graph **i_current) {
             break;
         case expr_ADD:
             eval_expr_ARITHMETIC(expr,
-                (arithmetic_func){ .func_num = &num_add, .func_reg = &ADD });
+                (arithmetic_func){ .func_num = &num_add, .func_reg = &arithm_ADD });
             break;
         case expr_SUB:
             eval_expr_ARITHMETIC(expr,
-                (arithmetic_func){ .func_num = &num_sub, .func_reg = &SUB });
+                (arithmetic_func){ .func_num = &num_sub, .func_reg = &arithm_SUB });
             break;
         case expr_MUL:
             eval_expr_ARITHMETIC(expr,
-                (arithmetic_func){ .func_num = &num_mul, .func_reg = &MUL });
+                (arithmetic_func){ .func_num = &num_mul, .func_reg = &arithm_MUL });
             break;
         case expr_DIV:
             eval_expr_ARITHMETIC(expr,
-                (arithmetic_func){ .func_num = &num_div, .func_reg = &DIV });
+                (arithmetic_func){ .func_num = &num_div, .func_reg = &arithm_DIV });
             break;
         case expr_MOD:
             eval_expr_ARITHMETIC(expr,
-                (arithmetic_func){ .func_num = &num_mod, .func_reg = &MOD });
+                (arithmetic_func){ .func_num = &num_mod, .func_reg = &arithm_MOD });
             break;
         default:
             fprintf(stderr, "[EXPR]: Wrong type of expression!\n");

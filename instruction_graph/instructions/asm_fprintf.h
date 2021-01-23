@@ -22,18 +22,6 @@ void STORE(reg *x, reg *y);
 
 reg * ADD(reg *x, reg *y);
 reg * SUB(reg *x, reg *y);
-/** 
- * x <= x * y
-*/
-reg * MUL(reg *x, reg *y);
-/** 
- * x <= x / y
-*/
-reg * DIV(reg *x, reg *y);
-/** 
- * x <= x % y
-*/
-reg * MOD(reg *x, reg *y);
 
 void RESET(reg *x);
 void INC(reg *x);

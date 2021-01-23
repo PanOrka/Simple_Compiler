@@ -142,4 +142,11 @@ val oper_get_assign_val_2(expression_t const * const expr);
 */
 void oper_regs_store_drop();
 
+/**
+ * 
+ * Store given register
+ * 
+*/
+void oper_store_reg(reg *r);
+
 #endif

@@ -626,3 +626,13 @@ void oper_regs_store_drop() {
         clear_reg->flags = REG_NO_FLAGS;
     }
 }
+
+void oper_store_reg(reg *r) {
+    reg_set *r_set = get_reg_set();
+
+    if (r->flags & REG_MODIFIED) {
+        stack_ptr_generate(r->addr);
+        STORE(r, &(r_set->stack_ptr));
+        r->flags &= ~REG_MODIFIED;
+    }
+}
