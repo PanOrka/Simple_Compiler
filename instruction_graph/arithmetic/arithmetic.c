@@ -363,6 +363,7 @@ val arithm_DIV(val x, val y, uint8_t *flags) {
     ADD(quotient, rem); // set quotient to x
 
     reg_m_promote(r_set, y.reg->addr);
+    *flags = ASSIGN_VAL_STASH;
     return (val) { .is_reg = true, .reg = quotient };
 }
 
@@ -455,5 +456,6 @@ val arithm_MOD(val x, val y, uint8_t *flags) {
     RESET(rem);
 
     reg_m_promote(r_set, y.reg->addr);
+    *flags = ASSIGN_VAL_STASH;
     return (val){ .is_reg = true, .reg = rem };
 }
