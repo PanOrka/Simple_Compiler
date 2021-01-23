@@ -7,26 +7,26 @@
 /**
  * return <= x + y
 */
-val arithm_ADD(val x, val y);
+val arithm_ADD(val x, val y, uint8_t *flags);
 
 /**
  * return <= x - y
 */
-val arithm_SUB(val x, val y);
+val arithm_SUB(val x, val y, uint8_t *flags);
 
 /** 
  * return <= x * y
 */
-val arithm_MUL(val x, val y);
+val arithm_MUL(val x, val y, uint8_t *flags);
 
 /** 
  * return <= x / y
 */
-val arithm_DIV(val x, val y);
+val arithm_DIV(val x, val y, uint8_t *flags);
 
 /** 
  * return <= x % y
 */
-val arithm_MOD(val x, val y);
+val arithm_MOD(val x, val y, uint8_t *flags);
 
 #endif

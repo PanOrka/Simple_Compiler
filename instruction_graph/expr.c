@@ -63,7 +63,7 @@ static void num_mod(mpz_t dest, mpz_t src_1, mpz_t src_2) {
 
 typedef struct {
     void (*func_num) (mpz_t dest, mpz_t src_1, mpz_t src_2);
-    val (*func_reg) (val x, val y);
+    val (*func_reg) (val x, val y, uint8_t *flags);
 } arithmetic_func;
 
 static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_func func) {
@@ -130,8 +130,14 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_NO_FLAGS);
         mpz_clear(assign_val_1.constant);
     } else {
-        val new_val = func.func_reg(assign_val_1, assign_val_2);
-        oper_set_assign_val_0(expr, new_val, ASSIGN_VAL_STASH);
+        uint8_t assign_val_flags = ASSIGN_VAL_INVALID_FLAG;
+        val new_val = func.func_reg(assign_val_1, assign_val_2, &assign_val_flags);
+        if (assign_val_flags == ASSIGN_VAL_INVALID_FLAG) {
+            fprintf(stderr, "[EXPR]: Invalid assign_val_flag!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        oper_set_assign_val_0(expr, new_val, assign_val_flags);
         if (!new_val.is_reg) {
             mpz_clear(new_val.constant);
         }

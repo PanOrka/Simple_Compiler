@@ -55,12 +55,12 @@ void oper_drop_array(const addr_t addr[2]);
  * ASSIGNS
  * 
 */
-#ifndef ASSIGN_VAL_NO_FLAGS
-#define ASSIGN_VAL_NO_FLAGS 0b00000000
+#ifndef ASSIGN_VAL_INVALID_FLAG
+#define ASSIGN_VAL_INVALID_FLAG 0b11111111
 #endif
 
-#ifndef ASSIGN_VAL_IS_NUM
-#define ASSIGN_VAL_IS_NUM 0b00000001
+#ifndef ASSIGN_VAL_NO_FLAGS
+#define ASSIGN_VAL_NO_FLAGS 0b00000000
 #endif
 
 #ifndef ASSIGN_VAL_STASH
