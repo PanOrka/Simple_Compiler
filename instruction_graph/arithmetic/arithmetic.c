@@ -4,53 +4,110 @@
 #include "../../parser_func/getters.h"
 #include "../generators/val_generator.h"
 
-static void arithm_add_with_const(reg *x, mpz_t y) {
+static void arithm_ADD_with_const(val *x, mpz_t y) {
     reg_set *r_set = get_reg_set();
 
-    oper_store_reg(x);
-    if (mpz_cmp_ui(y, 5) <= 0) {
-        const uint64_t y_const = mpz_get_ui(y);
-        for (uint64_t i=0; i<y_const; ++i) {
-            INC(x);
-        }
-    } else if (reg_m_get(r_set, VAL_GEN_ADDR, false).was_allocated || !(reg_m_get(r_set, VAL_GEN_ADDR, false).r->flags & REG_MODIFIED)) {
+    if (reg_m_get(r_set, VAL_GEN_ADDR, false).was_allocated || !(reg_m_get(r_set, VAL_GEN_ADDR, false).r->flags & REG_MODIFIED)) {
         reg *val_gen = val_generate_from_mpz(y);
-        ADD(x, val_gen);
-    } else if (mpz_cmp_ui(y, 20) <= 0) {
+        if (x->reg->addr == TEMP_ADDR_1 || x->reg->addr == TEMP_ADDR_2) {
+            ADD(x->reg, val_gen);
+        } else {
+            val_gen->addr = TEMP_ADDR_3;
+            ADD(val_gen, x->reg);
+            x->reg = val_gen;
+        }
+    } else if (!(x->reg->flags & REG_MODIFIED) && mpz_cmp_ui(y, 10) <= 0) {
         const uint64_t y_const = mpz_get_ui(y);
         for (uint64_t i=0; i<y_const; ++i) {
-            INC(x);
+            INC(x->reg);
         }
     } else {
         reg *val_gen = val_generate_from_mpz(y);
-        ADD(x, val_gen);
+        if (x->reg->addr == TEMP_ADDR_1 || x->reg->addr == TEMP_ADDR_2) {
+            ADD(x->reg, val_gen);
+        } else {
+            val_gen->addr = TEMP_ADDR_3;
+            ADD(val_gen, x->reg);
+            x->reg = val_gen;
+        }
     }
 
     mpz_clear(y);
 }
 
-reg * arithm_ADD(val *x, val *y) {
-    if (x->is_reg && y->is_reg) {
-        oper_store_reg(x->reg);
-        if (x->reg == y->reg) {
-            SHL(x->reg);
+val arithm_ADD(val x, val y) {
+    if (x.is_reg && y.is_reg) {
+        oper_store_reg(x.reg);
+        if (x.reg == y.reg) {
+            SHL(x.reg);
         } else {
-            ADD(x->reg, y->reg);
+            ADD(x.reg, y.reg);
         }
 
-        return x->reg;
-    } else if (x->is_reg) {
-        arithm_add_with_const(x->reg, y->constant);
+        return x;
+    } else if (x.is_reg) {
+        arithm_ADD_with_const(&x, y.constant);
 
-        return x->reg;
+        return x;
     } else {
-        arithm_add_with_const(y->reg, x->constant);
+        arithm_ADD_with_const(&y, x.constant);
 
-        return y->reg;
+        return y;
     }
 }
 
-reg * arithm_MUL(val *x, val *y) {
+static void arithm_SUB_with_const(val *x, mpz_t y) {
+    reg_set *r_set = get_reg_set();
+
+    if (!(x->reg->flags & REG_MODIFIED) &&
+            (reg_m_get(r_set, VAL_GEN_ADDR, false).was_allocated || !(reg_m_get(r_set, VAL_GEN_ADDR, false).r->flags & REG_MODIFIED))) {
+
+        reg *val_gen = val_generate_from_mpz(y);
+        SUB(x->reg, val_gen);
+    } else if (!(x->reg->flags & REG_MODIFIED) && mpz_cmp_ui(y, 10) <= 0) {
+        const uint64_t y_const = mpz_get_ui(y);
+        for (uint64_t i=0; i<y_const; ++i) {
+            DEC(x->reg);
+        }
+    } else {
+        reg *val_gen = val_generate_from_mpz(y);
+        oper_store_reg(x->reg);
+        SUB(x->reg, val_gen);
+    }
+
+    mpz_clear(y);
+}
+
+val arithm_SUB(val x, val y) {
+    if (x.is_reg && y.is_reg) {
+        if (x.reg == y.reg) {
+            val new_val;
+            new_val.is_reg = false;
+            mpz_init_set_si(new_val.constant, 0);
+
+            return new_val;
+        }
+
+        oper_store_reg(x.reg);
+        SUB(x.reg, y.reg);
+
+        return x;
+    } else if (x.is_reg) {
+        arithm_SUB_with_const(&x, y.constant);
+
+        return x;
+    } else {
+        reg *val_gen = val_generate_from_mpz(x.constant);
+        mpz_clear(x.constant);
+
+        val_gen->addr = TEMP_ADDR_3;
+        SUB(val_gen, y.reg);
+
+        return (val){ .is_reg = true, .reg = val_gen };
+    }
+}
+
+val arithm_MUL(val x, val y) {
     reg_set *r_set = get_reg_set();
     reg *acc = oper_get_reg_for_variable(TEMP_ADDR_3).r;
     acc->addr = TEMP_ADDR_3;
@@ -88,7 +145,7 @@ reg * arithm_MUL(val *x, val *y) {
     return acc;
 }
 
-reg * arithm_DIV(val *x, val *y) {
+val arithm_DIV(val x, val y) {
     reg_set *r_set = get_reg_set();
 
     // SAME AS IN MUL, totally not needed store if y is 0
@@ -187,7 +244,7 @@ reg * arithm_DIV(val *x, val *y) {
     return quotient;
 }
 
-reg * arithm_MOD(val *x, val *y) {
+val arithm_MOD(val x, val y) {
     reg_set *r_set = get_reg_set();
 
     // SAME AS IN MUL, totally not needed store if y is 0

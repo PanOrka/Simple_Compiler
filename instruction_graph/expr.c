@@ -63,12 +63,17 @@ static void num_mod(mpz_t dest, mpz_t src_1, mpz_t src_2) {
 
 typedef struct {
     void (*func_num) (mpz_t dest, mpz_t src_1, mpz_t src_2);
-    reg * (*func_reg) (val x, val y);
+    val (*func_reg) (val x, val y);
 } arithmetic_func;
 
 static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_func func) {
+    reg_set *r_set = get_reg_set();
     val assign_val_1 = oper_get_assign_val_1(expr);
     val assign_val_2 = oper_get_assign_val_2(expr);
+
+    if (assign_val_1.is_reg) {
+        reg_m_promote(r_set, assign_val_1.reg->addr);
+    }
 
     // if (assign_val_1.is_reg && assign_val_2.is_reg) {
     //     reg_m_promote(r_set, assign_val_1.reg->addr);
@@ -125,8 +130,11 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_NO_FLAGS);
         mpz_clear(assign_val_1.constant);
     } else {
-        reg *new_reg = func.func_reg(assign_val_1, assign_val_2);
-        oper_set_assign_val_0(expr, (val){ .is_reg = true, .reg = new_reg }, ASSIGN_VAL_STASH);
+        val new_val = func.func_reg(assign_val_1, assign_val_2);
+        oper_set_assign_val_0(expr, new_val, ASSIGN_VAL_STASH);
+        if (!new_val.is_reg) {
+            mpz_clear(new_val.constant);
+        }
     }
 
     // FOR NOW it's glued up with TODO in std_oper get_assign functions
