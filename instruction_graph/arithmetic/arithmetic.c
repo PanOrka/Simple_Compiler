@@ -99,8 +99,8 @@ val arithm_SUB(val x, val y) {
     } else {
         reg *val_gen = val_generate_from_mpz(x.constant);
         mpz_clear(x.constant);
-
         val_gen->addr = TEMP_ADDR_3;
+
         SUB(val_gen, y.reg);
 
         return (val){ .is_reg = true, .reg = val_gen };
