@@ -142,10 +142,45 @@ val arithm_SUB(val x, val y, uint8_t *flags) {
     }
 }
 
-val arithm_MUL(val x, val y, uint8_t *flags) {
-    reg_set *r_set = get_reg_set();
+static void arithm_MUL_with_const(val *x, mpz_t y, uint8_t *flags) {
+    const bool reg_no_store = !(x->reg->flags & REG_MODIFIED);
 
+    if (mpz_cmp_ui(y, 0) == 0) {
+        val new_val;
+        new_val.is_reg = false;
+        mpz_init_set_si(new_val.constant, 0);
+
+        *flags = ASSIGN_VAL_NO_FLAGS;
+        *x = new_val;
+    } else if (mpz_cmp_ui(y, 1) == 0) {
+        if (reg_no_store) {
+            *flags = ASSIGN_VAL_STASH;
+        } else {
+            *flags = ASSIGN_VAL_NO_FLAGS;
+        }
+    } else {
+        mp_bitcnt_t bits = mpz_popcount(y);
+        if (bits == 1) {
+            oper_store_reg(x->reg);
+            while (mpz_cmp_ui(y, 0) != 0) {
+                mpz_div_ui(y, y, 2);
+                SHL(x->reg);
+            }
+            *flags = ASSIGN_VAL_STASH;
+        } else {
+            reg *val_gen = val_generate_from_mpz(y);
+            val_gen->addr = TEMP_ADDR_4;
+            *x = arithm_MUL(*x, (val) { .is_reg = true, .reg = val_gen }, flags);
+        }
+    }
+
+    mpz_clear(y);
+}
+
+val arithm_MUL(val x, val y, uint8_t *flags) {
     if (x.is_reg && y.is_reg) {
+        reg_set *r_set = get_reg_set();
+
         oper_store_reg(x.reg);
 
         reg *acc = oper_get_reg_for_variable(TEMP_ADDR_3).r;
@@ -223,7 +258,11 @@ val arithm_MUL(val x, val y, uint8_t *flags) {
         *flags = ASSIGN_VAL_STASH;
         return (val){ .is_reg = true, .reg = acc };
     } else if (x.is_reg) {
-        mp_bitcnt_t mpz_popcount
+        arithm_MUL_with_const(&x, y.constant, flags);
+        return x;
+    } else {
+        arithm_MUL_with_const(&y, x.constant, flags);
+        return y;
     }
 }
 
