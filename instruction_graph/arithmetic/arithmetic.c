@@ -274,16 +274,16 @@ val arithm_DIV(val x, val y, uint8_t *flags) {
     reg *size = oper_get_reg_for_variable(TEMP_ADDR_3).r;
     size->addr = TEMP_ADDR_3;
 
-    reg *rem = x;
-    x = oper_get_reg_for_variable(TEMP_ADDR_4).r;
-    x->addr = TEMP_ADDR_4;
+    reg *rem = x.reg;
+    x.reg = oper_get_reg_for_variable(TEMP_ADDR_4).r;
+    x.reg->addr = TEMP_ADDR_4;
 
-    if (rem == y) {
-        addr_t y_address = y->addr;
+    if (rem == y.reg) {
+        addr_t y_address = y.reg->addr;
         rem->addr = TEMP_ADDR_1;
-        y = oper_get_reg_for_variable(y_address).r;
-        y->addr = y_address;
-        oper_reg_swap(y, rem);
+        y.reg = oper_get_reg_for_variable(y_address).r;
+        y.reg->addr = y_address;
+        oper_reg_swap(y.reg, rem);
     } else {
         rem->addr = TEMP_ADDR_1; // to make sure it won't be stored + It's available for this register
     }
@@ -299,70 +299,70 @@ val arithm_DIV(val x, val y, uint8_t *flags) {
      * Integer division algorithm
      * pls kill me
     */
-    JZERO_i_idx(y, 51); // If y is 0 then we end with 0
-    DEC(y);
-    JZERO_i_idx(y, 47); // If y is 1 then we end with x
-    INC(y);
+    JZERO_i_idx(y.reg, 51); // If y is 0 then we end with 0
+    DEC(y.reg);
+    JZERO_i_idx(y.reg, 47); // If y is 1 then we end with x
+    INC(y.reg);
 
     // calculating size of reg_x value
     // and inversing x
     JZERO_i_idx(rem, 47); // end of proc x = 0 so END
-    RESET(x);
+    RESET(x.reg);
     RESET(size);
     JODD_i_idx(rem, 4);
         SHR(rem);
         INC(size);
     JUMP_i_idx(-3); // If here then rem > 0, so waiting for odd
-        INC(x);
+        INC(x.reg);
         SHR(rem);
         INC(size);
 
     JZERO_i_idx(rem, 10); // end of proc, go further
-        SHL(x);
+        SHL(x.reg);
     JODD_i_idx(rem, 4);
         SHR(rem);
         INC(size);
     JUMP_i_idx(-5); // check if rem is 0 and SHL x ^
-        INC(x);
+        INC(x.reg);
         SHR(rem);
         INC(size);
     JUMP_i_idx(-9);
 
     // now div algo rem is definetly 0 here
-    JODD_i_idx(x, 4);
+    JODD_i_idx(x.reg, 4);
         DEC(size);
-        SHR(x);
+        SHR(x.reg);
     JUMP_i_idx(-3); // x > 0 so to first ODD we have remainder = 0 divisor != 0
         INC(rem);
         DEC(size);
-        SHR(x);
+        SHR(x.reg);
         // here we test 1 >= divisor so if divisor == 1 we should test it b4
         // return x if y == 1
     JZERO_i_idx(size, 20); // end of proc
         SHL(rem);
         SHL(quotient);
-    JODD_i_idx(x, 11);
+    JODD_i_idx(x.reg, 11);
         DEC(size);
-        SHR(x);
+        SHR(x.reg);
 
         RESET(temp); // R >= D
         ADD(temp, rem);
         INC(temp);
-        SUB(temp, y);
+        SUB(temp, y.reg);
         JZERO_i_idx(temp, -10); // jump to Jzero (end of proc)
-            SUB(rem, y);
+            SUB(rem, y.reg);
             INC(quotient);
     JUMP_i_idx(-13); // jump to Jzero (end of proc)
         INC(rem);
         DEC(size);
-        SHR(x);
+        SHR(x.reg);
     JUMP_i_idx(-11); // jump to if R >= D
 
-    INC(y); // reset y value when y = 1
+    INC(y.reg); // reset y value when y = 1
     ADD(quotient, rem); // set quotient to x
 
-    reg_m_promote(r_set, y->addr);
-    return quotient;
+    reg_m_promote(r_set, y.reg->addr);
+    return (val) { .is_reg = true, .reg = quotient };
 }
 
 val arithm_MOD(val x, val y, uint8_t *flags) {
@@ -373,18 +373,18 @@ val arithm_MOD(val x, val y, uint8_t *flags) {
     reg *size = oper_get_reg_for_variable(TEMP_ADDR_3).r;
     size->addr = TEMP_ADDR_3;
 
-    reg *rem = x;
-    if (rem == y) {
-        addr_t y_address = y->addr;
+    reg *rem = x.reg;
+    if (rem == y.reg) {
+        addr_t y_address = y.reg->addr;
         rem->addr = TEMP_ADDR_1;
-        y = oper_get_reg_for_variable(y_address).r;
-        y->addr = y_address;
-        oper_reg_swap(y, rem);
+        y.reg = oper_get_reg_for_variable(y_address).r;
+        y.reg->addr = y_address;
+        oper_reg_swap(y.reg, rem);
     } else {
         rem->addr = TEMP_ADDR_1; // to make sure it won't be stored + It's available for this register
     }
-    x = oper_get_reg_for_variable(TEMP_ADDR_4).r;
-    x->addr = TEMP_ADDR_4;
+    x.reg = oper_get_reg_for_variable(TEMP_ADDR_4).r;
+    x.reg->addr = TEMP_ADDR_4;
 
     reg *temp = &(r_set->stack_ptr);
     stack_ptr_clear();
@@ -393,66 +393,66 @@ val arithm_MOD(val x, val y, uint8_t *flags) {
      * Integer division algorithm
      * pls kill me
     */
-    JZERO_i_idx(y, 48); // If y is 0 then we end with 0
-    DEC(y);
-    JZERO_i_idx(y, 45); // If y is 1 then we end with 0
-    INC(y);
+    JZERO_i_idx(y.reg, 48); // If y is 0 then we end with 0
+    DEC(y.reg);
+    JZERO_i_idx(y.reg, 45); // If y is 1 then we end with 0
+    INC(y.reg);
 
     // calculating size of reg_x value
     // and inversing x
     JZERO_i_idx(rem, 45); // end of proc x = 0 so END
-    RESET(x);
+    RESET(x.reg);
     RESET(size);
     JODD_i_idx(rem, 4);
         SHR(rem);
         INC(size);
     JUMP_i_idx(-3); // If here then rem > 0, so waiting for odd
-        INC(x);
+        INC(x.reg);
         SHR(rem);
         INC(size);
 
     JZERO_i_idx(rem, 10); // end of proc, go further
-        SHL(x);
+        SHL(x.reg);
     JODD_i_idx(rem, 4);
         SHR(rem);
         INC(size);
     JUMP_i_idx(-5); // check if rem is 0 and SHL x ^
-        INC(x);
+        INC(x.reg);
         SHR(rem);
         INC(size);
     JUMP_i_idx(-9);
 
     // now div algo rem is definetly 0 here
-    JODD_i_idx(x, 4);
+    JODD_i_idx(x.reg, 4);
         DEC(size);
-        SHR(x);
+        SHR(x.reg);
     JUMP_i_idx(-3); // x > 0 so to first ODD we have remainder = 0 divisor != 0
         INC(rem);
         DEC(size);
-        SHR(x);
+        SHR(x.reg);
         // here we test 1 >= divisor so if divisor == 1 we should test it b4
         // return x if y == 1
     JZERO_i_idx(size, 18); // end of proc
         SHL(rem);
-    JODD_i_idx(x, 10);
+    JODD_i_idx(x.reg, 10);
         DEC(size);
-        SHR(x);
+        SHR(x.reg);
 
         RESET(temp); // R >= D
         ADD(temp, rem);
         INC(temp);
-        SUB(temp, y);
+        SUB(temp, y.reg);
         JZERO_i_idx(temp, -9); // jump to Jzero (end of proc)
-            SUB(rem, y);
+            SUB(rem, y.reg);
     JUMP_i_idx(-11); // jump to Jzero (end of proc)
         INC(rem);
         DEC(size);
-        SHR(x);
+        SHR(x.reg);
     JUMP_i_idx(-10); // jump to if R >= D
 
-    INC(y); // reset y value when y = 1
+    INC(y.reg); // reset y value when y = 1
     RESET(rem);
 
-    reg_m_promote(r_set, y->addr);
-    return rem;
+    reg_m_promote(r_set, y.reg->addr);
+    return (val){ .is_reg = true, .reg = rem };
 }
