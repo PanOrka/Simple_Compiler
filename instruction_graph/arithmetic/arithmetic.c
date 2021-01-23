@@ -3,6 +3,7 @@
 #include "../instructions/asm_fprintf.h"
 #include "../../parser_func/getters.h"
 #include "../generators/val_generator.h"
+#include "../generators/stack_generator.h"
 
 static void arithm_ADD_with_const(val *x, mpz_t y, uint8_t *flags) {
     reg_set *r_set = get_reg_set();
