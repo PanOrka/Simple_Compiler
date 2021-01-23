@@ -137,6 +137,10 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
             exit(EXIT_FAILURE);
         }
 
+        if (new_val.is_reg) {
+            reg_m_promote(r_set, new_val.reg->addr);
+        }
+
         oper_set_assign_val_0(expr, new_val, assign_val_flags);
         if (!new_val.is_reg) {
             mpz_clear(new_val.constant);

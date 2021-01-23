@@ -143,40 +143,87 @@ val arithm_SUB(val x, val y, uint8_t *flags) {
 
 val arithm_MUL(val x, val y, uint8_t *flags) {
     reg_set *r_set = get_reg_set();
-    reg *acc = oper_get_reg_for_variable(TEMP_ADDR_3).r;
-    acc->addr = TEMP_ADDR_3;
-    RESET(acc);
 
-    // additionally:
-    // We can optimize by changing order of multiplication
-    if (x == y) {
-        y = oper_get_reg_for_variable(TEMP_ADDR_2).r;
-        y->addr = TEMP_ADDR_2;
-        oper_reg_swap(y, x);
-    } else if (y->flags & REG_MODIFIED) {
-        // JZERO_i_idx(y, ) <= totally not needed store if value under y is 0
-        // JZERO_i_idx(x, ) <= totally not needed store if value under x is 0
-        // ^ for reg_x it can even be outside this
-        stack_ptr_generate(y->addr);
-        STORE(y, &(r_set->stack_ptr));
-        y->flags &= ~REG_MODIFIED;
+    if (x.is_reg && y.is_reg) {
+        oper_store_reg(x.reg);
+
+        reg *acc = oper_get_reg_for_variable(TEMP_ADDR_3).r;
+        acc->addr = TEMP_ADDR_3;
+
+        if (x.reg == y.reg) {
+            y.reg = oper_get_reg_for_variable(TEMP_ADDR_2).r;
+            y.reg->addr = TEMP_ADDR_2;
+            oper_reg_swap(y.reg, x.reg);
+
+            RESET(acc);
+            JZERO_i_idx(x.reg, 10);
+            JZERO_i_idx(y.reg, 9);
+            JODD_i_idx(y.reg, 4);
+                SHL(x.reg);
+                SHR(y.reg);
+            JUMP_i_idx(-4);
+                ADD(acc, x.reg);
+                SHL(x.reg);
+                SHR(y.reg);
+            JUMP_i_idx(-8);
+        } else {
+            oper_store_reg(y.reg);
+
+            JZERO_i_idx(x.reg, 39); // JUMP to RESET(acc) <- we return 0
+            JZERO_i_idx(y.reg, 38); // JUMP to RESET(acc) <- we return 0
+                oper_reg_swap(acc, x.reg); // 2 instructions
+                SUB(acc, y.reg);
+                // HERE x > y
+                JZERO_i_idx(acc, 18); // JUMP TO IS_ODD
+                    RESET(acc);
+                    // unwind once
+                    JODD_i_idx(y.reg, 4);
+                        SHL(x.reg);
+                        SHR(y.reg);
+                    JUMP_i_idx(4);
+                        ADD(acc, x.reg);
+                        SHL(x.reg);
+                        SHR(y.reg);
+                    //////////////
+                    JZERO_i_idx(y.reg, 26); // JUMP outside
+                    JODD_i_idx(y.reg, 4);
+                        SHL(x.reg);
+                        SHR(y.reg);
+                    JUMP_i_idx(-4);
+                        ADD(acc, x.reg);
+                        SHL(x.reg);
+                        SHR(y.reg);
+                    JUMP_i_idx(-8);
+                // HERE x <= y
+                    // unwind once
+                    JODD_i_idx(x.reg, 4); // IS_ODD
+                        SHL(y.reg);
+                        SHR(x.reg);
+                    JUMP_i_idx(4);
+                        ADD(acc, y.reg);
+                        SHL(y.reg);
+                        SHR(x.reg);
+                    //////////////
+                    JZERO_i_idx(x.reg, 10); // JUMP outside
+                    JODD_i_idx(x.reg, 4);
+                        SHL(y.reg);
+                        SHR(x.reg);
+                    JUMP_i_idx(-4);
+                        ADD(acc, y.reg);
+                        SHL(y.reg);
+                        SHR(x.reg);
+                    JUMP_i_idx(-8);
+            RESET(acc);
+        }
+
+        reg_m_drop_addr(r_set, x.reg->addr);
+        reg_m_drop_addr(r_set, y.reg->addr);
+
+        *flags = ASSIGN_VAL_STASH;
+        return (val){ .is_reg = true, .reg = acc };
+    } else if (x.is_reg) {
+    
     }
-
-    JZERO_i_idx(x, 10);
-    JZERO_i_idx(y, 9);
-    JODD_i_idx(y, 4);
-        SHL(x);
-        SHR(y);
-    JUMP_i_idx(-4);
-        ADD(acc, x);
-        SHL(x);
-        SHR(y);
-    JUMP_i_idx(-8);
-
-    reg_m_drop_addr(r_set, x->addr);
-    reg_m_drop_addr(r_set, y->addr);
-
-    return acc;
 }
 
 val arithm_DIV(val x, val y, uint8_t *flags) {
