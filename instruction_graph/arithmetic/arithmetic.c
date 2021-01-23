@@ -83,7 +83,8 @@ static void arithm_SUB_with_const(val *x, mpz_t y, uint8_t *flags) {
         reg *val_gen = val_generate_from_mpz(y);
         SUB(x->reg, val_gen);
         *flags = ASSIGN_VAL_STASH;
-    } else if (reg_no_store && mpz_cmp_ui(y, 10) <= 0) {
+    } else if (mpz_cmp_ui(y, 10) <= 0) {
+        oper_store_reg(x->reg);
         const uint64_t y_const = mpz_get_ui(y);
         for (uint64_t i=0; i<y_const; ++i) {
             DEC(x->reg);
@@ -222,7 +223,7 @@ val arithm_MUL(val x, val y, uint8_t *flags) {
         *flags = ASSIGN_VAL_STASH;
         return (val){ .is_reg = true, .reg = acc };
     } else if (x.is_reg) {
-    
+        mp_bitcnt_t mpz_popcount
     }
 }
 
