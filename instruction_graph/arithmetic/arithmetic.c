@@ -574,7 +574,7 @@ val arithm_MOD(val x, val y, uint8_t *flags) {
                     INC(y.reg);
                     RESET(new_reg);
             JUMP_i_idx(2);
-                RESET(new_reg); // ODD
+                RESET(new_reg);
             // ENDIF
             return (val){ .is_reg = true, .reg = new_reg };
         } else {
