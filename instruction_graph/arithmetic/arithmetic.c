@@ -163,7 +163,7 @@ static void arithm_MUL_with_const(val *x, mpz_t y, uint8_t *flags) {
         mp_bitcnt_t bits = mpz_popcount(y);
         if (bits == 1) {
             oper_store_reg(x->reg);
-            while (mpz_cmp_ui(y, 0) != 0) {
+            while (mpz_cmp_ui(y, 1) != 0) {
                 mpz_div_ui(y, y, 2);
                 SHL(x->reg);
             }
