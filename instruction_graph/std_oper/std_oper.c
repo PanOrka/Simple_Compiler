@@ -41,10 +41,10 @@ static void add_sub_val_gen(reg *stack_ptr, addr_t arr_addr, reg *var_idx, uint6
     stack_ptr_clear();
 }
 
-static void dec_val_gen(reg *stack_ptr, addr_t arr_addr, reg *var_idx, num_t eff_addr) {
+static void dec_val_gen(reg *stack_ptr, addr_t arr_addr, reg *var_idx, uint64_t start_idx) {
     stack_ptr_generate(arr_addr);
     ADD(stack_ptr, var_idx);
-    for (num_t i=eff_addr; i<1; ++i) {
+    for (uint64_t i=0; i<start_idx; ++i) {
         DEC(stack_ptr);
     }
     stack_ptr_clear();
@@ -63,14 +63,14 @@ void oper_set_stack_ptr_addr_arr(addr_t var_idx_addr, addr_t arr_addr, uint64_t 
         stack_ptr_generate(eff_addr);
         ADD(&(r_set->stack_ptr), var_idx.r);
         stack_ptr_clear();
-    } else if (eff_addr >= -5) {
-        dec_val_gen(&(r_set->stack_ptr), arr_addr, var_idx.r, eff_addr);
+    } else if (start_idx <= 5) {
+        dec_val_gen(&(r_set->stack_ptr), arr_addr, var_idx.r, start_idx);
     } else if (reg_m_get(r_set, VAL_GEN_ADDR, false).was_allocated) {
         add_sub_val_gen(&(r_set->stack_ptr), arr_addr, var_idx.r, start_idx);
     } else if (!(reg_m_get(r_set, VAL_GEN_ADDR, false).r->flags & REG_MODIFIED)) {
         add_sub_val_gen(&(r_set->stack_ptr), arr_addr, var_idx.r, start_idx);
-    } else if (eff_addr >= -20) {
-        dec_val_gen(&(r_set->stack_ptr), arr_addr, var_idx.r, eff_addr);
+    } else if (start_idx <= 20) {
+        dec_val_gen(&(r_set->stack_ptr), arr_addr, var_idx.r, start_idx);
     } else {
         add_sub_val_gen(&(r_set->stack_ptr), arr_addr, var_idx.r, start_idx);
     }
