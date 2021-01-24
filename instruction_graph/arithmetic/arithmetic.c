@@ -557,6 +557,20 @@ val arithm_MOD(val x, val y, uint8_t *flags) {
 
             *flags = ASSIGN_VAL_NO_FLAGS;
             return new_val;
+        } else if (mpz_cmp_ui(x.constant, 1) == 0) {
+            mpz_clear(x.constant);
+
+            reg *new_reg = oper_get_reg_for_variable(TEMP_ADDR_3).r;
+            new_reg->addr = TEMP_ADDR_3;
+            *flags = ASSIGN_VAL_STASH;
+
+            JZERO_i_idx(y.reg, 3);
+                RESET(new_reg);
+                INC(new_reg);
+            JUMP_i_idx(2);
+                RESET(new_reg); // ODD
+            // ENDIF
+            return (val){ .is_reg = true, .reg = new_reg };
         } else {
             reg *val_gen = val_generate_from_mpz(x.constant);
             mpz_clear(x.constant);
