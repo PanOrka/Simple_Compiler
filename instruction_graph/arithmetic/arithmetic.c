@@ -564,9 +564,15 @@ val arithm_MOD(val x, val y, uint8_t *flags) {
             new_reg->addr = TEMP_ADDR_3;
             *flags = ASSIGN_VAL_STASH;
 
-            JZERO_i_idx(y.reg, 3);
-                RESET(new_reg);
-                INC(new_reg);
+            JZERO_i_idx(y.reg, 10);
+                DEC(y.reg);
+                JZERO_i_idx(y.reg, 5);
+                    INC(y.reg);
+                    RESET(new_reg);
+                    INC(new_reg);
+                JUMP_i_idx(5);
+                    INC(y.reg);
+                    RESET(new_reg);
             JUMP_i_idx(2);
                 RESET(new_reg); // ODD
             // ENDIF
