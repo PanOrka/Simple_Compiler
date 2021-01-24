@@ -267,104 +267,161 @@ val arithm_MUL(val x, val y, uint8_t *flags) {
     }
 }
 
-val arithm_DIV(val x, val y, uint8_t *flags) {
-    reg_set *r_set = get_reg_set();
+static void arithm_DIV_with_const(val *x, mpz_t y, uint8_t *flags) {
+    const bool reg_no_store = !(x->reg->flags & REG_MODIFIED);
 
-    // SAME AS IN MUL, totally not needed store if y is 0
-    // Or if x is 0, for future optimizations
-    reg *size = oper_get_reg_for_variable(TEMP_ADDR_3).r;
-    size->addr = TEMP_ADDR_3;
+    if (mpz_cmp_ui(y, 0) == 0) {
+        val new_val;
+        new_val.is_reg = false;
+        mpz_init_set_si(new_val.constant, 0);
 
-    reg *rem = x.reg;
-    x.reg = oper_get_reg_for_variable(TEMP_ADDR_4).r;
-    x.reg->addr = TEMP_ADDR_4;
-
-    if (rem == y.reg) {
-        addr_t y_address = y.reg->addr;
-        rem->addr = TEMP_ADDR_1;
-        y.reg = oper_get_reg_for_variable(y_address).r;
-        y.reg->addr = y_address;
-        oper_reg_swap(y.reg, rem);
+        *flags = ASSIGN_VAL_NO_FLAGS;
+        *x = new_val;
+    } else if (mpz_cmp_ui(y, 1) == 0) {
+        if (reg_no_store) {
+            *flags = ASSIGN_VAL_STASH;
+        } else {
+            *flags = ASSIGN_VAL_NO_FLAGS;
+        }
     } else {
-        rem->addr = TEMP_ADDR_1; // to make sure it won't be stored + It's available for this register
+        mp_bitcnt_t bits = mpz_popcount(y);
+        if (bits == 1) {
+            oper_store_reg(x->reg);
+            while (mpz_cmp_ui(y, 1) != 0) {
+                mpz_div_ui(y, y, 2);
+                SHR(x->reg);
+            }
+            *flags = ASSIGN_VAL_STASH;
+        } else {
+            reg *val_gen = val_generate_from_mpz(y);
+            val_gen->addr = TEMP_ADDR_2;
+            *x = arithm_DIV(*x, (val) { .is_reg = true, .reg = val_gen }, flags);
+        }
     }
 
-    reg *quotient = oper_get_reg_for_variable(TEMP_ADDR_5).r;
-    quotient->addr = TEMP_ADDR_5;
-    RESET(quotient);
+    mpz_clear(y);
+}
 
-    reg *temp = &(r_set->stack_ptr);
-    stack_ptr_clear();
+val arithm_DIV(val x, val y, uint8_t *flags) {
+    if (x.is_reg && y.is_reg) {
+        if (x.reg == y.reg) {
+            val new_val;
+            new_val.is_reg = false;
+            mpz_init_set_si(new_val.constant, 1);
 
-    /**
-     * Integer division algorithm
-     * pls kill me
-    */
-    JZERO_i_idx(y.reg, 51); // If y is 0 then we end with 0
-    DEC(y.reg);
-    JZERO_i_idx(y.reg, 47); // If y is 1 then we end with x
-    INC(y.reg);
+            *flags = ASSIGN_VAL_NO_FLAGS;
+            return new_val;
+        }
+        oper_store_reg(x.reg);
 
-    // calculating size of reg_x value
-    // and inversing x
-    JZERO_i_idx(rem, 47); // end of proc x = 0 so END
-    RESET(x.reg);
-    RESET(size);
-    JODD_i_idx(rem, 4);
-        SHR(rem);
-        INC(size);
-    JUMP_i_idx(-3); // If here then rem > 0, so waiting for odd
-        INC(x.reg);
-        SHR(rem);
-        INC(size);
+        reg_set *r_set = get_reg_set();
 
-    JZERO_i_idx(rem, 10); // end of proc, go further
-        SHL(x.reg);
-    JODD_i_idx(rem, 4);
-        SHR(rem);
-        INC(size);
-    JUMP_i_idx(-5); // check if rem is 0 and SHL x ^
-        INC(x.reg);
-        SHR(rem);
-        INC(size);
-    JUMP_i_idx(-9);
+        reg *size = oper_get_reg_for_variable(TEMP_ADDR_3).r;
+        size->addr = TEMP_ADDR_3;
 
-    // now div algo rem is definetly 0 here
-    JODD_i_idx(x.reg, 4);
-        DEC(size);
-        SHR(x.reg);
-    JUMP_i_idx(-3); // x > 0 so to first ODD we have remainder = 0 divisor != 0
-        INC(rem);
-        DEC(size);
-        SHR(x.reg);
-        // here we test 1 >= divisor so if divisor == 1 we should test it b4
-        // return x if y == 1
-    JZERO_i_idx(size, 20); // end of proc
-        SHL(rem);
-        SHL(quotient);
-    JODD_i_idx(x.reg, 11);
-        DEC(size);
-        SHR(x.reg);
+        reg *rem = x.reg;
+        x.reg = oper_get_reg_for_variable(TEMP_ADDR_4).r;
+        x.reg->addr = TEMP_ADDR_4;
 
-        RESET(temp); // R >= D
-        ADD(temp, rem);
-        INC(temp);
-        SUB(temp, y.reg);
-        JZERO_i_idx(temp, -10); // jump to Jzero (end of proc)
-            SUB(rem, y.reg);
-            INC(quotient);
-    JUMP_i_idx(-13); // jump to Jzero (end of proc)
-        INC(rem);
-        DEC(size);
-        SHR(x.reg);
-    JUMP_i_idx(-11); // jump to if R >= D
+        rem->addr = TEMP_ADDR_1; // to make sure it won't be stored + It's available for this register
 
-    INC(y.reg); // reset y value when y = 1
-    ADD(quotient, rem); // set quotient to x
+        reg *quotient = oper_get_reg_for_variable(TEMP_ADDR_5).r;
+        quotient->addr = TEMP_ADDR_5;
+        RESET(quotient);
 
-    reg_m_promote(r_set, y.reg->addr);
-    *flags = ASSIGN_VAL_STASH;
-    return (val) { .is_reg = true, .reg = quotient };
+        reg *temp = &(r_set->stack_ptr);
+        stack_ptr_clear();
+
+        /**
+         * Integer division algorithm
+         * pls kill me
+        */
+        JZERO_i_idx(y.reg, 51); // If y is 0 then we end with 0
+        DEC(y.reg);
+        JZERO_i_idx(y.reg, 47); // If y is 1 then we end with x
+        INC(y.reg);
+
+        // calculating size of reg_x value
+        // and inversing x
+        JZERO_i_idx(rem, 47); // end of proc x = 0 so END
+        RESET(x.reg);
+        RESET(size);
+        JODD_i_idx(rem, 4);
+            SHR(rem);
+            INC(size);
+        JUMP_i_idx(-3); // If here then rem > 0, so waiting for odd
+            INC(x.reg);
+            SHR(rem);
+            INC(size);
+
+        JZERO_i_idx(rem, 10); // end of proc, go further
+            SHL(x.reg);
+        JODD_i_idx(rem, 4);
+            SHR(rem);
+            INC(size);
+        JUMP_i_idx(-5); // check if rem is 0 and SHL x ^
+            INC(x.reg);
+            SHR(rem);
+            INC(size);
+        JUMP_i_idx(-9);
+
+        // now div algo rem is definetly 0 here
+        JODD_i_idx(x.reg, 4);
+            DEC(size);
+            SHR(x.reg);
+        JUMP_i_idx(-3); // x > 0 so to first ODD we have remainder = 0 divisor != 0
+            INC(rem);
+            DEC(size);
+            SHR(x.reg);
+            // here we test 1 >= divisor so if divisor == 1 we should test it b4
+            // return x if y == 1
+        JZERO_i_idx(size, 20); // end of proc
+            SHL(rem);
+            SHL(quotient);
+        JODD_i_idx(x.reg, 11);
+            DEC(size);
+            SHR(x.reg);
+
+            RESET(temp); // R >= D
+            ADD(temp, rem);
+            INC(temp);
+            SUB(temp, y.reg);
+            JZERO_i_idx(temp, -10); // jump to Jzero (end of proc)
+                SUB(rem, y.reg);
+                INC(quotient);
+        JUMP_i_idx(-13); // jump to Jzero (end of proc)
+            INC(rem);
+            DEC(size);
+            SHR(x.reg);
+        JUMP_i_idx(-11); // jump to if R >= D
+
+        INC(y.reg); // reset y value when y = 1
+        ADD(quotient, rem); // set quotient to x
+
+        reg_m_promote(r_set, y.reg->addr);
+        *flags = ASSIGN_VAL_STASH;
+        return (val) { .is_reg = true, .reg = quotient };
+    } else if (x.is_reg) {
+        arithm_DIV_with_const(&x, y.constant, flags);
+        return x;
+    } else {
+        if (mpz_cmp_ui(x.constant, 0) == 0) {
+            mpz_clear(x.constant);
+
+            val new_val;
+            new_val.is_reg = false;
+            mpz_init_set_si(new_val.constant, 0);
+
+            *flags = ASSIGN_VAL_NO_FLAGS;
+            return new_val;
+        } else {
+            reg *val_gen = val_generate_from_mpz(x.constant);
+            mpz_clear(x.constant);
+            val_gen->addr = TEMP_ADDR_2;
+
+            return arithm_DIV(x, (val){ .is_reg = true, .reg = val_gen }, flags);
+        }
+    }
 }
 
 val arithm_MOD(val x, val y, uint8_t *flags) {
