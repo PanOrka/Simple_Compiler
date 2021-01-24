@@ -548,11 +548,12 @@ val arithm_MOD(val x, val y, uint8_t *flags) {
         arithm_MOD_with_const(&x, y.constant, flags);
         return x;
     } else {
-        if (mpz_cmp_ui(x.constant, 0) == 0 || mpz_cmp_ui(x.constant, 1) == 0) {
+        if (mpz_cmp_ui(x.constant, 0) == 0) {
+            mpz_clear(x.constant);
+
             val new_val;
             new_val.is_reg = false;
-            mpz_init_set(new_val.constant, x.constant);
-            mpz_clear(x.constant);
+            mpz_init_set_si(new_val.constant, 0);
 
             *flags = ASSIGN_VAL_NO_FLAGS;
             return new_val;
