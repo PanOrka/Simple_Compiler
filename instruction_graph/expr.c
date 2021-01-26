@@ -61,10 +61,15 @@ static void num_mod(mpz_t dest, mpz_t src_1, mpz_t src_2) {
     }
 }
 
+
 typedef struct {
     void (*func_num) (mpz_t dest, mpz_t src_1, mpz_t src_2);
-    val (*func_reg) (val x, val y, uint8_t *flags);
+    val (*func_reg) (val x, val y, uint8_t *flags, bool mask_assign[2]);
 } arithmetic_func;
+
+
+static void expr_get_var_mask(expression_t const * const expr, bool mask_assign[2]);
+
 
 static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_func func) {
     reg_set *r_set = get_reg_set();
@@ -81,8 +86,10 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_NO_FLAGS);
         mpz_clear(assign_val_1.constant);
     } else {
+        bool mask_assign[2];
+        expr_get_var_mask(expr, mask_assign);
         uint8_t assign_val_flags = ASSIGN_VAL_INVALID_FLAG;
-        val new_val = func.func_reg(assign_val_1, assign_val_2, &assign_val_flags);
+        val new_val = func.func_reg(assign_val_1, assign_val_2, &assign_val_flags, mask_assign);
         if (assign_val_flags == ASSIGN_VAL_INVALID_FLAG) {
             fprintf(stderr, "[EXPR]: Invalid assign_val_flag!\n");
             exit(EXIT_FAILURE);
@@ -141,5 +148,91 @@ void eval_EXPR(i_graph **i_current) {
         default:
             fprintf(stderr, "[EXPR]: Wrong type of expression!\n");
             exit(EXIT_FAILURE);
+    }
+}
+
+
+static void expr_get_var_mask(expression_t const * const expr, bool mask_assign[2]) {
+    symbol_table *s_table = get_symbol_table();
+
+    const idx_t assign_idx = expr->var_1[0].sym_idx;
+    symbol *assign_sym = symbol_table_find_by_idx(s_table, assign_idx);
+    const bool assign_sym_1_is_array = assign_sym->flags & SYMBOL_IS_ARRAY;
+    const bool assign_sym_2_num = expr->mask & ASSIGN_SYM2_NUM;
+    const bool assign_sym_2_addr = expr->addr_mask & ASSIGN_SYM2_ADDR;
+
+
+    const bool left_sym_1_addr = expr->addr_mask & LEFT_SYM1_ADDR;
+    const bool left_sym_1_num = expr->mask & LEFT_SYM1_NUM;
+    const bool left_sym_2_num = expr->mask & LEFT_SYM2_NUM;
+    const bool left_sym_2_addr = expr->addr_mask & LEFT_SYM2_ADDR;
+    if (left_sym_1_addr) {
+        mask_assign[0] = false;
+    } else if (!left_sym_1_num) {
+        const idx_t left_idx = expr->var_1[1].sym_idx;
+        if (left_idx == assign_idx) {
+            if (assign_sym_1_is_array) {
+                if (assign_sym_2_num) {
+                    if (left_sym_2_num) {
+                        mask_assign[0] = (expr->var_2[0].num == expr->var_2[1].num);
+                    } else {
+                        mask_assign[0] = false;
+                    }
+                } else if (assign_sym_2_addr) {
+                    if (left_sym_2_addr) {
+                        mask_assign[0] = (expr->var_2[0].addr == expr->var_2[1].addr);
+                    } else {
+                        mask_assign[0] = false;
+                    }
+                } else if (!left_sym_2_num && !left_sym_2_addr) {
+                    mask_assign[0] = (expr->var_2[0].sym_idx == expr->var_2[1].sym_idx);
+                } else {
+                    mask_assign[0] = false;
+                }
+            } else {
+                mask_assign[0] = true;
+            }
+        } else {
+            mask_assign[0] = false;
+        }
+    } else {
+        mask_assign[0] = false;
+    }
+
+    const bool right_sym_1_addr = expr->addr_mask & RIGHT_SYM1_ADDR;
+    const bool right_sym_1_num = expr->mask & RIGHT_SYM1_NUM;
+    const bool right_sym_2_num = expr->mask & RIGHT_SYM2_NUM;
+    const bool right_sym_2_addr = expr->addr_mask & RIGHT_SYM2_ADDR;
+    if (right_sym_1_addr) {
+        mask_assign[1] = false;
+    } else if (!right_sym_1_num) {
+        const idx_t right_idx = expr->var_1[2].sym_idx;
+        if (right_idx == assign_idx) {
+            if (assign_sym_1_is_array) {
+                if (assign_sym_2_num) {
+                    if (right_sym_2_num) {
+                        mask_assign[1] = (expr->var_2[0].num == expr->var_2[2].num);
+                    } else {
+                        mask_assign[1] = false;
+                    }
+                } else if (assign_sym_2_addr) {
+                    if (right_sym_2_addr) {
+                        mask_assign[1] = (expr->var_2[0].addr == expr->var_2[2].addr);
+                    } else {
+                        mask_assign[1] = false;
+                    }
+                } else if (!right_sym_2_num && !right_sym_2_addr) {
+                    mask_assign[1] = (expr->var_2[0].sym_idx == expr->var_2[2].sym_idx);
+                } else {
+                    mask_assign[1] = false;
+                }
+            } else {
+                mask_assign[1] = true;
+            }
+        } else {
+            mask_assign[1] = false;
+        }
+    } else {
+        mask_assign[1] = false;
     }
 }

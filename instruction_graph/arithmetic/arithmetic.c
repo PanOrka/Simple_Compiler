@@ -46,9 +46,12 @@ static void arithm_ADD_with_const(val *x, mpz_t y, uint8_t *flags) {
     mpz_clear(y);
 }
 
-val arithm_ADD(val x, val y, uint8_t *flags) {
+val arithm_ADD(val x, val y, uint8_t *flags, bool mask_assign[2]) {
     if (x.is_reg && y.is_reg) {
-        oper_store_reg(x.reg);
+        if (!mask_assign[0]) {
+            oper_store_reg(x.reg);
+        }
+
         if (x.reg == y.reg) {
             SHL(x.reg);
         } else {
@@ -101,7 +104,7 @@ static void arithm_SUB_with_const(val *x, mpz_t y, uint8_t *flags) {
     mpz_clear(y);
 }
 
-val arithm_SUB(val x, val y, uint8_t *flags) {
+val arithm_SUB(val x, val y, uint8_t *flags, bool mask_assign[2]) {
     if (x.is_reg && y.is_reg) {
         if (x.reg == y.reg) {
             val new_val;
@@ -178,7 +181,7 @@ static void arithm_MUL_with_const(val *x, mpz_t y, uint8_t *flags) {
     mpz_clear(y);
 }
 
-val arithm_MUL(val x, val y, uint8_t *flags) {
+val arithm_MUL(val x, val y, uint8_t *flags, bool mask_assign[2]) {
     if (x.is_reg && y.is_reg) {
         reg_set *r_set = get_reg_set();
 
@@ -301,7 +304,7 @@ static void arithm_DIV_with_const(val *x, mpz_t y, uint8_t *flags) {
     mpz_clear(y);
 }
 
-val arithm_DIV(val x, val y, uint8_t *flags) {
+val arithm_DIV(val x, val y, uint8_t *flags, bool mask_assign[2]) {
     if (x.is_reg && y.is_reg) {
         if (x.reg == y.reg) {
             val new_val;
@@ -451,7 +454,7 @@ static void arithm_MOD_with_const(val *x, mpz_t y, uint8_t *flags) {
     mpz_clear(y);
 }
 
-val arithm_MOD(val x, val y, uint8_t *flags) {
+val arithm_MOD(val x, val y, uint8_t *flags, bool mask_assign[2]) {
     if (x.is_reg && y.is_reg) {
         if (x.reg == y.reg) {
             val new_val;
