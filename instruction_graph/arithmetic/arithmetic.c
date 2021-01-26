@@ -5,11 +5,23 @@
 #include "../generators/val_generator.h"
 #include "../generators/stack_generator.h"
 
-static void arithm_ADD_with_const(val *x, mpz_t y, uint8_t *flags) {
+static void arithm_ADD_with_const(val *x, mpz_t y, uint8_t *flags, bool assign_flag) {
     reg_set *r_set = get_reg_set();
     const bool reg_no_store = !(x->reg->flags & REG_MODIFIED);
 
-    if (mpz_cmp_ui(y, 0) == 0) {
+    if (assign_flag) {
+        if (mpz_cmp_ui(y, 10) <= 0) {
+            const uint64_t y_const = mpz_get_ui(y);
+            for (uint64_t i=0; i<y_const; ++i) {
+                INC(x->reg);
+            }
+            *flags = ASSIGN_VAL_STASH;
+        } else {
+            reg *val_gen = val_generate_from_mpz(y);
+            ADD(x->reg, val_gen);
+            *flags = ASSIGN_VAL_STASH;
+        }
+    } else if (mpz_cmp_ui(y, 0) == 0) {
         if (reg_no_store) {
             *flags = ASSIGN_VAL_STASH;
         } else {
@@ -48,34 +60,70 @@ static void arithm_ADD_with_const(val *x, mpz_t y, uint8_t *flags) {
 
 val arithm_ADD(val x, val y, uint8_t *flags, bool mask_assign[2]) {
     if (x.is_reg && y.is_reg) {
-        if (!mask_assign[0]) {
-            oper_store_reg(x.reg);
-        }
-
         if (x.reg == y.reg) {
+            if (!mask_assign[0]) {
+                oper_store_reg(x.reg);
+            }
             SHL(x.reg);
-        } else {
-            ADD(x.reg, y.reg);
-        }
 
-        *flags = ASSIGN_VAL_STASH;
-        return x;
+            *flags = ASSIGN_VAL_STASH;
+            return x;
+        } else {
+            if (mask_assign[0]) {
+                ADD(x.reg, y.reg);
+
+                *flags = ASSIGN_VAL_STASH;
+                return x;
+            } else if (mask_assign[1]) {
+                ADD(y.reg, x.reg);
+
+                *flags = ASSIGN_VAL_STASH;
+                return y;
+            } else {
+                const bool reg_no_store = !(x.reg->flags & REG_MODIFIED);
+                *flags = ASSIGN_VAL_STASH;
+
+                if (reg_no_store) {
+                    oper_store_reg(x.reg);
+                    ADD(x.reg, y.reg);
+
+                    return x;
+                } else {
+                    oper_store_reg(y.reg);
+                    ADD(y.reg, x.reg);
+
+                    return y;
+                }
+            }
+        }
     } else if (x.is_reg) {
-        arithm_ADD_with_const(&x, y.constant, flags);
+        arithm_ADD_with_const(&x, y.constant, flags, mask_assign[0]);
 
         return x;
     } else {
-        arithm_ADD_with_const(&y, x.constant, flags);
+        arithm_ADD_with_const(&y, x.constant, flags, mask_assign[1]);
 
         return y;
     }
 }
 
-static void arithm_SUB_with_const(val *x, mpz_t y, uint8_t *flags) {
+static void arithm_SUB_with_const(val *x, mpz_t y, uint8_t *flags, bool assign_flag) {
     reg_set *r_set = get_reg_set();
     const bool reg_no_store = !(x->reg->flags & REG_MODIFIED);
 
-    if (mpz_cmp_ui(y, 0) == 0) {
+    if (assign_flag) {
+        if (mpz_cmp_ui(y, 10) <= 0) {
+            const uint64_t y_const = mpz_get_ui(y);
+            for (uint64_t i=0; i<y_const; ++i) {
+                DEC(x->reg);
+            }
+            *flags = ASSIGN_VAL_STASH;
+        } else {
+            reg *val_gen = val_generate_from_mpz(y);
+            SUB(x->reg, val_gen);
+            *flags = ASSIGN_VAL_STASH;
+        }
+    } else if (mpz_cmp_ui(y, 0) == 0) {
         if (reg_no_store) {
             *flags = ASSIGN_VAL_STASH;
         } else {
@@ -115,13 +163,15 @@ val arithm_SUB(val x, val y, uint8_t *flags, bool mask_assign[2]) {
             return new_val;
         }
 
-        oper_store_reg(x.reg);
+        if (!mask_assign[0]) {
+            oper_store_reg(x.reg);
+        }
         SUB(x.reg, y.reg);
 
         *flags = ASSIGN_VAL_STASH;
         return x;
     } else if (x.is_reg) {
-        arithm_SUB_with_const(&x, y.constant, flags);
+        arithm_SUB_with_const(&x, y.constant, flags, mask_assign[0]);
 
         return x;
     } else {
@@ -146,7 +196,7 @@ val arithm_SUB(val x, val y, uint8_t *flags, bool mask_assign[2]) {
     }
 }
 
-static void arithm_MUL_with_const(val *x, mpz_t y, uint8_t *flags) {
+static void arithm_MUL_with_const(val *x, mpz_t y, uint8_t *flags, bool assign_flag) {
     const bool reg_no_store = !(x->reg->flags & REG_MODIFIED);
 
     if (mpz_cmp_ui(y, 0) == 0) {
@@ -157,7 +207,7 @@ static void arithm_MUL_with_const(val *x, mpz_t y, uint8_t *flags) {
         *flags = ASSIGN_VAL_NO_FLAGS;
         *x = new_val;
     } else if (mpz_cmp_ui(y, 1) == 0) {
-        if (reg_no_store) {
+        if (reg_no_store || assign_flag) {
             *flags = ASSIGN_VAL_STASH;
         } else {
             *flags = ASSIGN_VAL_NO_FLAGS;
@@ -165,7 +215,9 @@ static void arithm_MUL_with_const(val *x, mpz_t y, uint8_t *flags) {
     } else {
         mp_bitcnt_t bits = mpz_popcount(y);
         if (bits == 1) {
-            oper_store_reg(x->reg);
+            if (!assign_flag) {
+                oper_store_reg(x->reg);
+            }
             while (mpz_cmp_ui(y, 1) != 0) {
                 mpz_div_ui(y, y, 2);
                 SHL(x->reg);
@@ -174,7 +226,9 @@ static void arithm_MUL_with_const(val *x, mpz_t y, uint8_t *flags) {
         } else {
             reg *val_gen = val_generate_from_mpz(y);
             val_gen->addr = TEMP_ADDR_4;
-            *x = arithm_MUL(*x, (val) { .is_reg = true, .reg = val_gen }, flags);
+
+            bool mask_assign[2] = { assign_flag, false };
+            *x = arithm_MUL(*x, (val) { .is_reg = true, .reg = val_gen }, flags, mask_assign);
         }
     }
 
@@ -185,7 +239,9 @@ val arithm_MUL(val x, val y, uint8_t *flags, bool mask_assign[2]) {
     if (x.is_reg && y.is_reg) {
         reg_set *r_set = get_reg_set();
 
-        oper_store_reg(x.reg);
+        if (!mask_assign[0]) {
+            oper_store_reg(x.reg);
+        }
 
         reg *acc = oper_get_reg_for_variable(TEMP_ADDR_3).r;
         acc->addr = TEMP_ADDR_3;
@@ -207,7 +263,9 @@ val arithm_MUL(val x, val y, uint8_t *flags, bool mask_assign[2]) {
                 SHR(y.reg);
             JUMP_i_idx(-8);
         } else {
-            oper_store_reg(y.reg);
+            if (!mask_assign[1]) {
+                oper_store_reg(y.reg);
+            }
 
             JZERO_i_idx(x.reg, 39); // JUMP to RESET(acc) <- we return 0
             JZERO_i_idx(y.reg, 38); // JUMP to RESET(acc) <- we return 0
@@ -262,15 +320,15 @@ val arithm_MUL(val x, val y, uint8_t *flags, bool mask_assign[2]) {
         *flags = ASSIGN_VAL_STASH;
         return (val){ .is_reg = true, .reg = acc };
     } else if (x.is_reg) {
-        arithm_MUL_with_const(&x, y.constant, flags);
+        arithm_MUL_with_const(&x, y.constant, flags, mask_assign[0]);
         return x;
     } else {
-        arithm_MUL_with_const(&y, x.constant, flags);
+        arithm_MUL_with_const(&y, x.constant, flags, mask_assign[1]);
         return y;
     }
 }
 
-static void arithm_DIV_with_const(val *x, mpz_t y, uint8_t *flags) {
+static void arithm_DIV_with_const(val *x, mpz_t y, uint8_t *flags, bool assign_flag) {
     const bool reg_no_store = !(x->reg->flags & REG_MODIFIED);
 
     if (mpz_cmp_ui(y, 0) == 0) {
@@ -281,7 +339,7 @@ static void arithm_DIV_with_const(val *x, mpz_t y, uint8_t *flags) {
         *flags = ASSIGN_VAL_NO_FLAGS;
         *x = new_val;
     } else if (mpz_cmp_ui(y, 1) == 0) {
-        if (reg_no_store) {
+        if (reg_no_store || assign_flag) {
             *flags = ASSIGN_VAL_STASH;
         } else {
             *flags = ASSIGN_VAL_NO_FLAGS;
@@ -289,7 +347,9 @@ static void arithm_DIV_with_const(val *x, mpz_t y, uint8_t *flags) {
     } else {
         mp_bitcnt_t bits = mpz_popcount(y);
         if (bits == 1) {
-            oper_store_reg(x->reg);
+            if (!assign_flag) {
+                oper_store_reg(x->reg);
+            }
             while (mpz_cmp_ui(y, 1) != 0) {
                 mpz_div_ui(y, y, 2);
                 SHR(x->reg);
@@ -297,7 +357,9 @@ static void arithm_DIV_with_const(val *x, mpz_t y, uint8_t *flags) {
             *flags = ASSIGN_VAL_STASH;
         } else {
             reg *val_gen = val_generate_from_mpz(y);
-            *x = arithm_DIV(*x, (val) { .is_reg = true, .reg = val_gen }, flags);
+
+            bool mask_assign[2] = { assign_flag, false };
+            *x = arithm_DIV(*x, (val) { .is_reg = true, .reg = val_gen }, flags, mask_assign);
         }
     }
 
@@ -314,7 +376,9 @@ val arithm_DIV(val x, val y, uint8_t *flags, bool mask_assign[2]) {
             *flags = ASSIGN_VAL_NO_FLAGS;
             return new_val;
         }
-        oper_store_reg(x.reg);
+        if (!mask_assign[0]) {
+            oper_store_reg(x.reg);
+        }
 
         reg_set *r_set = get_reg_set();
 
@@ -404,7 +468,7 @@ val arithm_DIV(val x, val y, uint8_t *flags, bool mask_assign[2]) {
         *flags = ASSIGN_VAL_STASH;
         return (val) { .is_reg = true, .reg = quotient };
     } else if (x.is_reg) {
-        arithm_DIV_with_const(&x, y.constant, flags);
+        arithm_DIV_with_const(&x, y.constant, flags, mask_assign[0]);
         return x;
     } else {
         if (mpz_cmp_ui(x.constant, 0) == 0) {
@@ -421,12 +485,13 @@ val arithm_DIV(val x, val y, uint8_t *flags, bool mask_assign[2]) {
             mpz_clear(x.constant);
             val_gen->addr = TEMP_ADDR_2;
 
-            return arithm_DIV((val){ .is_reg = true, .reg = val_gen }, y, flags);
+            bool mask_assign_temp[2] = { false, mask_assign[1] };
+            return arithm_DIV((val){ .is_reg = true, .reg = val_gen }, y, flags, mask_assign_temp);
         }
     }
 }
 
-static void arithm_MOD_with_const(val *x, mpz_t y, uint8_t *flags) {
+static void arithm_MOD_with_const(val *x, mpz_t y, uint8_t *flags, bool assign_flag) {
     if (mpz_cmp_ui(y, 0) == 0 || mpz_cmp_ui(y, 1) == 0) {
         val new_val;
         new_val.is_reg = false;
@@ -435,20 +500,33 @@ static void arithm_MOD_with_const(val *x, mpz_t y, uint8_t *flags) {
         *flags = ASSIGN_VAL_NO_FLAGS;
         *x = new_val;
     } else if (mpz_cmp_ui(y, 2) == 0) {
-        reg *new_reg = oper_get_reg_for_variable(TEMP_ADDR_3).r;
-        new_reg->addr = TEMP_ADDR_3;
-        *flags = ASSIGN_VAL_STASH;
+        if (assign_flag) {
+            *flags = ASSIGN_VAL_STASH;
 
-        JODD_i_idx(x->reg, 3);
-            RESET(new_reg);
-        JUMP_i_idx(3);
-            RESET(new_reg); // ODD
-            INC(new_reg);
-        // ENDIF
-        x->reg = new_reg;
+            JODD_i_idx(x->reg, 3);
+                RESET(x->reg);
+            JUMP_i_idx(3);
+                RESET(x->reg); // ODD
+                INC(x->reg);
+            // ENDIF
+        } else {
+            reg *new_reg = oper_get_reg_for_variable(TEMP_ADDR_3).r;
+            new_reg->addr = TEMP_ADDR_3;
+            *flags = ASSIGN_VAL_STASH;
+
+            JODD_i_idx(x->reg, 3);
+                RESET(new_reg);
+            JUMP_i_idx(3);
+                RESET(new_reg); // ODD
+                INC(new_reg);
+            // ENDIF
+            x->reg = new_reg;
+        }
     } else {
         reg *val_gen = val_generate_from_mpz(y);
-        *x = arithm_MOD(*x, (val) { .is_reg = true, .reg = val_gen }, flags);
+
+        bool mask_assign_temp[2] = { assign_flag, false };
+        *x = arithm_MOD(*x, (val) { .is_reg = true, .reg = val_gen }, flags, mask_assign_temp);
     }
 
     mpz_clear(y);
@@ -464,7 +542,9 @@ val arithm_MOD(val x, val y, uint8_t *flags, bool mask_assign[2]) {
             *flags = ASSIGN_VAL_NO_FLAGS;
             return new_val;
         }
-        oper_store_reg(x.reg);
+        if (!mask_assign[0]) {
+            oper_store_reg(x.reg);
+        }
 
         reg_set *r_set = get_reg_set();
 
@@ -548,7 +628,7 @@ val arithm_MOD(val x, val y, uint8_t *flags, bool mask_assign[2]) {
         *flags = ASSIGN_VAL_STASH;
         return (val){ .is_reg = true, .reg = rem };
     } else if (x.is_reg) {
-        arithm_MOD_with_const(&x, y.constant, flags);
+        arithm_MOD_with_const(&x, y.constant, flags, mask_assign[0]);
         return x;
     } else {
         if (mpz_cmp_ui(x.constant, 0) == 0) {
@@ -585,7 +665,8 @@ val arithm_MOD(val x, val y, uint8_t *flags, bool mask_assign[2]) {
             mpz_clear(x.constant);
             val_gen->addr = TEMP_ADDR_2;
 
-            return arithm_MOD((val){ .is_reg = true, .reg = val_gen }, y, flags);
+            bool mask_assign_temp[2] = { false, mask_assign[1] };
+            return arithm_MOD((val){ .is_reg = true, .reg = val_gen }, y, flags, mask_assign_temp);
         }
     }
 }
