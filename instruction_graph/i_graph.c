@@ -334,11 +334,13 @@ static void i_graph_store_marked() {
                 oper_arr_set_non_constant(sym);
             } else if (sym_const) {
                 sym->flags &= ~SYMBOL_IS_CONSTANT;
-                reg *val_reg = val_generate_from_mpz(sym->consts.value);
-                mpz_set_si(sym->consts.value, 0);
-                stack_ptr_generate(sym->addr[0]);
-                STORE(val_reg, &(r_set->stack_ptr));
-                sym->symbol_in_memory = true;
+                if (!sym->symbol_in_memory) {
+                    reg *val_reg = val_generate_from_mpz(sym->consts.value);
+                    mpz_set_si(sym->consts.value, 0);
+                    stack_ptr_generate(sym->addr[0]);
+                    STORE(val_reg, &(r_set->stack_ptr));
+                    sym->symbol_in_memory = true;
+                }
             }
         }
     }
