@@ -19,10 +19,23 @@ void add_EXPR(expression_t *expr) {
     add_to_list(expr, i_EXPR);
 }
 
+
+static void expr_get_var_mask(expression_t const * const expr, bool check_second, bool mask_assign[2]);
+
+
 static void eval_expr_VALUE(expression_t const * const expr) {
     reg_set *r_set = get_reg_set();
+
+    bool mask_assign[2];
+    expr_get_var_mask(expr, false, mask_assign);
+
     val assign_val = oper_get_assign_val_1(expr);
-    oper_set_assign_val_0(expr, assign_val, ASSIGN_VAL_NO_FLAGS);
+    if (mask_assign[0] || (assign_val.is_reg && (assign_val.reg->addr == TEMP_ADDR_1))) {
+        oper_set_assign_val_0(expr, assign_val, ASSIGN_VAL_STASH);
+    } else {
+        oper_set_assign_val_0(expr, assign_val, ASSIGN_VAL_NO_FLAGS);
+    }
+
     if (!assign_val.is_reg) {
         mpz_clear(assign_val.constant);
     }
@@ -68,9 +81,6 @@ typedef struct {
 } arithmetic_func;
 
 
-static void expr_get_var_mask(expression_t const * const expr, bool mask_assign[2]);
-
-
 static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_func func) {
     reg_set *r_set = get_reg_set();
     val assign_val_1 = oper_get_assign_val_1(expr);
@@ -87,7 +97,7 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         mpz_clear(assign_val_1.constant);
     } else {
         bool mask_assign[2];
-        expr_get_var_mask(expr, mask_assign);
+        expr_get_var_mask(expr, true, mask_assign);
         uint8_t assign_val_flags = ASSIGN_VAL_INVALID_FLAG;
         val new_val = func.func_reg(assign_val_1, assign_val_2, &assign_val_flags, mask_assign);
         if (assign_val_flags == ASSIGN_VAL_INVALID_FLAG) {
@@ -152,7 +162,7 @@ void eval_EXPR(i_graph **i_current) {
 }
 
 
-static void expr_get_var_mask(expression_t const * const expr, bool mask_assign[2]) {
+static void expr_get_var_mask(expression_t const * const expr, bool check_second, bool mask_assign[2]) {
     symbol_table *s_table = get_symbol_table();
 
     const idx_t assign_idx = expr->var_1[0].sym_idx;
@@ -197,6 +207,10 @@ static void expr_get_var_mask(expression_t const * const expr, bool mask_assign[
         }
     } else {
         mask_assign[0] = false;
+    }
+
+    if (!check_second) {
+        return ;
     }
 
     const bool right_sym_1_addr = expr->addr_mask & RIGHT_SYM1_ADDR;
