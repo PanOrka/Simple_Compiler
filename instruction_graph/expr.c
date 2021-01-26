@@ -75,55 +75,6 @@ static void eval_expr_ARITHMETIC(expression_t const * const expr, arithmetic_fun
         reg_m_promote(r_set, assign_val_1.reg->addr);
     }
 
-    // if (assign_val_1.is_reg && assign_val_2.is_reg) {
-    //     reg_m_promote(r_set, assign_val_1.reg->addr);
-    //     if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
-    //         stack_ptr_generate(assign_val_1.reg->addr);
-    //         STORE(assign_val_1.reg, &(r_set->stack_ptr));
-    //         assign_val_1.reg->flags &= ~REG_MODIFIED;
-    //     }
-
-    //     reg *new_reg = func.func_reg(assign_val_1.reg, assign_val_2.reg);
-    //     if (new_reg) {
-    //         assign_val_1.reg = new_reg;
-    //         reg_m_promote(r_set, assign_val_1.reg->addr);
-    //     }
-
-    //     oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
-    // } else if (assign_val_1.is_reg) {
-    //     reg *val_reg = val_generate_from_mpz(assign_val_2.constant);
-    //     mpz_clear(assign_val_2.constant);
-    //     if (assign_val_1.reg->flags & REG_MODIFIED) { // First register is always stashed
-    //         stack_ptr_generate(assign_val_1.reg->addr);
-    //         STORE(assign_val_1.reg, &(r_set->stack_ptr));
-    //         assign_val_1.reg->flags &= ~REG_MODIFIED;
-    //     }
-
-    //     reg *new_reg = func.func_reg(assign_val_1.reg, val_reg);
-    //     if (new_reg) {
-    //         assign_val_1.reg = new_reg;
-    //         reg_m_promote(r_set, assign_val_1.reg->addr);
-    //     }
-
-    //     oper_set_assign_val_0(expr, assign_val_1, ASSIGN_VAL_STASH);
-    // } else if (assign_val_2.is_reg) {
-    //     reg *val_reg = val_generate_from_mpz(assign_val_1.constant);
-    //     mpz_clear(assign_val_1.constant);
-    //     val_reg->addr = TEMP_ADDR_1;
-
-    //     reg *new_reg = func.func_reg(val_reg, assign_val_2.reg);
-    //     if (new_reg) {
-    //         assign_val_2.reg = new_reg;
-    //         reg_m_promote(r_set, assign_val_2.reg->addr);
-    //     } else {
-    //         assign_val_2.reg = val_reg;
-    //     }
-
-    //     oper_set_assign_val_0(expr, assign_val_2, ASSIGN_VAL_STASH);
-    // } else {
-        
-    // }
-
     if (!(assign_val_1.is_reg || assign_val_2.is_reg)) { // both constants
         func.func_num(assign_val_1.constant, assign_val_1.constant, assign_val_2.constant);
         mpz_clear(assign_val_2.constant);
