@@ -11,6 +11,7 @@
 
 static i_graph *start = NULL;
 static i_graph *end = NULL;
+static bool get_next = true;
 
 void add_to_list(void *payload, instruction_type i_type) {
     i_graph *new_element = malloc(sizeof(i_graph));
@@ -170,7 +171,11 @@ void i_graph_execute(FILE *file) {
                 exit(EXIT_FAILURE);
         }
 
-        start = start->next;
+        if (get_next) {
+            start = start->next;
+        } else {
+            get_next = true;
+        }
     }
 
     HALT();
@@ -278,21 +283,20 @@ void i_graph_clear_if(bool cond, i_graph **i_current) {
             if (i_else) {
                 i_clear(i_else, i_endif);
                 i_delete_node(i_else);
-                *i_current = i_if;
             } else {
                 i_delete_node(i_endif);
-                *i_current = i_if;
             }
         } else {
             if (i_else) {
                 i_clear(i_if, i_else);
                 i_delete_node(i_endif);
-                *i_current = i_if;
             } else {
                 i_clear(i_if, i_endif);
-                *i_current = i_if;
             }
         }
+        *i_current = i_if->next;
+        i_delete_node(i_if);
+        get_next = false;
 
         return ;
     }
@@ -423,7 +427,9 @@ void i_graph_clear_while(bool cond, i_graph **i_current) {
             exit(EXIT_FAILURE);
         } else {
             i_clear(i_while, i_endwhile);
-            *i_current = i_while;
+            *i_current = i_while->next;
+            i_delete_node(i_while);
+            get_next = false;
         }
 
         return ;
