@@ -18,6 +18,8 @@ void add_WHILE(expression_t *expr) {
     add_to_list(expr, i_WHILE);
 }
 
+void i_graph_set_start(i_graph *new_start);
+
 void eval_WHILE(i_graph **i_current) {
     expression_t const * const expr = (*i_current)->payload;
     reg_set *r_set = get_reg_set();
@@ -39,8 +41,16 @@ void eval_WHILE(i_graph **i_current) {
         mpz_clear(assign_val_2.constant);
         i_graph_clear_while(cond, i_current);
     } else {
+        i_graph *instruction_while = *i_current;
+        i_graph *instruction_endwhile = NULL;
+        i_graph_while_find(instruction_while, &instruction_endwhile);
+        if (!instruction_endwhile) {
+            fprintf(stderr, "[EVAL_WHILE]: While-find NULLptr!\n");
+            exit(EXIT_FAILURE);
+        }
+
+        // FIRST UNWIND //
         reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
-        oper_regs_store_drop();
         if (expr->type != cond_IS_EQUAL) {
             JZERO(x); // compare
         } else {
@@ -48,10 +58,30 @@ void eval_WHILE(i_graph **i_current) {
             JUMP();
         }
 
-        x->addr = TEMP_ADDR_1;
+        x->addr = COND_ADDR;
         i_level_add_branch_eval(i_WHILE, false, (void *)expr);
-        reg_m_drop_addr(r_set, TEMP_ADDR_1);
-        stack_ptr_clear();
+        *i_current = instruction_while->next;
+        i_graph_execute(instruction_endwhile);
+        *i_current = instruction_while;
+        // FIRST UNWIND //
+
+        i_level i_while = i_level_pop_branch_eval(false);
+
+        // SECOND UNWIND //
+        assign_val_1 = oper_get_assign_val_1(expr);
+        assign_val_2 = oper_get_assign_val_2(expr);
+        x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
+        if (expr->type != cond_IS_EQUAL) {
+            JZERO(x); // compare
+        } else {
+            JZERO_i_idx(x, 2);
+            JUMP();
+        }
+        x->addr = COND_ADDR;
+        i_level_add_branch_eval(i_WHILE, false, (void *)expr);
+        // SECOND UNWIND //
+
+        reg_m_sort_by_snapshot(r_set, i_while.r_snap.r);
     }
 }
 

@@ -120,15 +120,16 @@ void eval_ENDFOR(i_graph **i_current);
 void eval_READ(i_graph **i_current);
 void eval_WRITE(i_graph **i_current);
 
-
-void i_graph_execute(FILE *file) {
+void i_graph_set_and_check(FILE *file) {
+    asm_fprintf_set_file(file);
     if (!i_level_is_empty()) {
         fprintf(stderr, "[I_GRAPH]: Conditional instructions stack non empty!\n");
         exit(EXIT_FAILURE);
     }
+}
 
-    asm_fprintf_set_file(file);
-    while (start) {
+void i_graph_execute(i_graph *to) {
+    while (start != to) {
         switch (start->i_type) {
             case i_EXPR:
                 eval_EXPR(&start);
@@ -177,7 +178,9 @@ void i_graph_execute(FILE *file) {
             get_next = true;
         }
     }
+}
 
+void i_graph_free_all() {
     HALT();
 
     while (end) {
@@ -367,7 +370,7 @@ void i_graph_analyze_if(i_graph **i_current) {
     exit(EXIT_FAILURE);
 }
 
-static void i_graph_while_find(i_graph *i_while, i_graph **i_endwhile) {
+void i_graph_while_find(i_graph *i_while, i_graph **i_endwhile) {
     i_level_add(i_WHILE);
     i_graph *ptr = i_while->next;
 

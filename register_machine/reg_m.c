@@ -182,6 +182,17 @@ void reg_m_apply_snapshot(reg_set *r_set, reg_snapshot r_snap) {
     }
 }
 
+void reg_m_sort_by_snapshot(reg_set *r_set, reg r[REG_SIZE]) {
+    reg *temp_regs[REG_SIZE] = {0};
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        temp_regs[i] = reg_m_get_by_id(r_set, r[i].id);
+    }
+
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        r_set->r[i] = temp_regs[i];
+    }
+}
+
 reg * reg_m_get_by_id(reg_set *r_set, char id) {
     for (int32_t i=0; i<REG_SIZE; ++i) {
         if (r_set->r[i]->id == id) {
