@@ -64,17 +64,24 @@ void eval_FOR(i_graph **i_current) {
             }
         }
 
-        if (loop_info->type == loop_TO) {
-            iter = assign_val_1.reg;
-            range = assign_val_2.reg;
-            INC(range);
-            SUB(range, iter);
+        if (assign_val_1.reg != assign_val_2.reg) {
+            if (loop_info->type == loop_TO) {
+                iter = assign_val_1.reg;
+                range = assign_val_2.reg;
+                INC(range);
+                SUB(range, iter);
+            } else {
+                iter = oper_get_reg_for_variable(loop_info->iterator).r;
+                oper_reg_swap(iter, assign_val_1.reg);
+                INC(assign_val_1.reg);
+                SUB(assign_val_1.reg, assign_val_2.reg);
+                range = assign_val_1.reg;
+            }
         } else {
-            iter = oper_get_reg_for_variable(loop_info->iterator).r;
-            oper_reg_swap(iter, assign_val_1.reg);
-            INC(assign_val_1.reg);
-            SUB(assign_val_1.reg, assign_val_2.reg);
-            range = assign_val_1.reg;
+            iter = assign_val_1.reg;
+            range = oper_get_reg_for_variable(loop_info->range).r;
+            RESET(range);
+            INC(range);
         }
     } else {
         mpz_t ran;
