@@ -193,6 +193,7 @@ void eval_ENDWHILE(i_graph **i_current) {
     }
     JUMP_i_idx(jump_loc);
 
+    int64_t delta_1 = asm_get_i_num();
     // CLEARING FIRST JZERO
     i_level_set_reserved_jump(i_while_1.reserved_jmp_idx,
                               (asm_get_i_num() - i_while_1.i_num) + 1);
@@ -200,11 +201,16 @@ void eval_ENDWHILE(i_graph **i_current) {
     oper_regs_store_drop();
     stack_ptr_clear();
     //////
+    delta_1 = asm_get_i_num() - delta_1;
 
-    JUMP();
-    i_level_add_branch_eval(i_ENDWHILE, false, NULL);
-    i_level i_endwhile_1 = i_level_pop_branch_eval(true);
+    i_level i_endwhile_1;
+    if (delta_1 > 0) {
+        JUMP();
+        i_level_add_branch_eval(i_ENDWHILE, false, NULL);
+        i_endwhile_1 = i_level_pop_branch_eval(true);
+    }
 
+    int64_t delta_2 = asm_get_i_num();
     // CLEARING SECOND JZERO
     i_level_set_reserved_jump(i_while_2.reserved_jmp_idx,
                               (asm_get_i_num() - i_while_2.i_num) + 1);
@@ -212,10 +218,14 @@ void eval_ENDWHILE(i_graph **i_current) {
     oper_regs_store_drop();
     stack_ptr_clear();
     //////
+    delta_2 = asm_get_i_num() - delta_2;
 
-    JUMP();
-    i_level_add_branch_eval(i_ENDWHILE, false, NULL);
-    i_level i_endwhile_2 = i_level_pop_branch_eval(true);
+    i_level i_endwhile_2;
+    if (delta_2 > 0) {
+        JUMP();
+        i_level_add_branch_eval(i_ENDWHILE, false, NULL);
+        i_endwhile_2 = i_level_pop_branch_eval(true);
+    }
 
     // CLEARING THIRD JZERO
     i_level_set_reserved_jump(i_while_3.reserved_jmp_idx,
@@ -225,8 +235,19 @@ void eval_ENDWHILE(i_graph **i_current) {
     stack_ptr_clear();
     //////
 
-    i_level_set_reserved_jump(i_endwhile_1.reserved_jmp_idx,
-                              (asm_get_i_num() - i_endwhile_1.i_num) + 1);
-    i_level_set_reserved_jump(i_endwhile_2.reserved_jmp_idx,
-                              (asm_get_i_num() - i_endwhile_2.i_num) + 1);
+    if (delta_1 > 0) {
+        i_level_set_reserved_jump(i_endwhile_1.reserved_jmp_idx,
+                                  (asm_get_i_num() - i_endwhile_1.i_num) + 1);
+    } else {
+        i_level_set_reserved_jump(i_while_1.reserved_jmp_idx,
+                                  (asm_get_i_num() - i_while_1.i_num) + 1);
+    }
+
+    if (delta_2 > 0) {
+        i_level_set_reserved_jump(i_endwhile_2.reserved_jmp_idx,
+                                  (asm_get_i_num() - i_endwhile_2.i_num) + 1);
+    } else {
+        i_level_set_reserved_jump(i_while_2.reserved_jmp_idx,
+                                  (asm_get_i_num() - i_while_2.i_num) + 1);
+    }
 }
