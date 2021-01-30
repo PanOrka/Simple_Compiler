@@ -292,6 +292,6 @@ void add_ENDWHILE() {
 }
 
 void eval_ENDWHILE(i_graph **i_current) {
-    fprintf("[WHILE]: While should be fully evaluated in eval_WHILE!\n");
+    fprintf(stderr, "[WHILE]: While should be fully evaluated in eval_WHILE!\n");
     exit(EXIT_FAILURE);
 }
