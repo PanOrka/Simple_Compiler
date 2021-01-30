@@ -30,7 +30,7 @@ typedef struct {
     bool same_registers;
 } msg;
 
-static void fetch_cond(expression_t const * const expr) {
+static reg * fetch_cond(expression_t const * const expr) {
     reg_set *r_set = get_reg_set();
 
     val assign_val_1 = oper_get_assign_val_1(expr);
@@ -42,6 +42,11 @@ static void fetch_cond(expression_t const * const expr) {
     reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
     reg_m_drop_addr(r_set, COND_ADDR);
     x->addr = COND_ADDR;
+
+    return x;
+}
+
+static void add_branch(expression_t const * const expr, reg *x) {
     if (expr->type != cond_IS_EQUAL) {
         JZERO(x); // compare
     } else {
@@ -51,13 +56,127 @@ static void fetch_cond(expression_t const * const expr) {
     i_level_add_branch_eval(i_WHILE, true, (void *)expr);
 }
 
-static void while_unwind_additional(i_graph **i_current,
-                                    i_graph *instruction_while,
-                                    i_graph *instruction_endwhile)
+static void while_unwind(i_graph **i_current,
+                         i_graph *instruction_while,
+                         i_graph *instruction_endwhile)
 {
     *i_current = instruction_while->next;
     i_graph_execute(instruction_endwhile);
     *i_current = instruction_while;
+}
+
+static void set_last_jump_location(expression_t const * const expr, int64_t i_num) {
+    int64_t jump_loc = i_num - (asm_get_i_num() + 1);
+    if (expr->type == cond_IS_EQUAL) {
+        jump_loc -= 1;
+    }
+    JUMP_i_idx(jump_loc);
+}
+
+static void end_while(const int32_t max_unwinds) {
+    reg_set *r_set = get_reg_set();
+
+    i_level i_while[MAX_WHILE_UNDWIND + 2];
+
+    for (int32_t i=max_unwinds-1; i>=0; --i) {
+        i_while[i] = i_level_pop_branch_eval(true);
+    }
+
+    int64_t delta[MAX_WHILE_UNDWIND + 1];
+
+    for (int32_t i=0; i<max_unwinds-1; ++i) {
+        delta[i] = asm_get_i_num();
+        i_level_set_reserved_jump(i_while[i].reserved_jmp_idx,
+                                (asm_get_i_num() - i_while[i].i_num) + 1);
+        reg_m_apply_snapshot(r_set, i_while[i].r_snap);
+        oper_regs_store_drop();
+        stack_ptr_clear();
+
+        delta[i] = asm_get_i_num() - delta[i];
+        if (delta[i] > 0) {
+            JUMP();
+            i_level_add_branch_eval(i_ENDWHILE, false, NULL);
+        }
+    }
+    i_level_set_reserved_jump(i_while[max_unwinds-1].reserved_jmp_idx,
+                            (asm_get_i_num() - i_while[max_unwinds-1].i_num) + 1);
+    reg_m_apply_snapshot(r_set, i_while[max_unwinds-1].r_snap);
+    oper_regs_store_drop();
+    stack_ptr_clear();
+
+    for (int32_t i=max_unwinds-2; i>=0; --i) {
+        if (delta[i] > 0) {
+            i_level i_endwhile = i_level_pop_branch_eval(true);
+            i_level_set_reserved_jump(i_endwhile.reserved_jmp_idx,
+                                    (asm_get_i_num() - i_endwhile.i_num) + 1);
+        } else {
+            i_level_set_reserved_jump(i_while[i].reserved_jmp_idx,
+                                    (asm_get_i_num() - i_while[i].i_num) + 1);
+        }
+    }
+}
+
+static void eval_known_regs(expression_t const * const expr,
+                            i_graph **i_current,
+                            i_graph *instruction_while,
+                            i_graph *instruction_endwhile,
+                            const int32_t max_unwinds)
+{
+    reg_set *r_set = get_reg_set();
+
+    i_level last_while = i_level_pop_branch_eval(false);
+
+    if (last_while.r_snap.stack_ptr_init) {
+        stack_ptr_generate_from_mpz(last_while.r_snap.stack_ptr_value);
+    }
+    if (reg_m_get(r_set, VAL_GEN_ADDR, false).was_allocated) {
+        val_generate_from_mpz(last_while.r_snap.val_gen_value);
+    }
+
+    set_last_jump_location(expr, last_while.i_num);
+
+    end_while(max_unwinds);
+    *i_current = instruction_endwhile;
+}
+
+static void eval_with_regs_drop(expression_t const * const expr,
+                                i_graph **i_current,
+                                i_graph *instruction_while,
+                                i_graph *instruction_endwhile,
+                                const int32_t max_unwinds)
+{
+    reg_set *r_set = get_reg_set();
+
+    reg *x = fetch_cond(expr);
+
+    oper_regs_store_drop();
+    stack_ptr_clear();
+    x->addr = COND_ADDR;
+    add_branch(expr, x);
+
+    while_unwind(i_current, instruction_while, instruction_endwhile);
+    x = fetch_cond(expr);
+    oper_regs_store_drop();
+
+    i_level last_while = i_level_pop_branch_eval(false);
+
+    reg *dest = NULL;
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        if (last_while.r_snap.r[i].addr == COND_ADDR) {
+            dest = reg_m_get_by_id(r_set, last_while.r_snap.r[i].id);
+        }
+    }
+
+    if (!dest) {
+        fprintf(stderr, "[WHILE]: Endwhile got NULL-ptr on register search!\n");
+        exit(EXIT_FAILURE);
+    }
+    oper_reg_swap(dest, x);
+
+    set_last_jump_location(expr, last_while.i_num);
+
+    end_while(max_unwinds);
+    *i_current = instruction_endwhile;
 }
 
 void eval_WHILE(i_graph **i_current) {
@@ -93,15 +212,9 @@ void eval_WHILE(i_graph **i_current) {
         reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
         reg_m_drop_addr(r_set, COND_ADDR);
         x->addr = COND_ADDR;
-        if (expr->type != cond_IS_EQUAL) {
-            JZERO(x); // compare
-        } else {
-            JZERO_i_idx(x, 2);
-            JUMP();
-        }
-        i_level_add_branch_eval(i_WHILE, true, (void *)expr); // FIRST JZERO
+        add_branch(expr, x);
         
-        while_unwind_additional(i_current, instruction_while, instruction_endwhile);
+        while_unwind(i_current, instruction_while, instruction_endwhile);
         // FIRST UNWIND //
 
         // ADDITIONAL UNWINDS //
@@ -111,7 +224,7 @@ void eval_WHILE(i_graph **i_current) {
         i_level i_while_last;
         for (int32_t i=0; i<MAX_WHILE_UNDWIND; ++i) {
             i_while_last = i_level_pop_branch_eval(false);
-            fetch_cond(expr);
+            x = fetch_cond(expr);
 
             reg_m_sort_by_snapshot(r_set, i_while_last.r_snap.r);
 
@@ -139,44 +252,29 @@ void eval_WHILE(i_graph **i_current) {
                 reg_m_sort_by_snapshot(r_set, i_while_last.r_snap.r);
                 same_registers = true;
                 max_unwinds = i;
-                printf("\n\n\nWOW\n\n\n");
                 break;
             } else {
-                while_unwind_additional(i_current, instruction_while, instruction_endwhile);
+                add_branch(expr, x);
+                while_unwind(i_current, instruction_while, instruction_endwhile);
             }
         }
         // ADDITIONAL UNWINDS //
 
-        // LAST UNWIND PREP //
-        msg *info_msg = malloc(sizeof(msg));
-        info_msg->same_registers = same_registers;
-        info_msg->total_unwinds = max_unwinds + 2;
-
-        if (!same_registers) {
-            assign_val_1 = oper_get_assign_val_1(expr);
-            assign_val_2 = oper_get_assign_val_2(expr);
-            if (assign_val_1.is_reg) {
-                reg_m_promote(r_set, assign_val_1.reg->addr);
-            }
-
-            x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
-
-            stack_ptr_clear();
-            oper_regs_store_drop();
-            x->addr = COND_ADDR;
-
-            if (expr->type != cond_IS_EQUAL) {
-                JZERO(x); // compare
-            } else {
-                JZERO_i_idx(x, 2);
-                JUMP();
-            }
-
-            i_level_add_branch_eval(i_WHILE, true, (void *)expr);
+        // LAST UNWIND //
+        if (same_registers) {
+            eval_known_regs(expr,
+                            i_current,
+                            instruction_while,
+                            instruction_endwhile,
+                            max_unwinds + 1);
+        } else {
+            eval_with_regs_drop(expr,
+                                i_current,
+                                instruction_while,
+                                instruction_endwhile,
+                                max_unwinds + 2);
         }
-
-        i_level_add_branch_eval(i_REPEAT, false, (void *)info_msg);
-        // LAST UNWIND PREP //
+        // LAST UNWIND //
     }
 }
 
@@ -194,92 +292,6 @@ void add_ENDWHILE() {
 }
 
 void eval_ENDWHILE(i_graph **i_current) {
-    i_level info = i_level_pop_branch_eval(true);
-    msg *msg_info = info.payload;
-
-    const int32_t n_all_undwinds = msg_info->total_unwinds;
-    i_level i_while[MAX_WHILE_UNDWIND + 2];
-
-    for (int32_t i=n_all_undwinds-1; i>=0; --i) {
-        i_while[i] = i_level_pop_branch_eval(true);
-    }
-
-    expression_t const * const expr = i_while[0].payload;
-    reg_set *r_set = get_reg_set();
-
-    val assign_val_1 = oper_get_assign_val_1(expr);
-    val assign_val_2 = oper_get_assign_val_2(expr);
-    if (assign_val_1.is_reg) {
-        reg_m_promote(r_set, assign_val_1.reg->addr);
-    }
-
-    reg *x = cond_val_from_vals(assign_val_1, assign_val_2, expr->type);
-    reg_m_drop_addr(r_set, COND_ADDR);
-    x->addr = COND_ADDR;
-
-    if (!msg_info->same_registers) {
-        oper_regs_store_drop();
-        reg *dest = NULL;
-        for (int32_t i=0; i<REG_SIZE; ++i) {
-            if (i_while[n_all_undwinds-1].r_snap.r[i].addr == COND_ADDR) {
-                dest = reg_m_get_by_id(r_set, i_while[n_all_undwinds-1].r_snap.r[i].id);
-            }
-        }
-
-        if (!dest) {
-            fprintf(stderr, "[WHILE]: Endwhile got NULL-ptr on register search!\n");
-            exit(EXIT_FAILURE);
-        }
-
-        oper_reg_swap(dest, x);
-    } else {
-        if (i_while[n_all_undwinds-1].r_snap.stack_ptr_init) {
-            stack_ptr_generate_from_mpz(i_while[n_all_undwinds-1].r_snap.stack_ptr_value);
-        }
-        if (reg_m_get(r_set, VAL_GEN_ADDR, false).was_allocated) {
-            val_generate_from_mpz(i_while[n_all_undwinds-1].r_snap.val_gen_value);
-        }
-    }
-
-    int64_t jump_loc = i_while[n_all_undwinds-1].i_num - (asm_get_i_num() + 1);
-    if (expr->type == cond_IS_EQUAL) {
-        jump_loc -= 1;
-    }
-    JUMP_i_idx(jump_loc);
-
-    int64_t delta[MAX_WHILE_UNDWIND + 1];
-    for (int32_t i=0; i<n_all_undwinds-1; ++i) {
-        delta[i] = asm_get_i_num();
-        i_level_set_reserved_jump(i_while[i].reserved_jmp_idx,
-                                (asm_get_i_num() - i_while[i].i_num) + 1);
-        reg_m_apply_snapshot(r_set, i_while[i].r_snap);
-        oper_regs_store_drop();
-        stack_ptr_clear();
-
-        delta[i] = asm_get_i_num() - delta[i];
-        if (delta[i] > 0) {
-            JUMP();
-            i_level_add_branch_eval(i_ENDWHILE, false, NULL);
-        }
-    }
-    i_level_set_reserved_jump(i_while[n_all_undwinds-1].reserved_jmp_idx,
-                            (asm_get_i_num() - i_while[n_all_undwinds-1].i_num) + 1);
-    if (msg_info->same_registers) {
-        reg_m_apply_snapshot(r_set, i_while[n_all_undwinds-1].r_snap);
-        oper_regs_store_drop();
-        stack_ptr_clear();
-    }
-
-    for (int32_t i=n_all_undwinds-2; i>=0; --i) {
-        if (delta[i] > 0) {
-            i_level i_endwhile = i_level_pop_branch_eval(true);
-            i_level_set_reserved_jump(i_endwhile.reserved_jmp_idx,
-                                    (asm_get_i_num() - i_endwhile.i_num) + 1);
-        } else {
-            i_level_set_reserved_jump(i_while[i].reserved_jmp_idx,
-                                    (asm_get_i_num() - i_while[i].i_num) + 1);
-        }
-    }
-
-    free(msg_info);
+    fprintf("[WHILE]: While should be fully evaluated in eval_WHILE!\n");
+    exit(EXIT_FAILURE);
 }
