@@ -80,7 +80,7 @@ reg_allocator reg_m_get(reg_set *r_set, addr_t addr, bool do_sort) {
     }
 
     // for debug
-    print_regs(r_set);
+    //print_regs(r_set);
 
     return (reg_allocator){r_set->r[idx], 0, false};
 }
@@ -93,7 +93,7 @@ reg_allocator reg_m_LRU(reg_set *r_set, bool do_sort) {
     }
 
     // for debug
-    print_regs(r_set);
+    //print_regs(r_set);
 
     return (reg_allocator){r_set->r[idx], 0, false};
 }
@@ -106,7 +106,7 @@ void reg_m_drop_addr(reg_set *r_set, addr_t addr) {
             reg_m_sort(r_set, i, REG_M_SORT_DOWN);
 
             // for debug
-            print_regs(r_set);
+            //print_regs(r_set);
 
             return;
         }
@@ -119,7 +119,7 @@ void reg_m_promote(reg_set *r_set, addr_t addr) {
             reg_m_sort(r_set, i, REG_M_SORT_UP);
 
             // for debug
-            print_regs(r_set);
+            //print_regs(r_set);
 
             return;
         }
