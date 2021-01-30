@@ -458,7 +458,7 @@ void i_graph_analyze_while(i_graph **i_current) {
     exit(EXIT_FAILURE);
 }
 
-static void i_graph_for_find(i_graph *i_for, i_graph **i_endfor) {
+void i_graph_for_find(i_graph *i_for, i_graph **i_endfor) {
     i_level_add(i_FOR);
     i_graph *ptr = i_for->next;
 

@@ -93,6 +93,13 @@ void i_graph_analyze_while(i_graph **i_current);
 
 /**
  * 
+ * Finding instructions of this particular loop
+ * 
+*/
+void i_graph_for_find(i_graph *i_for, i_graph **i_endfor);
+
+/**
+ * 
  * Analyze for and store constant values, make them non-constant
  * 
 */

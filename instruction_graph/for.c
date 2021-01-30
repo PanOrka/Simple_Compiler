@@ -25,6 +25,174 @@ static void num_sub(mpz_t dest, mpz_t src_1, mpz_t src_2) {
     }
 }
 
+#ifndef MAX_FOR_UNWIND
+#define MAX_FOR_UNWIND 100
+#endif
+
+static reg * fetch_cond(for_loop_t const * const loop_info) {
+    reg_set *r_set = get_reg_set();
+
+    reg_allocator range_alloc = oper_get_reg_for_variable(loop_info->range);
+    if (!range_alloc.was_allocated) {
+        oper_load_variable_to_reg(range_alloc.r, loop_info->range);
+    }
+
+    return range_alloc.r;
+}
+
+static reg * fetch_iter(for_loop_t const * const loop_info) {
+    reg_set *r_set = get_reg_set();
+
+    reg_allocator range_alloc = oper_get_reg_for_variable(loop_info->iterator);
+    if (!range_alloc.was_allocated) {
+        oper_load_variable_to_reg(range_alloc.r, loop_info->iterator);
+    }
+
+    return range_alloc.r;
+}
+
+static void change_iter(for_loop_t const * const loop_info,
+                        reg *iter, reg *range)
+{
+    if (loop_info->type == loop_TO) {
+        INC(iter);
+    } else {
+        DEC(iter);
+    }
+    DEC(range);
+    iter->flags = REG_MODIFIED;
+    range->flags = REG_MODIFIED;
+}
+
+static void for_unwind(i_graph **i_current,
+                       i_graph *instruction_for,
+                       i_graph *instruction_endfor)
+{
+    *i_current = instruction_for->next;
+    i_graph_execute(instruction_endfor);
+    *i_current = instruction_endfor;
+}
+
+static void add_branch(for_loop_t const * const loop_info, reg *x) {
+    JZERO(x);
+    i_level_add_branch_eval(i_FOR, true, (void *)loop_info);
+}
+
+static void set_last_jump_location(int64_t i_num) {
+    int64_t jump_loc = i_num - (asm_get_i_num() + 1);
+    JUMP_i_idx(jump_loc);
+}
+
+static void end_for(const int32_t max_unwinds) {
+    reg_set *r_set = get_reg_set();
+
+    i_level i_for[MAX_FOR_UNWIND + 2];
+
+    for (int32_t i=max_unwinds-1; i>=0; --i) {
+        i_for[i] = i_level_pop_branch_eval(true);
+    }
+
+    int64_t delta[MAX_FOR_UNWIND + 1];
+
+    for (int32_t i=0; i<max_unwinds-1; ++i) {
+        delta[i] = asm_get_i_num();
+        i_level_set_reserved_jump(i_for[i].reserved_jmp_idx,
+                                  (asm_get_i_num() - i_for[i].i_num) + 1);
+        reg_m_apply_snapshot(r_set, i_for[i].r_snap);
+        oper_regs_store_drop();
+        stack_ptr_clear();
+
+        delta[i] = asm_get_i_num() - delta[i];
+        if (delta[i] > 0) {
+            JUMP();
+            i_level_add_branch_eval(i_ENDFOR, false, NULL);
+        }
+    }
+    i_level_set_reserved_jump(i_for[max_unwinds-1].reserved_jmp_idx,
+                              (asm_get_i_num() - i_for[max_unwinds-1].i_num) + 1);
+    reg_m_apply_snapshot(r_set, i_for[max_unwinds-1].r_snap);
+    oper_regs_store_drop();
+    stack_ptr_clear();
+
+    for (int32_t i=max_unwinds-2; i>=0; --i) {
+        if (delta[i] > 0) {
+            i_level i_endfor = i_level_pop_branch_eval(true);
+            i_level_set_reserved_jump(i_endfor.reserved_jmp_idx,
+                                      (asm_get_i_num() - i_endfor.i_num) + 1);
+        } else {
+            i_level_set_reserved_jump(i_for[i].reserved_jmp_idx,
+                                      (asm_get_i_num() - i_for[i].i_num) + 1);
+        }
+    }
+}
+
+static void eval_known_regs(i_graph **i_current,
+                            i_graph *instruction_for,
+                            i_graph *instruction_endfor,
+                            const int32_t max_unwinds)
+{
+    reg_set *r_set = get_reg_set();
+
+    i_level last_for = i_level_pop_branch_eval(false);
+
+    if (last_for.r_snap.stack_ptr_init) {
+        stack_ptr_generate_from_mpz(last_for.r_snap.stack_ptr_value);
+    }
+    if (reg_m_get(r_set, VAL_GEN_ADDR, false).was_allocated) {
+        val_generate_from_mpz(last_for.r_snap.val_gen_value);
+    }
+
+    set_last_jump_location(last_for.i_num);
+
+    end_for(max_unwinds);
+    *i_current = instruction_endfor;
+}
+
+static void eval_with_regs_drop(for_loop_t const * const loop_info,
+                                i_graph **i_current,
+                                i_graph *instruction_for,
+                                i_graph *instruction_endfor,
+                                const int32_t max_unwinds)
+{
+    reg_set *r_set = get_reg_set();
+
+    reg *iter = fetch_iter(loop_info);
+    reg *range = fetch_cond(loop_info);
+    change_iter(loop_info, iter, range);
+
+    oper_regs_store_drop();
+    stack_ptr_clear();
+
+    range->addr = COND_ADDR;
+    add_branch(loop_info, range);
+    for_unwind(i_current, instruction_for, instruction_endfor);
+
+    iter = fetch_iter(loop_info);
+    range = fetch_cond(loop_info);
+    change_iter(loop_info, iter, range);
+    oper_regs_store_drop();
+
+    i_level last_for = i_level_pop_branch_eval(false);
+
+    reg *dest = NULL;
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        if (last_for.r_snap.r[i].addr == COND_ADDR) {
+            dest = reg_m_get_by_id(r_set, last_for.r_snap.r[i].id);
+        }
+    }
+
+    if (!dest) {
+        fprintf(stderr, "[WHILE]: Endwhile got NULL-ptr on register search!\n");
+        exit(EXIT_FAILURE);
+    }
+    oper_reg_swap(dest, range);
+
+    set_last_jump_location(last_for.i_num);
+
+    end_for(max_unwinds);
+    *i_current = instruction_endfor;
+}
+
 void eval_FOR(i_graph **i_current) {
     for_loop_t const * const loop_info = (*i_current)->payload;
     reg_set *r_set = get_reg_set();
@@ -110,13 +278,68 @@ void eval_FOR(i_graph **i_current) {
     range->addr = loop_info->range;
     range->flags = REG_MODIFIED;
 
-    oper_regs_store_drop();
+    i_graph *instruction_for = *i_current;
+    i_graph *instruction_endfor = NULL;
+    i_graph_for_find(instruction_for, &instruction_endfor);
+    if (!instruction_endfor) {
+        fprintf(stderr, "[EVAL_FOR]: FOR-find NULLptr!\n");
+        exit(EXIT_FAILURE);
+    }
 
-    JZERO(range); // compare
-    stack_ptr_clear();
-    range->addr = TEMP_ADDR_1;
-    i_level_add_branch_eval(i_FOR, false, (void *)loop_info);
-    reg_m_drop_addr(r_set, TEMP_ADDR_1);
+    // FIRST UNWIND //
+    add_branch(loop_info, range);
+    for_unwind(i_current, instruction_for, instruction_endfor);
+    // FIRST UNWIND //
+
+    // ADDITIONAL UNWINDS //
+    bool same_registers = false;
+    int32_t max_unwinds = MAX_FOR_UNWIND;
+
+    for (int32_t i=0; i<MAX_FOR_UNWIND; ++i) {
+        i_level i_for_last = i_level_pop_branch_eval(false);
+        iter = fetch_iter(loop_info);
+        range = fetch_cond(loop_info);
+        change_iter(loop_info, iter, range);
+
+        reg_m_sort_by_snapshot(r_set, i_for_last.r_snap.r);
+
+        bool total_store = false;
+        for (int32_t i=0; i<REG_SIZE; ++i) {
+            const bool regs_identic = r_set->r[i]->addr == i_for_last.r_snap.r[i].addr &&
+                                      r_set->r[i]->id == i_for_last.r_snap.r[i].id &&
+                                      r_set->r[i]->flags == i_for_last.r_snap.r[i].flags;
+            const bool useless_addr = r_set->r[i]->addr > COND_ADDR && r_set->r[i]->addr != VAL_GEN_ADDR &&
+                                      i_for_last.r_snap.r[i].addr > COND_ADDR && i_for_last.r_snap.r[i].addr != VAL_GEN_ADDR;
+            const bool same_val_gen = r_set->r[i]->addr == VAL_GEN_ADDR && i_for_last.r_snap.r[i].addr == VAL_GEN_ADDR;
+            if (!(regs_identic || useless_addr || same_val_gen)) {
+                total_store = true;
+                break;
+            }
+        }
+
+        if (!total_store) {
+            same_registers = true;
+            max_unwinds = i;
+            break;
+        } else {
+            add_branch(loop_info, range);
+            for_unwind(i_current, instruction_for, instruction_endfor);
+        }
+    }
+
+    // LAST UNWIND //
+    if (same_registers) {
+        eval_known_regs(i_current,
+                        instruction_for,
+                        instruction_endfor,
+                        max_unwinds + 1);
+    } else {
+        eval_with_regs_drop(loop_info,
+                            i_current,
+                            instruction_for,
+                            instruction_endfor,
+                            max_unwinds + 2);
+    }
 }
 
 void add_ENDFOR() {
@@ -160,53 +383,6 @@ void add_ENDFOR() {
 }
 
 void eval_ENDFOR(i_graph **i_current) {
-    i_level i_for = i_level_pop_branch_eval(true);
-    for_loop_t const * const loop_info = i_for.payload;
-    reg_set *r_set = get_reg_set();
-
-    reg_allocator iter_alloc = oper_get_reg_for_variable(loop_info->iterator);
-    if (!iter_alloc.was_allocated) {
-        oper_load_variable_to_reg(iter_alloc.r, loop_info->iterator);
-    }
-    reg *iter = iter_alloc.r;
-
-    reg_allocator range_alloc = oper_get_reg_for_variable(loop_info->range);
-    if (!range_alloc.was_allocated) {
-        oper_load_variable_to_reg(range_alloc.r, loop_info->range);
-    }
-    reg *range = range_alloc.r;
-
-    if (loop_info->type == loop_TO) {
-        INC(iter);
-    } else {
-        DEC(iter);
-    }
-    DEC(range);
-    iter->flags = REG_MODIFIED;
-    range->flags = REG_MODIFIED;
-
-    oper_regs_store_drop();
-
-    const reg_snapshot r_snap = i_for.r_snap;
-
-    reg *dest_range = NULL;
-    for (int32_t i=0; i<REG_SIZE; ++i) {
-        if (r_snap.r[i].addr == TEMP_ADDR_1) {
-            dest_range = reg_m_get_by_id(r_set, r_snap.r[i].id);
-        }
-    }
-
-    if (!dest_range) {
-        fprintf(stderr, "[WHILE]: Endfor got NULL-ptr on register search!\n");
-        exit(EXIT_FAILURE);
-    }
-
-    oper_reg_swap(dest_range, range);
-
-    const int64_t jump_loc = i_for.i_num - (asm_get_i_num() + 1);
-    JUMP_i_idx(jump_loc);
-
-    i_level_set_reserved_jump(i_for.reserved_jmp_idx,
-                              (asm_get_i_num() - i_for.i_num) + 1);
-    stack_ptr_clear();
+    fprintf(stderr, "[FOR]: FOR should be fully evaluated in eval_FOR!\n");
+    exit(EXIT_FAILURE);
 }

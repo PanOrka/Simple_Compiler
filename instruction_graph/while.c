@@ -25,11 +25,6 @@ void i_graph_set_start(i_graph *new_start);
 #define MAX_WHILE_UNDWIND 100
 #endif
 
-typedef struct {
-    int32_t total_unwinds;
-    bool same_registers;
-} msg;
-
 static reg * fetch_cond(expression_t const * const expr) {
     reg_set *r_set = get_reg_set();
 
@@ -221,9 +216,8 @@ void eval_WHILE(i_graph **i_current) {
         bool same_registers = false;
         int32_t max_unwinds = MAX_WHILE_UNDWIND;
 
-        i_level i_while_last;
         for (int32_t i=0; i<MAX_WHILE_UNDWIND; ++i) {
-            i_while_last = i_level_pop_branch_eval(false);
+            i_level i_while_last = i_level_pop_branch_eval(false);
             x = fetch_cond(expr);
 
             reg_m_sort_by_snapshot(r_set, i_while_last.r_snap.r);
@@ -243,13 +237,6 @@ void eval_WHILE(i_graph **i_current) {
             }
 
             if (!total_store) {
-                if (i_while_last.r_snap.stack_ptr_init) {
-                    stack_ptr_generate_from_mpz(i_while_last.r_snap.stack_ptr_value);
-                }
-                if (reg_m_get(r_set, VAL_GEN_ADDR, false).was_allocated) {
-                    val_generate_from_mpz(i_while_last.r_snap.val_gen_value);
-                }
-                reg_m_sort_by_snapshot(r_set, i_while_last.r_snap.r);
                 same_registers = true;
                 max_unwinds = i;
                 break;
