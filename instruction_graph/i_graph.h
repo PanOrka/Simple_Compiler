@@ -37,10 +37,24 @@ void i_graph_add_instruction(void *payload, instruction_type i_type);
 
 /**
  * 
- * Execute instructions from instruction graph
+ * Set asm_print file and check for correct amount of branches
  * 
 */
-void i_graph_execute(FILE *file);
+void i_graph_set_and_check(FILE *file);
+
+/**
+ * 
+ * Execute instructions from instruction graph while start != to
+ * 
+*/
+void i_graph_execute(i_graph *to);
+
+/**
+ * 
+ * Frees i_graph, register set and symbol table
+ * 
+*/
+void i_graph_free_all();
 
 /**
  * 
@@ -65,10 +79,24 @@ void i_graph_clear_while(bool cond, i_graph **i_current);
 
 /**
  * 
+ * Finding instructions of this particular loop
+ * 
+*/
+void i_graph_while_find(i_graph *i_while, i_graph **i_endwhile);
+
+/**
+ * 
  * Analyze while and store constant values, make them non-constant
  * 
 */
 void i_graph_analyze_while(i_graph **i_current);
+
+/**
+ * 
+ * Finding instructions of this particular loop
+ * 
+*/
+void i_graph_for_find(i_graph *i_for, i_graph **i_endfor);
 
 /**
  * 

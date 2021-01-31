@@ -113,6 +113,13 @@ void reg_m_apply_snapshot(reg_set *r_set, reg_snapshot r_snap);
 
 /**
  * 
+ * Sort registers by snapshot
+ * 
+*/
+void reg_m_sort_by_snapshot(reg_set *r_set, reg r[REG_SIZE]);
+
+/**
+ * 
  * Get pointer to register with given id
  * 
  * RETURN: Pointer to register or NULL on failure

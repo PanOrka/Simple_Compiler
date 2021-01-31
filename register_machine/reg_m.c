@@ -80,7 +80,7 @@ reg_allocator reg_m_get(reg_set *r_set, addr_t addr, bool do_sort) {
     }
 
     // for debug
-    print_regs(r_set);
+    //print_regs(r_set);
 
     return (reg_allocator){r_set->r[idx], 0, false};
 }
@@ -93,7 +93,7 @@ reg_allocator reg_m_LRU(reg_set *r_set, bool do_sort) {
     }
 
     // for debug
-    print_regs(r_set);
+    //print_regs(r_set);
 
     return (reg_allocator){r_set->r[idx], 0, false};
 }
@@ -106,7 +106,7 @@ void reg_m_drop_addr(reg_set *r_set, addr_t addr) {
             reg_m_sort(r_set, i, REG_M_SORT_DOWN);
 
             // for debug
-            print_regs(r_set);
+            //print_regs(r_set);
 
             return;
         }
@@ -119,7 +119,7 @@ void reg_m_promote(reg_set *r_set, addr_t addr) {
             reg_m_sort(r_set, i, REG_M_SORT_UP);
 
             // for debug
-            print_regs(r_set);
+            //print_regs(r_set);
 
             return;
         }
@@ -179,6 +179,17 @@ void reg_m_apply_snapshot(reg_set *r_set, reg_snapshot r_snap) {
 
         mpz_clear(r_snap.stack_ptr_value);
         mpz_clear(r_snap.val_gen_value);
+    }
+}
+
+void reg_m_sort_by_snapshot(reg_set *r_set, reg r[REG_SIZE]) {
+    reg *temp_regs[REG_SIZE] = {0};
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        temp_regs[i] = reg_m_get_by_id(r_set, r[i].id);
+    }
+
+    for (int32_t i=0; i<REG_SIZE; ++i) {
+        r_set->r[i] = temp_regs[i];
     }
 }
 

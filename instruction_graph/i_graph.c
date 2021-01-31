@@ -11,6 +11,7 @@
 
 static i_graph *start = NULL;
 static i_graph *end = NULL;
+static bool get_next = true;
 
 void add_to_list(void *payload, instruction_type i_type) {
     i_graph *new_element = malloc(sizeof(i_graph));
@@ -119,15 +120,16 @@ void eval_ENDFOR(i_graph **i_current);
 void eval_READ(i_graph **i_current);
 void eval_WRITE(i_graph **i_current);
 
-
-void i_graph_execute(FILE *file) {
+void i_graph_set_and_check(FILE *file) {
+    asm_fprintf_set_file(file);
     if (!i_level_is_empty()) {
         fprintf(stderr, "[I_GRAPH]: Conditional instructions stack non empty!\n");
         exit(EXIT_FAILURE);
     }
+}
 
-    asm_fprintf_set_file(file);
-    while (start) {
+void i_graph_execute(i_graph *to) {
+    while (start != to) {
         switch (start->i_type) {
             case i_EXPR:
                 eval_EXPR(&start);
@@ -170,9 +172,15 @@ void i_graph_execute(FILE *file) {
                 exit(EXIT_FAILURE);
         }
 
-        start = start->next;
+        if (get_next) {
+            start = start->next;
+        } else {
+            get_next = true;
+        }
     }
+}
 
+void i_graph_free_all() {
     HALT();
 
     while (end) {
@@ -278,21 +286,20 @@ void i_graph_clear_if(bool cond, i_graph **i_current) {
             if (i_else) {
                 i_clear(i_else, i_endif);
                 i_delete_node(i_else);
-                *i_current = i_if;
             } else {
                 i_delete_node(i_endif);
-                *i_current = i_if;
             }
         } else {
             if (i_else) {
                 i_clear(i_if, i_else);
                 i_delete_node(i_endif);
-                *i_current = i_if;
             } else {
                 i_clear(i_if, i_endif);
-                *i_current = i_if;
             }
         }
+        *i_current = i_if->next;
+        i_delete_node(i_if);
+        get_next = false;
 
         return ;
     }
@@ -334,11 +341,13 @@ static void i_graph_store_marked() {
                 oper_arr_set_non_constant(sym);
             } else if (sym_const) {
                 sym->flags &= ~SYMBOL_IS_CONSTANT;
-                reg *val_reg = val_generate_from_mpz(sym->consts.value);
-                mpz_set_si(sym->consts.value, 0);
-                stack_ptr_generate(sym->addr[0]);
-                STORE(val_reg, &(r_set->stack_ptr));
-                sym->symbol_in_memory = true;
+                if (!sym->symbol_in_memory) {
+                    reg *val_reg = val_generate_from_mpz(sym->consts.value);
+                    mpz_set_si(sym->consts.value, 0);
+                    stack_ptr_generate(sym->addr[0]);
+                    STORE(val_reg, &(r_set->stack_ptr));
+                    sym->symbol_in_memory = true;
+                }
             }
         }
     }
@@ -361,7 +370,7 @@ void i_graph_analyze_if(i_graph **i_current) {
     exit(EXIT_FAILURE);
 }
 
-static void i_graph_while_find(i_graph *i_while, i_graph **i_endwhile) {
+void i_graph_while_find(i_graph *i_while, i_graph **i_endwhile) {
     i_level_add(i_WHILE);
     i_graph *ptr = i_while->next;
 
@@ -421,7 +430,9 @@ void i_graph_clear_while(bool cond, i_graph **i_current) {
             exit(EXIT_FAILURE);
         } else {
             i_clear(i_while, i_endwhile);
-            *i_current = i_while;
+            *i_current = i_while->next;
+            i_delete_node(i_while);
+            get_next = false;
         }
 
         return ;
@@ -447,7 +458,7 @@ void i_graph_analyze_while(i_graph **i_current) {
     exit(EXIT_FAILURE);
 }
 
-static void i_graph_for_find(i_graph *i_for, i_graph **i_endfor) {
+void i_graph_for_find(i_graph *i_for, i_graph **i_endfor) {
     i_level_add(i_FOR);
     i_graph *ptr = i_for->next;
 

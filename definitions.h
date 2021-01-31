@@ -90,4 +90,13 @@ typedef size_t idx_t;
 #define TEMP_ADDR_5 0xFFFFFFFFFFFFFFF8
 #endif
 
+/**
+ * 
+ * Cond address
+ * 
+*/
+#ifndef COND_ADDR
+#define COND_ADDR 0xFFFFFFFFFFFFFFF7
+#endif
+
 #endif

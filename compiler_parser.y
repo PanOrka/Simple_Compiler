@@ -262,7 +262,9 @@ any: DECLARE declarations
        i_graph_add_instruction(expr, i_WRITE);
    }
    | END {
-       i_graph_execute(compiler_out);
+       i_graph_set_and_check(compiler_out);
+       i_graph_execute(NULL);
+       i_graph_free_all();
    }
 ;
 
